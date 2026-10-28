@@ -319,8 +319,15 @@ rect.clickable:hover{fill:#6db3ff}
 
 <!-- ============ ACTIONS ============ -->
 <section id="tab-tiltak" style="display:none">
+  <div class="kpis" id="tiltakKpis"></div>
   <div class="card">
-    <h3 class="sect">Prioriterte tiltak – automatisk foreslått av Logichain</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <h3 class="sect" style="margin:0">Prioriterte tiltak – automatisk foreslått av Logichain</h3>
+      <div class="chips" style="margin:0">
+        <button class="active" id="tv-kort" onclick="tiltakView('kort')">Kortvisning</button>
+        <button id="tv-tabell" onclick="tiltakView('tabell')">Tabellvisning</button>
+      </div>
+    </div>
     <div id="tiltakList"></div>
     <div class="note">Hvert tiltak viser identifisert potensial – ikke garantert sparing. Klikk «Se grunnlag» for dokumentasjon.</div>
   </div>
@@ -742,9 +749,52 @@ if(overallOTD<80)tiltak.push({prio:"høy",t:"Nasjonal OTD-målsetting og eskaler
 tiltak.push({prio:"lav",t:"Automatiser innrapportering fra leverandørene",d:`I dag mottas data som Excel-filer. Be leverandørene om fast mal og ukentlig levering, så oppdateres dashboardet automatisk – raskere beslutninger og færre manuelle feil.`,v:0});
 tiltak.push({prio:"midt",t:`Reduser single-source-risiko for ${singleSource.filter(x=>x.spend>3e5).length} materialer`,d:`Flere materialer med betydelig spend har kun én leverandør. Kartlegg alternative kilder eller inngå rammeavtale med reserveleverandør – se Spend Intelligence → Single-source risiko.`,v:0});
 tiltak.sort((a,b)=>b.v-a.v);
-const prioLbl={høy:["prio-hoy","bad","HØY PRIORITET"],midt:["prio-midt","warn","MIDDELS"],lav:["prio-lav","acc","LAV"]};
-document.getElementById("tiltakList").innerHTML=tiltak.map(x=>{const[cls,c,l]=prioLbl[x.prio];
-  return `<div class="tiltak ${cls}"><div class="tag ${c}">${l}</div><h4>${x.t}</h4><p>${x.d}</p>${x.v>1000?`<p style="margin-top:6px"><b class="good">Identifisert potensial: ${fmt(x.v)} kr / år</b> · <a class="evlink" onclick="showEvidence('${x.ev[0]}'${x.ev[1]!==undefined?","+x.ev[1]:""})">Se grunnlag →</a></p>`:""}</div>`}).join("");
+tiltak.forEach(x=>{x.kat=/Konsolid/.test(x.t)?"Konsolidering":/Renegoti|Forhandl/.test(x.t)?"Forhandling":/oppf\u00f8lgingsplan/.test(x.t)?"Leverand\u00f8roppf\u00f8lging":/single-source/.test(x.t)?"Risiko":/OTD/.test(x.t)?"Leveringsprosess":"Prosess";});
+const prioLbl={h\u00f8y:["prio-h\u00f8y","bad","H\u00d8Y PRIORITET"],midt:["prio-midt","warn","MIDDELS PRIORITET"],lav:["prio-lav","acc","LAV PRIORITET"]};
+const prioShort={h\u00f8y:"H\u00f8y",midt:"Middels",lav:"Lav"};
+let tiltakViewMode="kort";
+window.tiltakView=function(m){tiltakViewMode=m;
+  document.getElementById("tv-kort").classList.toggle("active",m==="kort");
+  document.getElementById("tv-tabell").classList.toggle("active",m==="tabell");
+  renderTiltak();};
+function renderTiltak(){
+  const box=document.getElementById("tiltakList");
+  const tot=tiltak.reduce((a,x)=>a+x.v,0);
+  const cnt={h\u00f8y:tiltak.filter(x=>x.prio==="h\u00f8y").length,midt:tiltak.filter(x=>x.prio==="midt").length,lav:tiltak.filter(x=>x.prio==="lav").length};
+  document.getElementById("tiltakKpis").innerHTML=
+    kpi("Totalt identifisert potensial",fmtM(tot),"summen av tiltakene","good")+
+    kpi("Antall tiltak",tiltak.length,"automatisk foresl\u00e5tt")+
+    kpi("H\u00f8y prioritet",cnt.h\u00f8y,"tiltak","bad")+
+    kpi("Dekningsgrad",Math.min(100,Math.round(tot/savTotal*100))+"%","av identifisert potensial i demoen");
+  if(tiltakViewMode==="tabell"){
+    box.innerHTML=`<div style="overflow-x:auto"><table><tr><th>Prioritet</th><th>Tiltak</th><th>Kategori</th><th style="text-align:right">Potensial / \u00e5r</th><th>Grunnlag</th></tr>`+
+      tiltak.map(x=>`<tr><td><span class="pill ${x.prio==="h\u00f8y"?"pD":x.prio==="midt"?"pC":"pB"}">${prioShort[x.prio]}</span></td><td><b>${x.t}</b></td><td>${x.kat}</td><td style="text-align:right" class="good">${x.v>1000?fmt(x.v)+" kr":"\u2013"}</td><td>${x.v>1000?`<a class="evlink" onclick="showEvidence('${x.ev[0]}'${x.ev[1]!==undefined?","+x.ev[1]:""})">Se grunnlag \u2192</a>`:"\u2013"}</td></tr>`).join("")+`</table></div>`;
+    return;
+  }
+  const grp={h\u00f8y:[],midt:[],lav:[]};
+  tiltak.forEach(x=>grp[x.prio].push(x));
+  let html="";
+  ["h\u00f8y","midt","lav"].forEach(p=>{
+    if(!grp[p].length)return;
+    const[cls,c,l]=prioLbl[p];
+    const sum=grp[p].reduce((a,x)=>a+x.v,0);
+    html+=`<div class="prio-head" style="border-left-color:${p==="h\u00f8y"?"var(--bad)":p==="midt"?"var(--warn)":"var(--accent)"}">
+      <span class="tag ${c}">${l}</span><span style="color:var(--muted);font-size:12px">${grp[p].length} tiltak</span>
+      <span style="margin-left:auto;font-weight:700;color:${sum>0?"var(--good)":"var(--muted)"}">${sum>1000?fmt(sum)+" kr / \u00e5r":""}</span></div>`;
+    html+=grp[p].map(x=>{
+      const chip=x.kat==="Risiko"?`<a class="chip" onclick="goto('octo')">\u1f310 Se single-source-materialer</a>`:x.ev&&x.ev[0]==="sup"?`<a class="chip" onclick="openSup(${x.ev[1]})">\ud83c\udfe2 ${suppliers.find(s=>s.id===x.ev[1]).name}</a>`:"";
+      return `<div class="tiltak ${cls}">
+        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+          <span class="tag ${c}" style="opacity:.85">${x.kat}</span>
+          <span class="val">${x.v>1000?`<b class="good">${fmt(x.v)} kr / \u00e5r</b>`:""}</span>
+        </div>
+        <h4>${x.t}</h4><p>${x.d}</p>
+        <div style="margin-top:6px">${chip}${x.v>1000?`<a class="evlink" style="${chip?"margin-left:8px":""}" onclick="showEvidence('${x.ev[0]}'${x.ev[1]!==undefined?","+x.ev[1]:""})">Se grunnlag \u2192</a>`:""}</div>
+      </div>`}).join("");
+  });
+  box.innerHTML=html;
+}
+renderTiltak();
 
 /* ================= CROSS-NAVIGATION ================= */
 const TABNAMES={forside:"Executive Overview",spend:"Spend Intelligence",lev:"Leverandører",po:"PO Performance",octo:"Marked (Octopart)",spar:"Sparingspotensial",tiltak:"Tiltak",faq:"Spørsmål og svar"};
