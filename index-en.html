@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logichain – Turn purchasing data into decisions</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+:root{
+  --bg:#070b16; --bg2:#0a0f1e; --panel:#101830; --panel2:#0d1428; --line:#1e2a4a;
+  --txt:#dbe4f5; --muted:#8fa0c0; --accent:#2e7cf6; --accent2:#6db3ff;
+  --good:#2ecc71; --bad:#e05d5d; --warn:#f0b429;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--txt);font-family:"Segoe UI",Arial,sans-serif;font-size:16px;line-height:1.6}
+h1,h2,h3{line-height:1.2}
+a{color:var(--accent2)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+header{position:sticky;top:0;z-index:40;background:rgba(7,11,22,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav{display:flex;align-items:center;gap:14px;padding:14px 24px;max-width:1180px;margin:0 auto}
+.logo{font-weight:800;font-size:24px;letter-spacing:1px;color:#fff;text-decoration:none}
+.logo b{color:#4d9fff}
+.nav .links{display:flex;gap:18px;margin-left:12px}
+.nav .links a{color:var(--muted);text-decoration:none;font-size:14px;font-weight:600}
+.nav .links a:hover{color:#fff}
+.nav .sp{flex:1}
+.btn{display:inline-block;padding:11px 22px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;border:none;transition:transform .15s,box-shadow .15s}
+.btn:hover{transform:translateY(-2px)}
+.btn-demo{background:linear-gradient(135deg,#2e7cf6,#1a5fd0);color:#fff;box-shadow:0 6px 24px rgba(46,124,246,.35)}
+.btn-ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+.langbtn{padding:11px 16px;font-size:13px;white-space:nowrap}
+@media(max-width:900px){.nav .links{display:none}}
+.hero{position:relative;padding:96px 0 80px;text-align:center;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-40% -20% auto;height:130%;background:
+ radial-gradient(600px 300px at 30% 20%,rgba(46,124,246,.25),transparent),
+ radial-gradient(500px 260px at 75% 30%,rgba(110,179,255,.14),transparent);pointer-events:none}
+.hero .badge{display:inline-block;background:rgba(46,124,246,.12);border:1px solid rgba(46,124,246,.4);color:var(--accent2);border-radius:20px;padding:6px 16px;font-size:12.5px;font-weight:600;margin-bottom:22px}
+.hero .kicker{color:var(--accent2);font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+.hero-brand{font-weight:800;font-size:22px;letter-spacing:1px;color:#fff;margin-bottom:18px}
+.hero-brand b{color:#4d9fff}
+.hero h1{font-size:clamp(36px,6vw,60px);font-weight:800;line-height:1.08;color:#fff;max-width:920px;margin:0 auto 20px}
+.hero h1 em{font-style:normal;color:#4d9fff}
+.hero p.lead{color:var(--muted);font-size:19px;max-width:760px;margin:0 auto 34px}
+.hero .ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.hero .small{margin-top:14px;font-size:12.5px;color:var(--muted)}
+.heroMock{display:block;margin:60px auto 0;max-width:1080px;background:#0a0f1e;border:1px solid #23407a;border-radius:18px;padding:18px 20px 16px;text-decoration:none;box-shadow:0 30px 80px rgba(0,0,0,.5);transition:transform .25s,box-shadow .25s}
+.heroMock:hover{transform:translateY(-4px);box-shadow:0 40px 90px rgba(46,124,246,.18)}
+.hm-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.hm-logo{font-weight:800;font-size:15px;color:#fff;white-space:nowrap}
+.hm-logo b{color:#4d9fff}
+.hm-tabs{font-size:10px;color:#8fa0c0;text-align:right}
+.hm-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.hm-kpi{background:#101830;border:1px solid #1e2a4a;border-radius:10px;padding:10px 12px}
+.hm-kpi .l{font-size:9px;color:#8fa0c0;letter-spacing:.5px;text-transform:uppercase}
+.hm-kpi .v{font-size:20px;font-weight:800;color:#fff}
+.hm-kpi.g .v{color:var(--good)} .hm-kpi.b .v{color:var(--bad)}
+.hm-cols{display:grid;grid-template-columns:1.6fr 1fr;gap:14px}
+.hm-panel{background:#101830;border:1px solid #1e2a4a;border-radius:10px;padding:12px}
+.hm-panel .t{font-size:9px;color:#8fa0c0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.hm-bars{display:flex;align-items:flex-end;gap:8px;height:110px}
+.hm-bars i{flex:1;background:linear-gradient(180deg,#3d8bff,#22305c);border-radius:4px 4px 0 0;height:0;transition:height 1.1s cubic-bezier(.2,.7,.2,1)}
+.heroMock.vis .hm-bars i{height:var(--h)}
+.hm-bars i:nth-child(2){transition-delay:.07s}.hm-bars i:nth-child(3){transition-delay:.14s}
+.hm-bars i:nth-child(4){transition-delay:.21s}.hm-bars i:nth-child(5){transition-delay:.28s}
+.hm-bars i:nth-child(6){transition-delay:.35s}.hm-bars i:nth-child(7){transition-delay:.42s}
+.hm-bars i:nth-child(8){transition-delay:.49s}.hm-bars i:nth-child(9){transition-delay:.56s}
+.hm-x{display:flex;gap:8px;margin-top:4px}
+.hm-x span{flex:1;text-align:center;font-size:8.5px;color:#8fa0c0}
+.hm-stack{display:flex;height:16px;border-radius:8px;overflow:hidden;margin-bottom:10px}
+.hm-stack i{display:block;height:100%}
+.hm-row{display:flex;justify-content:space-between;font-size:10px;color:#dbe4f5;padding:4px 0}
+.hm-row .bar{width:90px;height:7px;background:#1a2444;border-radius:4px;overflow:hidden;align-self:center}
+.hm-row .bar i{display:block;height:100%;border-radius:4px}
+.hm-hint{margin-top:10px;font-size:10.5px;color:#8fa0c0;text-align:center}
+@media(max-width:800px){.hm-cols{grid-template-columns:1fr}.hm-kpis{grid-template-columns:repeat(2,1fr)}.hm-tabs{display:none}}
+section{padding:78px 0}
+.sec-kicker{color:var(--accent2);font-size:12.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px}
+.sec-title{font-size:36px;font-weight:800;color:#fff;margin-bottom:14px;max-width:760px}
+.sec-lead{color:var(--muted);font-size:17px;max-width:720px;margin-bottom:40px}
+.center{text-align:center}.center .sec-title,.center .sec-lead{margin-left:auto;margin-right:auto}
+.alt{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+.reveal.vis{opacity:1;transform:none}
+.cards3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.pcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
+.pcard .ic{font-size:28px;margin-bottom:12px}
+.pcard h3{font-size:18px;color:#fff;margin-bottom:8px}
+.pcard p{color:var(--muted);font-size:14.5px}
+.pcard .top{height:4px;border-radius:4px;background:var(--bad);margin:-26px -26px 20px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;position:relative}
+.step{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;position:relative}
+.step .num{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#2e7cf6,#1a5fd0);color:#fff;font-weight:800;font-size:19px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.step h3{font-size:18px;color:#fff;margin-bottom:8px}
+.step p{color:var(--muted);font-size:14.5px}
+.modtabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.modtabs button{background:var(--panel);border:1px solid var(--line);color:var(--txt);padding:10px 18px;border-radius:10px;cursor:pointer;font-size:14px;font-weight:600}
+.modtabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.modpanel{display:none;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:30px;grid-template-columns:1.1fr 1fr;gap:34px;align-items:center}
+.modpanel.show{display:grid}
+@media(max-width:900px){.modpanel.show{grid-template-columns:1fr}}
+.modpanel h3{font-size:22px;color:#fff;margin-bottom:10px}
+.modpanel p{color:var(--muted);font-size:14.5px;margin-bottom:14px}
+.modpanel ul{list-style:none;margin-bottom:18px}
+.modpanel li{color:var(--txt);font-size:14px;padding:5px 0 5px 26px;position:relative}
+.modpanel li::before{content:"✓";position:absolute;left:0;color:var(--good);font-weight:800}
+.modpanel .demo-link{color:var(--accent2);font-weight:700;text-decoration:none;font-size:14.5px}
+.mock{background:#0a0f1e;border:1px solid #23407a;border-radius:14px;padding:16px;min-height:230px}
+.mock .mtitle{font-size:10px;letter-spacing:1px;color:#8fa0c0;text-transform:uppercase;margin-bottom:10px}
+.mkpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.mkpi{background:#101830;border:1px solid #1e2a4a;border-radius:8px;padding:8px 10px}
+.mkpi .l{font-size:8px;color:#8fa0c0;text-transform:uppercase;letter-spacing:.5px}
+.mkpi .v{font-size:15px;font-weight:800;color:#fff}
+.mkpi.g .v{color:var(--good)} .mkpi.b .v{color:var(--bad)} .mkpi.w .v{color:var(--warn)}
+.mbars{display:flex;align-items:flex-end;gap:6px;height:74px;margin:6px 0 4px}
+.mbars i{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,#3d8bff,#22305c)}
+.mrows .row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(30,42,74,.6);font-size:11px;color:#dbe4f5}
+.mrows .bar{width:110px;height:8px;background:#1a2444;border-radius:4px;overflow:hidden}
+.mrows .bar i{display:block;height:100%;background:#2e7cf6;border-radius:4px}
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:32px}
+@media(max-width:900px){.calc{grid-template-columns:1fr}}
+.calc label{font-size:14px;color:var(--muted);font-weight:600}
+.calc input[type=range]{width:100%;margin:14px 0 6px;accent-color:#2e7cf6}
+.calc .val{font-size:26px;font-weight:800;color:#fff}
+.calc .out{margin-top:18px;padding:18px;border-radius:14px;background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.35)}
+.calc .out .big{font-size:30px;font-weight:800;color:var(--good)}
+.calc .out p{font-size:12.5px;color:var(--muted);margin-top:6px}
+.calc .src{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+.calc .src div{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--txt)}
+.calc .src b{color:var(--accent2)}
+.disclaimer{background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.35);border-radius:10px;padding:10px 16px;font-size:12.5px;color:var(--warn);margin-top:14px;line-height:1.5}
+.cmp{width:100%;border-collapse:collapse;font-size:14.5px}
+.cmp th{padding:14px 16px;text-align:left;color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--line)}
+.cmp td{padding:16px;border-bottom:1px solid rgba(30,42,74,.5);vertical-align:top}
+.cmp td:first-child{color:var(--muted);font-weight:700;width:180px}
+.cmp .x{color:var(--bad)} .cmp .c{color:var(--good);font-weight:700}
+.tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:34px}
+.tier{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px}
+.tier.hi{border-color:var(--accent);box-shadow:0 0 40px rgba(46,124,246,.15)}
+.tier .tn{font-size:17px;font-weight:800;color:#fff;letter-spacing:1px}
+.tier .tp{color:var(--muted);font-size:12.5px;margin:4px 0 16px}
+.tier li{list-style:none;padding:6px 0 6px 26px;position:relative;font-size:14px}
+.tier li::before{content:"✓";position:absolute;left:0;color:var(--good);font-weight:800}
+.faqitem{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin-bottom:12px;cursor:pointer}
+.faqitem h3{font-size:16px;color:#fff}
+.faqitem .a{display:none;color:var(--muted);font-size:14.5px;margin-top:10px}
+.faqitem.open .a{display:block}
+.contact{display:grid;grid-template-columns:1fr 1fr;gap:34px}
+@media(max-width:900px){.contact{grid-template-columns:1fr}}
+.ccard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;margin-bottom:16px}
+.ccard h3{font-size:16px;color:#fff;margin-bottom:6px}
+.ccard p{color:var(--muted);font-size:14.5px}
+.ccard a{color:var(--accent2);text-decoration:none;font-weight:600}
+form .fld{margin-bottom:14px}
+form input,form textarea{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);padding:12px 14px;border-radius:10px;font-size:14px;font-family:inherit}
+form textarea{min-height:110px;resize:vertical}
+footer{border-top:1px solid var(--line);padding:34px 0;text-align:center;color:var(--muted);font-size:13px}
+footer .logo{font-size:20px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav">
+    <a class="logo" href="#top">LOGIC<b>HAIN</b></a>
+    <div class="links">
+      <a href="#problem">The challenge</a>
+      <a href="#slik">How it works</a>
+      <a href="#moduler">Modules</a>
+      <a href="#sparing">Savings</a>
+      <a href="#pris">Price &amp; value</a>
+      <a href="#faq">FAQ</a>
+      <a href="#kontakt">Contact</a>
+    </div>
+    <div class="sp"></div>
+    <a class="btn btn-demo" href="logichain-dashboard-demo.html">▶ Try the demo</a>
+    <a class="btn btn-ghost langbtn" href="index.html" title="Bytt til norsk">🇳🇴 Norsk</a>
+  </div>
+</header>
+
+<!-- ================= HERO ================= -->
+<section class="hero" id="top">
+  <div class="wrap">
+    <div class="hero-brand">LOGIC<b>HAIN</b></div>
+    <div class="badge">💡 New in the demo: the Spend Intelligence module is live</div>
+    <div class="kicker">Turn purchasing data into decisions</div>
+    <h1>From scattered Excel files to <em>full procurement insight</em>.</h1>
+    <p class="lead">Logichain collects purchasing data from all of your suppliers in one interactive dashboard:
+    total spend, supplier performance, delivery precision and identified savings potential – with full
+    documentation behind every figure. At a fraction of the price of traditional BI solutions.</p>
+    <div class="ctas">
+      <a class="btn btn-demo" href="logichain-dashboard-demo.html">▶ Try the demo now</a>
+      <a class="btn btn-ghost" href="#kontakt">Get in touch</a>
+    </div>
+    <div class="small">No installation, no sign-up. All data in the demo is demo data.</div>
+
+    <a class="heroMock" id="heroMock" href="logichain-dashboard-demo.html" aria-label="Open the Logichain demo">
+      <div class="hm-top">
+        <div class="hm-logo">LOGIC<b>HAIN</b> Dashboard</div>
+        <div class="hm-tabs">Executive Overview · Spend Intelligence · Suppliers · PO Performance · Savings · Actions</div>
+      </div>
+      <div class="hm-kpis">
+        <div class="hm-kpi"><div class="l">Total spend</div><div class="v"><span data-count="248">0</span> mill</div></div>
+        <div class="hm-kpi b"><div class="l">Overall OTD</div><div class="v"><span data-count="53">0</span> %</div></div>
+        <div class="hm-kpi"><div class="l">Suppliers</div><div class="v"><span data-count="180">0</span></div></div>
+        <div class="hm-kpi g"><div class="l">Ident. potential</div><div class="v"><span data-count="11">0</span>.4 mill</div></div>
+      </div>
+      <div class="hm-cols">
+        <div class="hm-panel">
+          <div class="t">Spend per month</div>
+          <div class="hm-bars">
+            <i style="--h:55%"></i><i style="--h:62%"></i><i style="--h:70%"></i><i style="--h:82%"></i>
+            <i style="--h:95%"></i><i style="--h:68%"></i><i style="--h:50%"></i><i style="--h:60%"></i><i style="--h:74%"></i>
+          </div>
+          <div class="hm-x"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div>
+        </div>
+        <div class="hm-panel">
+          <div class="t">Delivery status</div>
+          <div class="hm-stack"><i style="width:53%;background:#2ecc71"></i><i style="width:36%;background:#e05d5d"></i><i style="width:11%;background:#f0b429"></i></div>
+          <div class="hm-row"><span>On time</span><span style="color:#2ecc71">53 %</span></div>
+          <div class="hm-row"><span>Late</span><span style="color:#e05d5d">36 %</span></div>
+          <div class="t" style="margin-top:10px">Top suppliers</div>
+          <div class="hm-row"><span>Nordic Steel</span><div class="bar"><i style="width:100%;background:#2e7cf6"></i></div></div>
+          <div class="hm-row"><span>Hydraflow</span><div class="bar"><i style="width:78%;background:#2e7cf6"></i></div></div>
+          <div class="hm-row"><span>Bergen Mek.</span><div class="bar"><i style="width:64%;background:#2e7cf6"></i></div></div>
+        </div>
+      </div>
+      <div class="hm-hint">Click to open the full demo →</div>
+    </a>
+  </div>
+</section>
+
+<!-- ================= PROBLEM ================= -->
+<section class="alt" id="problem">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-kicker">The challenge</div>
+      <div class="sec-title">Do you recognise this from your purchasing department?</div>
+      <div class="sec-lead">Most companies are sitting on gold worth of purchasing data – without being able to use it. Here are the three most common symptoms.</div>
+    </div>
+    <div class="cards3">
+      <div class="pcard reveal"><div class="top"></div><div class="ic">📂</div><h3>Scattered Excel files</h3>
+        <p>Every supplier reports in its own format. Data is copied manually, arrives late and contains errors – and nobody has time to clean it up.</p></div>
+      <div class="pcard reveal"><div class="top"></div><div class="ic">🌫️</div><h3>No unified overview</h3>
+        <p>How much do we actually buy from each supplier? Where are prices rising? Who is delivering late? The answers exist – but never in one place.</p></div>
+      <div class="pcard reveal"><div class="top"></div><div class="ic">🎲</div><h3>Decisions without facts</h3>
+        <p>Follow-ups, negotiations and supplier selection are based on gut feeling – while documented numbers would make a completely different negotiation card.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= HOW ================= -->
+<section id="slik">
+  <div class="wrap center">
+    <div class="reveal">
+      <div class="sec-kicker">How it works</div>
+      <div class="sec-title">Three steps. Days – not months.</div>
+      <div class="sec-lead">Logichain requires no ERP integration and no IT project. Your suppliers keep working as before – in Excel – and Logichain does the rest.</div>
+    </div>
+    <div class="steps">
+      <div class="step reveal"><div class="num">1</div><h3>Upload Excel</h3>
+        <p>Suppliers send reports in a fixed, simple template – weekly or monthly. You upload the files, and you are up and running.</p></div>
+      <div class="step reveal"><div class="num">2</div><h3>Logichain validates and consolidates</h3>
+        <p>Data is checked and standardised automatically into one model: orders, deliveries, deviations, prices and volumes – across all suppliers.</p></div>
+      <div class="step reveal"><div class="num">3</div><h3>Decisions</h3>
+        <p>Executive overview, spend analysis, supplier ratings, identified savings potential and prioritised actions – ready for the management meeting.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MODULES ================= -->
+<section class="alt" id="moduler">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-kicker">The modules</div>
+      <div class="sec-title">Six modules. One source of truth.</div>
+      <div class="sec-lead">Click through the modules – every link opens exactly that module in the demo.</div>
+    </div>
+    <div class="modtabs" id="modtabs">
+      <button class="active" data-m="exec">📊 Executive Overview</button>
+      <button data-m="spend">💠 Spend Intelligence</button>
+      <button data-m="sup">🏢 Suppliers</button>
+      <button data-m="po">📦 PO Performance</button>
+      <button data-m="sav">💰 Savings Potential</button>
+      <button data-m="act">🛠️ Actions</button>
+    </div>
+
+    <div class="modpanel show" id="mp-exec">
+      <div>
+        <h3>Executive Overview</h3>
+        <p>The entire purchasing function on one screen – what management sees first.</p>
+        <ul><li>Total purchase volume and OTD in real time</li><li>Supplier concentration and risk</li><li>Identified savings potential – always visible</li></ul>
+        <a class="demo-link" href="logichain-dashboard-demo.html#forside">See Executive Overview in the demo →</a>
+      </div>
+      <div class="mock"><div class="mtitle">Executive overview · KPIs</div>
+        <div class="mkpis">
+          <div class="mkpi"><div class="l">Total spend</div><div class="v">248 mill</div></div>
+          <div class="mkpi b"><div class="l">Overall OTD</div><div class="v">53 %</div></div>
+          <div class="mkpi w"><div class="l">Top 5 concentration</div><div class="v">48 %</div></div>
+          <div class="mkpi g"><div class="l">Ident. potential</div><div class="v">11.4 mill</div></div>
+        </div>
+        <div class="mtitle">Spend per month</div>
+        <div class="mbars"><i style="height:55%"></i><i style="height:62%"></i><i style="height:70%"></i><i style="height:82%"></i><i style="height:95%"></i><i style="height:68%"></i><i style="height:50%"></i><i style="height:60%"></i><i style="height:74%"></i></div>
+      </div>
+    </div>
+
+    <div class="modpanel" id="mp-spend">
+      <div>
+        <h3>Spend Intelligence</h3>
+        <p>Where does the money go – and why? Full analysis of the spend structure.</p>
+        <ul><li>Spend by supplier, category and month</li><li>Top 10 suppliers and concentration risk</li><li>Price development per material and volume development</li><li>Tail spend and single-source risk</li></ul>
+        <a class="demo-link" href="logichain-dashboard-demo.html#spend">Open Spend Intelligence in the demo →</a>
+      </div>
+      <div class="mock"><div class="mtitle">Top suppliers · share of spend</div>
+        <div class="mrows">
+          <div class="row"><span>Nordic Steel AS</span><div class="bar"><i style="width:100%"></i></div></div>
+          <div class="row"><span>Hydraflow Systems</span><div class="bar"><i style="width:78%"></i></div></div>
+          <div class="row"><span>Bergen Mek. Verksted</span><div class="bar"><i style="width:64%"></i></div></div>
+          <div class="row"><span>Aalborg Industri</span><div class="bar"><i style="width:41%"></i></div></div>
+        </div>
+        <div class="mtitle" style="margin-top:12px">Price development · Pipe DN200</div>
+        <div class="mbars"><i style="height:40%"></i><i style="height:48%"></i><i style="height:55%"></i><i style="height:58%"></i><i style="height:66%"></i><i style="height:72%"></i><i style="height:78%"></i></div>
+      </div>
+    </div>
+
+    <div class="modpanel" id="mp-sup">
+      <div>
+        <h3>Suppliers</h3>
+        <p>All suppliers ranked and measured – with history per supplier.</p>
+        <ul><li>A–D rating on performance and precision</li><li>OTD, deviations and delays per supplier</li><li>Click into details and delivery history</li></ul>
+        <a class="demo-link" href="logichain-dashboard-demo.html#lev">Open Suppliers in the demo →</a>
+      </div>
+      <div class="mock"><div class="mtitle">Supplier overview · rating &amp; OTD</div>
+        <div class="mrows">
+          <div class="row"><span>Nordic Steel AS · A</span><div class="bar"><i style="width:92%;background:#2ecc71"></i></div></div>
+          <div class="row"><span>Hydraflow Systems · B</span><div class="bar"><i style="width:74%;background:#2e7cf6"></i></div></div>
+          <div class="row"><span>Fjell Metall AS · C</span><div class="bar"><i style="width:52%;background:#f0b429"></i></div></div>
+          <div class="row"><span>Haugesund Bolt AS · D</span><div class="bar"><i style="width:28%;background:#e05d5d"></i></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modpanel" id="mp-po">
+      <div>
+        <h3>PO Performance</h3>
+        <p>All purchase orders – searchable and measurable, down to every line.</p>
+        <ul><li>Monthly OTD development against the 90 % target</li><li>Free-text search on PO, supplier and material</li><li>Deviations per line, with promised and actual delivery dates</li></ul>
+        <a class="demo-link" href="logichain-dashboard-demo.html#po">Open PO Performance in the demo →</a>
+      </div>
+      <div class="mock"><div class="mtitle">OTD development · month</div>
+        <div class="mbars"><i style="height:45%"></i><i style="height:52%"></i><i style="height:63%"></i><i style="height:70%"></i><i style="height:88%"></i><i style="height:58%"></i><i style="height:66%"></i><i style="height:61%"></i><i style="height:72%"></i></div>
+        <div class="mtitle" style="margin-top:10px">Search: «hydraulics» · 34 hits</div>
+        <div class="mrows">
+          <div class="row"><span>PO26314 · Cylinder 250T</span><span style="color:#e05d5d">+12 days</span></div>
+          <div class="row"><span>PO26122 · Pump seal</span><span style="color:#2ecc71">0 days</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="modpanel" id="mp-sav">
+      <div>
+        <h3>Savings Potential</h3>
+        <p>Identified potential – never promises. Fully documented.</p>
+        <ul><li>Four sources: expedition, stock, price, consolidation</li><li>Click a figure to see exactly what it is built on</li><li>“View evidence”: materials, POs and assumptions</li></ul>
+        <a class="demo-link" href="logichain-dashboard-demo.html#spar">Open Savings Potential in the demo →</a>
+      </div>
+      <div class="mock"><div class="mtitle">Identified potential · by source</div>
+        <div class="mrows">
+          <div class="row"><span>🚚 Expedition &amp; freight</span><span style="color:#2ecc71">2.9 mill</span></div>
+          <div class="row"><span>📦 Safety stock</span><span style="color:#2ecc71">3.8 mill</span></div>
+          <div class="row"><span>✍️ Price revision C/D</span><span style="color:#2ecc71">3.1 mill</span></div>
+          <div class="row"><span>🧩 Consolidation</span><span style="color:#2ecc71">1.6 mill</span></div>
+        </div>
+        <div style="margin-top:12px;font-size:10px;color:#f0b429">⚠️ Identified potential – not a guarantee</div>
+      </div>
+    </div>
+
+    <div class="modpanel" id="mp-act">
+      <div>
+        <h3>Actions</h3>
+        <p>From insight to action – a prioritised list with estimated value.</p>
+        <ul><li>Automatically suggested actions with priority</li><li>Every action tied to documented evidence</li><li>Perfect groundwork for supplier meetings</li></ul>
+        <a class="demo-link" href="logichain-dashboard-demo.html#tiltak">Open Actions in the demo →</a>
+      </div>
+      <div class="mock"><div class="mtitle">Prioritised actions</div>
+        <div class="mrows">
+          <div class="row"><span style="color:#e05d5d">● HIGH</span><span>Improvement plan: Haugesund Bolt</span></div>
+          <div class="row"><span style="color:#f0b429">● MEDIUM</span><span>Renegotiate: Fjell Metall</span></div>
+          <div class="row"><span style="color:#6db3ff">● LOW</span><span>Automate reporting</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SAVINGS CALC ================= -->
+<section id="sparing">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-kicker">Savings</div>
+      <div class="sec-title">What could your insight be worth?</div>
+      <div class="sec-lead">Drag the slider and see an illustrative potential estimate – based on the same assumptions the demo is built on.</div>
+    </div>
+    <div class="calc reveal">
+      <div>
+        <label>Annual purchase volume (ex. VAT)</label>
+        <input type="range" id="spendSlider" min="20" max="1000" step="10" value="250">
+        <div class="val" id="calcVal">250 mill NOK</div>
+        <div class="src">
+          <div><b>🚚 Expedition &amp; freight</b><br>delayed deliveries</div>
+          <div><b>📦 Safety stock</b><br>large delivery deviations</div>
+          <div><b>✍️ Price revision</b><br>C/D suppliers with volume</div>
+          <div><b>🧩 Consolidation</b><br>small suppliers</div>
+        </div>
+      </div>
+      <div>
+        <div class="out">
+          <div style="font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Typical identified potential</div>
+          <div class="big" id="calcOut">7.5 – 15 mill NOK / year</div>
+          <p>Based on 3–6 % of the purchase volume – the same assumption logic as in the demo. This is <b>identified potential that should be examined</b> in the sourcing process, not a guarantee of realised savings.</p>
+        </div>
+        <div class="disclaimer">⚠️ Illustrative calculation based on demo assumptions. Logichain always shows the documentation behind every figure – we never promise savings we cannot substantiate.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRICE / VALUE ================= -->
+<section class="alt" id="pris">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-kicker">Price &amp; value</div>
+      <div class="sec-title">Enterprise insight. At a fraction of the price.</div>
+      <div class="sec-lead">Traditional BI and procurement platforms often cost hundreds of thousands in licences and consultants – and take months to get started. Logichain delivers the core of the value without any of it.</div>
+    </div>
+    <div class="card reveal" style="background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:10px 10px 0;overflow-x:auto">
+      <table class="cmp">
+        <tr><th></th><th>Traditional BI/SPM solution</th><th>Logichain</th></tr>
+        <tr><td>Start-up</td><td class="x">Months – implementation project</td><td class="c">✓ Days – works with Excel from day one</td></tr>
+        <tr><td>Cost</td><td class="x">Licences + consultants + maintenance</td><td class="c">✓ Fixed subscription – a fraction of the price</td></tr>
+        <tr><td>IT dependency</td><td class="x">Requires ERP integration and IT resources</td><td class="c">✓ No integration needed</td></tr>
+        <tr><td>Ownership</td><td class="x">Internal resources must run the reporting</td><td class="c">✓ Logichain validates, consolidates and updates</td></tr>
+        <tr><td>Documentation</td><td class="x">Black box – figures without justification</td><td class="c">✓ “View evidence” behind every estimate</td></tr>
+      </table>
+    </div>
+    <div class="tiers">
+      <div class="tier reveal"><div class="tn">MONTHLY</div><div class="tp">Reporting once a month</div>
+        <li>One company, one dashboard</li><li>Monthly supplier reporting</li><li>All core modules</li><li>Monthly status overview</li></div>
+      <div class="tier hi reveal"><div class="tn">WEEKLY ⭐</div><div class="tp">Reporting every week – recommended</div>
+        <li>Weekly supplier reporting and updates</li><li>Savings analysis with documentation</li><li>Action tracking and export</li><li>Multiple users</li></div>
+    </div>
+    <p class="reveal" style="text-align:center;color:var(--muted);font-size:14px;margin-top:22px">Pricing and scope are tailored to each customer – <a href="#kontakt">get in touch</a> for a no-obligation chat.</p>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq">
+  <div class="wrap" style="max-width:860px">
+    <div class="reveal center">
+      <div class="sec-kicker">FAQ</div>
+      <div class="sec-title">Frequently asked questions</div>
+    </div>
+    <div id="faqList"></div>
+  </div>
+</section>
+
+<!-- ================= CONTACT ================= -->
+<section class="alt" id="kontakt">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="sec-kicker">Contact</div>
+      <div class="sec-title">Ready to see your own data in Logichain?</div>
+      <div class="sec-lead">Send us two or three Excel reports from your suppliers, and we will build a demo on your own numbers – completely non-binding.</div>
+    </div>
+    <div class="contact">
+      <div>
+        <div class="ccard reveal"><h3>✉️ Email</h3><p><a href="mailto:einar@logichain.no">einar@logichain.no</a></p></div>
+        <div class="ccard reveal"><h3>📞 Phone</h3><p><a href="tel:+4791797730">+47 917 977 30</a></p></div>
+        <div class="ccard reveal"><h3>👤 Your contact</h3><p><b style="color:#fff">Einar Fredriksen</b><br>Founder, Logichain</p><p style="margin-top:8px"><a href="https://www.linkedin.com/in/einar-fredriksen-756375256/" target="_blank" rel="noopener">LinkedIn profile →</a></p></div>
+      </div>
+      <div class="ccard reveal">
+        <h3 style="margin-bottom:14px">Send us a message</h3>
+        <form id="cform">
+          <div class="fld"><input type="text" id="cname" placeholder="Full name" required></div>
+          <div class="fld"><input type="text" id="ccomp" placeholder="Company name" required></div>
+          <div class="fld"><input type="email" id="cmail" placeholder="Email" required></div>
+          <div class="fld"><textarea id="cmsg" placeholder="Briefly tell us about your purchase volume and what you need help with ..." required></textarea></div>
+          <button class="btn btn-demo" type="submit" style="width:100%">Send message ✉️</button>
+          <p style="font-size:11.5px;color:var(--muted);margin-top:10px">Opens your email client with the message ready – we reply within one working day.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="logo" style="display:block;margin-bottom:8px">LOGIC<b>HAIN</b></div>
+  Turn purchasing data into decisions. · © 2026 Logichain · Demo data used for illustration only.
+</footer>
+
+<script>
+/* ---------- reveal on scroll ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("vis");io.unobserve(e.target);}}),{threshold:.15});
+document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
+
+/* ---------- animated counters ---------- */
+const cio=new IntersectionObserver(es=>es.forEach(e=>{
+  if(!e.isIntersecting)return;cio.unobserve(e.target);
+  const el=e.target,end=+el.dataset.count,t0=performance.now();
+  (function tick(t){const p=Math.min((t-t0)/900,1);el.textContent=Math.round(end*p);if(p<1)requestAnimationFrame(tick);})(t0);
+}),{threshold:.4});
+document.querySelectorAll("[data-count]").forEach(el=>cio.observe(el));
+
+/* ---------- hero mock animation ---------- */
+const hm=document.getElementById("heroMock");
+if(hm){const hio=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){hm.classList.add("vis");hio.disconnect();}}),{threshold:.2});hio.observe(hm);}
+
+/* ---------- module tabs ---------- */
+document.getElementById("modtabs").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  document.querySelectorAll("#modtabs button").forEach(x=>x.classList.toggle("active",x===b));
+  document.querySelectorAll(".modpanel").forEach(p=>p.classList.toggle("show",p.id==="mp-"+b.dataset.m));
+});
+
+/* ---------- savings calculator ---------- */
+const sl=document.getElementById("spendSlider");
+function calc(){
+  const v=+sl.value;
+  document.getElementById("calcVal").textContent=v+" mill NOK";
+  document.getElementById("calcOut").textContent=
+    (v*0.03).toLocaleString("en-GB")+" – "+(v*0.06).toLocaleString("en-GB")+" mill NOK / year";
+}
+sl.addEventListener("input",calc);calc();
+
+/* ---------- faq ---------- */
+const FAQ=[
+["What do you need to get started?","Just Excel reports from your suppliers – in a fixed template we set up together. No ERP integration, no IT project."],
+["How often is the dashboard updated?","Whenever new reports are uploaded – typically weekly or monthly, depending on the suppliers' reporting frequency."],
+["How is the savings potential calculated?","Logichain shows identified potential based on your own data and explicit assumptions – four sources: expedition costs from delays, excess safety stock, price gaps on low-rated suppliers and consolidation of small volumes."],
+["Can we trust the numbers?","Every estimate has “View evidence”: click the figure and see exactly which materials, POs, suppliers and assumptions it is built on. We show identified potential that should be examined – never guaranteed savings."],
+["How does Logichain differ from a BI solution?","Traditional BI requires integration, licences and consultants. Logichain delivers procurement analysis from day one, purpose-built for supplier and spend data – at a fraction of the price."],
+["Is Logichain suitable for smaller companies?","Yes. Small and medium-sized businesses in particular often have purchasing data in Excel with no tooling around it. Logichain is the cheapest and fastest exactly there."],
+["Who owns the data?","You do. Logichain treats your data confidentially, and you can export everything to Excel at any time."],
+["What does it cost?","Pricing is tailored to each customer by size and scope. The key thing to know: Logichain costs a fraction of traditional platforms – and you see the value in the demo before you decide."]];
+document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faqitem reveal" onclick="this.classList.toggle('open')"><h3>${q}</h3><div class="a">${a}</div></div>`).join("");
+document.querySelectorAll("#faqList .reveal").forEach(el=>io.observe(el));
+
+/* ---------- contact form (mailto) ---------- */
+document.getElementById("cform").addEventListener("submit",e=>{
+  e.preventDefault();
+  const n=document.getElementById("cname").value,c=document.getElementById("ccomp").value,em=document.getElementById("cmail").value,m=document.getElementById("cmsg").value;
+  location.href="mailto:einar@logichain.no?subject="+encodeURIComponent("Logichain – enquiry from "+n+" / "+c)+
+    "&body="+encodeURIComponent("Company: "+c+"\n\n"+m+"\n\n"+n+"\n"+em);
+});
+</script>
+</body>
+</html>
