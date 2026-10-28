@@ -44,10 +44,40 @@ header{position:sticky;top:0;z-index:40;background:rgba(7,11,22,.92);backdrop-fi
 .hero p.lead{color:var(--muted);font-size:19px;max-width:760px;margin:0 auto 34px}
 .hero .ctas{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
 .hero .small{margin-top:14px;font-size:12.5px;color:var(--muted)}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-top:64px;text-align:center}
-.stat{background:rgba(16,24,48,.7);border:1px solid var(--line);border-radius:14px;padding:20px 12px}
-.stat .n{font-size:34px;font-weight:800;color:#fff}
-.stat .l{font-size:12px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+.hero-brand{font-weight:800;font-size:22px;letter-spacing:1px;color:#fff;margin-bottom:18px}
+.hero-brand b{color:#4d9fff}
+.hero .kicker{color:var(--accent2);font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:14px}
+.hero h1{font-size:clamp(36px,6vw,60px);font-weight:800;line-height:1.08;color:#fff;max-width:920px;margin:0 auto 20px}
+.heroMock{display:block;margin:60px auto 0;max-width:1080px;background:#0a0f1e;border:1px solid #23407a;border-radius:18px;padding:18px 20px 16px;text-decoration:none;box-shadow:0 30px 80px rgba(0,0,0,.5);transition:transform .25s,box-shadow .25s}
+.heroMock:hover{transform:translateY(-4px);box-shadow:0 40px 90px rgba(46,124,246,.18)}
+.hm-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.hm-logo{font-weight:800;font-size:15px;color:#fff;white-space:nowrap}
+.hm-logo b{color:#4d9fff}
+.hm-tabs{font-size:10px;color:#8fa0c0;text-align:right}
+.hm-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.hm-kpi{background:#101830;border:1px solid #1e2a4a;border-radius:10px;padding:10px 12px}
+.hm-kpi .l{font-size:9px;color:#8fa0c0;letter-spacing:.5px;text-transform:uppercase}
+.hm-kpi .v{font-size:20px;font-weight:800;color:#fff}
+.hm-kpi.g .v{color:var(--good)} .hm-kpi.b .v{color:var(--bad)}
+.hm-cols{display:grid;grid-template-columns:1.6fr 1fr;gap:14px}
+.hm-panel{background:#101830;border:1px solid #1e2a4a;border-radius:10px;padding:12px}
+.hm-panel .t{font-size:9px;color:#8fa0c0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.hm-bars{display:flex;align-items:flex-end;gap:8px;height:110px}
+.hm-bars i{flex:1;background:linear-gradient(180deg,#3d8bff,#22305c);border-radius:4px 4px 0 0;height:0;transition:height 1.1s cubic-bezier(.2,.7,.2,1)}
+.heroMock.vis .hm-bars i{height:var(--h)}
+.hm-bars i:nth-child(2){transition-delay:.07s}.hm-bars i:nth-child(3){transition-delay:.14s}
+.hm-bars i:nth-child(4){transition-delay:.21s}.hm-bars i:nth-child(5){transition-delay:.28s}
+.hm-bars i:nth-child(6){transition-delay:.35s}.hm-bars i:nth-child(7){transition-delay:.42s}
+.hm-bars i:nth-child(8){transition-delay:.49s}.hm-bars i:nth-child(9){transition-delay:.56s}
+.hm-x{display:flex;gap:8px;margin-top:4px}
+.hm-x span{flex:1;text-align:center;font-size:8.5px;color:#8fa0c0}
+.hm-stack{display:flex;height:16px;border-radius:8px;overflow:hidden;margin-bottom:10px}
+.hm-stack i{display:block;height:100%}
+.hm-row{display:flex;justify-content:space-between;font-size:10px;color:#dbe4f5;padding:4px 0}
+.hm-row .bar{width:90px;height:7px;background:#1a2444;border-radius:4px;overflow:hidden;align-self:center}
+.hm-row .bar i{display:block;height:100%;border-radius:4px}
+.hm-hint{margin-top:10px;font-size:10.5px;color:#8fa0c0;text-align:center}
+@media(max-width:800px){.hm-cols{grid-template-columns:1fr}.hm-kpis{grid-template-columns:repeat(2,1fr)}.hm-tabs{display:none}}
 
 /* ---------- sections ---------- */
 section{padding:78px 0}
@@ -172,8 +202,10 @@ footer .logo{font-size:20px}
 <!-- ================= HERO ================= -->
 <section class="hero" id="top">
   <div class="wrap">
+    <div class="hero-brand">LOGIC<b>HAIN</b></div>
     <div class="badge">💡 Nytt i demoen: Spend Intelligence-modulen er live</div>
-    <h1>Turn purchasing data<br>into <em>decisions</em>.</h1>
+    <div class="kicker">Turn purchasing data into decisions</div>
+    <h1>Fra spredte Excel-filer til <em>full innkjøpsinnsikt</em>.</h1>
     <p class="lead">Logichain samler innkjøpsdata fra alle leverandørene dine i ett interaktivt dashboard:
     total spend, leverandørytelse, leveringspresisjon og identifisert sparepotensial – med full
     dokumentasjon bak hvert tall. Til en brøkdel av prisen på tradisjonelle BI-løsninger.</p>
@@ -181,13 +213,41 @@ footer .logo{font-size:20px}
       <a class="btn btn-demo" href="logichain-dashboard-demo.html">▶ Prøv demoen nå</a>
       <a class="btn btn-ghost" href="#kontakt">Kom i kontakt</a>
     </div>
-    <div class="small">Demo åpnes i nettleseren – ingen installasjon, ingen registrering. All data i demoen er demodata.</div>
-    <div class="stats">
-      <div class="stat reveal"><div class="n"><span data-count="6">0</span></div><div class="l">Moduler i plattformen</div></div>
-      <div class="stat reveal"><div class="n"><span data-count="3">0</span></div><div class="l">Steg fra Excel til innsikt</div></div>
-      <div class="stat reveal"><div class="n"><span data-count="0">0</span></div><div class="l">IT-integrasjoner nødvendig</div></div>
-      <div class="stat reveal"><div class="n">1/<span data-count="10">0</span></div><div class="l">Av prisen – i klassen av alternativer</div></div>
-    </div>
+    <div class="small">Ingen installasjon, ingen registrering. All data i demoen er demodata.</div>
+
+    <a class="heroMock" id="heroMock" href="logichain-dashboard-demo.html" aria-label="Åpne Logichain-demoen">
+      <div class="hm-top">
+        <div class="hm-logo">LOGIC<b>HAIN</b> Dashboard</div>
+        <div class="hm-tabs">Executive Overview · Spend Intelligence · Leverandører · PO Performance · Sparingspotensial · Tiltak</div>
+      </div>
+      <div class="hm-kpis">
+        <div class="hm-kpi"><div class="l">Total spend</div><div class="v"><span data-count="248">0</span> mill</div></div>
+        <div class="hm-kpi b"><div class="l">Overall OTD</div><div class="v"><span data-count="53">0</span> %</div></div>
+        <div class="hm-kpi"><div class="l">Leverandører</div><div class="v"><span data-count="180">0</span></div></div>
+        <div class="hm-kpi g"><div class="l">Ident. potensial</div><div class="v"><span data-count="11">0</span>,4 mill</div></div>
+      </div>
+      <div class="hm-cols">
+        <div class="hm-panel">
+          <div class="t">Spend per måned</div>
+          <div class="hm-bars">
+            <i style="--h:55%"></i><i style="--h:62%"></i><i style="--h:70%"></i><i style="--h:82%"></i>
+            <i style="--h:95%"></i><i style="--h:68%"></i><i style="--h:50%"></i><i style="--h:60%"></i><i style="--h:74%"></i>
+          </div>
+          <div class="hm-x"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>Mai</span><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span></div>
+        </div>
+        <div class="hm-panel">
+          <div class="t">Leveringsstatus</div>
+          <div class="hm-stack"><i style="width:53%;background:#2ecc71"></i><i style="width:36%;background:#e05d5d"></i><i style="width:11%;background:#f0b429"></i></div>
+          <div class="hm-row"><span>I tide</span><span style="color:#2ecc71">53 %</span></div>
+          <div class="hm-row"><span>For sent</span><span style="color:#e05d5d">36 %</span></div>
+          <div class="t" style="margin-top:10px">Toppleverandører</div>
+          <div class="hm-row"><span>Nordic Steel</span><div class="bar"><i style="width:100%;background:#2e7cf6"></i></div></div>
+          <div class="hm-row"><span>Hydraflow</span><div class="bar"><i style="width:78%;background:#2e7cf6"></i></div></div>
+          <div class="hm-row"><span>Bergen Mek.</span><div class="bar"><i style="width:64%;background:#2e7cf6"></i></div></div>
+        </div>
+      </div>
+      <div class="hm-hint">Klikk for å åpne hele demoen →</div>
+    </a>
   </div>
 </section>
 
@@ -471,6 +531,10 @@ const cio=new IntersectionObserver(es=>es.forEach(e=>{
   (function tick(t){const p=Math.min((t-t0)/900,1);el.textContent=Math.round(end*p);if(p<1)requestAnimationFrame(tick);})(t0);
 }),{threshold:.4});
 document.querySelectorAll("[data-count]").forEach(el=>cio.observe(el));
+
+/* ---------- hero mock animation ---------- */
+const hm=document.getElementById("heroMock");
+if(hm){const hio=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){hm.classList.add("vis");hio.disconnect();}}),{threshold:.2});hio.observe(hm);}
 
 /* ---------- module tabs ---------- */
 document.getElementById("modtabs").addEventListener("click",e=>{
