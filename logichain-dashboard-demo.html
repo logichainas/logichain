@@ -116,6 +116,11 @@ rect.clickable{cursor:pointer}
 rect.clickable:hover{fill:#6db3ff}
 .mock-badge{background:rgba(240,180,41,.15);color:var(--warn);border:1px solid rgba(240,180,41,.4);border-radius:12px;padding:2px 10px;font-size:10px;font-weight:700;vertical-align:middle}
 .best{color:var(--good);font-weight:700}
+.octo-hero{background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.35);border-radius:12px;padding:16px 18px;margin:12px 0}
+.octo-hero.red{background:rgba(224,93,93,.08);border-color:rgba(224,93,93,.45)}
+.octo-hero .lbl{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.octo-hero .big{font-size:30px;font-weight:800}
+.octo-hero input{background:#0b1226;border:1px solid var(--line);color:var(--txt);padding:8px 12px;border-radius:8px;font-size:14px;margin:8px 0;width:150px}
 </style>
 </head>
 <body>
@@ -826,6 +831,7 @@ window.showOcto=function(mi){
   const best=offers[0].price;
   const delta=Math.round((best-avgUnit)/avgUnit*1000)/10;
   const totStock=offers.reduce((a,o)=>a+o.stock,0);
+  window.__octo={avgUnit,best};
   let html=`<div class="mh"><div><h2>🌐 Octopart markedsdata <span class="mock-badge">MOCK DATA</span></h2>
     <div style="font-size:12px;color:var(--muted)">${mt[1]} · ${mt[0]}</div></div>
     <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
@@ -836,6 +842,20 @@ window.showOcto=function(mi){
     ${kpi("Din snittpris",fmt(Math.round(avgUnit))+" kr","fra egne PO-linjer")}
     ${kpi("Gap",(delta>0?"+":"")+delta.toFixed(1).replace(".",",")+"%",delta>0?"du betaler mer enn markedspris":"du ligger under markedspris",delta>0?"bad":"good")}
     ${kpi("Lager hos distributører",fmt(totStock),"enheter tilgjengelig nå")}
+  </div>
+  ${delta>0?`<div class="octo-hero red">
+    <div class="lbl" style="color:var(--bad)">⚠️ Du betaler ${delta.toFixed(1).replace(".",",")}% mer enn markedet</div>
+    <div class="big bad">+${fmt(Math.round((avgUnit-best)*100))} kr pr. enhet</div>
+  </div>`:`<div class="octo-hero">
+    <div class="lbl">✓ Du ligger ${Math.abs(delta).toFixed(1).replace(".",",")}% under markedet</div>
+    <div class="big good">−${fmt(Math.round((best-avgUnit)*100))} kr pr. enhet</div>
+  </div>`}
+  <div class="octo-hero">
+    <div class="lbl">Årlig behov (antall enheter) – endre tallet og se sparingen</div>
+    <input id="octoQty" type="number" min="1" value="${qtot}" oninput="recalcOcto(${mi})">
+    <div class="big good" id="octoSave">…</div>
+    <div id="octoSave3" style="font-size:13px;color:var(--muted);margin-top:4px"></div>
+    <div id="octoNote" style="font-size:11.5px;color:var(--muted);margin-top:6px"></div>
   </div>
   <h3 class="sect">Tilbud fra distributører</h3>
   <table><tr><th>Distributør</th><th>SKU</th><th style="text-align:right">Beholdning</th><th style="text-align:right">MOQ</th><th>Lead time</th><th style="text-align:right">Enhetspris</th></tr>`+
@@ -851,6 +871,23 @@ window.showOcto=function(mi){
   document.getElementById("modalBox").innerHTML=html;
   document.getElementById("modalBg").classList.add("show");
   setCrumbs([["Logichain","goto('forside')"],["Materiale: "+mt[1],`showMat(${mi})`],["Octopart"]]);
+  recalcOcto(mi);
+};
+window.recalcOcto=function(mi){
+  const o=window.__octo;if(!o)return;
+  const q=Math.max(1,parseInt(document.getElementById("octoQty").value)||0);
+  const diff=o.avgUnit-o.best;
+  const save=Math.round(Math.max(0,diff)*q);
+  const box=document.getElementById("octoSave");
+  if(diff>0){
+    box.textContent=fmt(save)+" NOK / år";
+    document.getElementById("octoSave3").textContent="= "+fmt(save*3)+" NOK over 3 år";
+    document.getElementById("octoNote").textContent="Identifisert potensial ved å flytte volumet til beste distributør (samme del, MOQ og lead time akseptert) – ikke en garanti.";
+  }else{
+    box.textContent="0 NOK";
+    document.getElementById("octoSave3").textContent="Din pris er allerede best i markedet – likevel verdt å holde distributørene konkurransedyktige.";
+    document.getElementById("octoNote").textContent="";
+  }
 };
 window.showMat=function(mi){
   const mt=MATS[mi];
