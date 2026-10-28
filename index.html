@@ -443,7 +443,8 @@ footer .logo{font-size:20px}
       <div class="ccard reveal">
         <h3 style="margin-bottom:14px">Send oss en melding</h3>
         <form id="cform">
-          <div class="fld"><input type="text" id="cname" placeholder="Navn og bedrift" required></div>
+          <div class="fld"><input type="text" id="cname" placeholder="Fullt navn" required></div>
+          <div class="fld"><input type="text" id="ccomp" placeholder="Bedriftens navn" required></div>
           <div class="fld"><input type="email" id="cmail" placeholder="E-post" required></div>
           <div class="fld"><textarea id="cmsg" placeholder="Fortell kort om innkjøpsvolumet ditt og hva du ønsker hjelp med ..." required></textarea></div>
           <button class="btn btn-demo" type="submit" style="width:100%">Send melding ✉️</button>
@@ -505,9 +506,9 @@ document.querySelectorAll("#faqList .reveal").forEach(el=>io.observe(el));
 /* ---------- contact form (mailto) ---------- */
 document.getElementById("cform").addEventListener("submit",e=>{
   e.preventDefault();
-  const n=document.getElementById("cname").value,em=document.getElementById("cmail").value,m=document.getElementById("cmsg").value;
-  location.href="mailto:einar@logichain.no?subject="+encodeURIComponent("Logichain – henvendelse fra "+n)+
-    "&body="+encodeURIComponent(m+"\n\n"+n+"\n"+em);
+  const n=document.getElementById("cname").value,c=document.getElementById("ccomp").value,em=document.getElementById("cmail").value,m=document.getElementById("cmsg").value;
+  location.href="mailto:einar@logichain.no?subject="+encodeURIComponent("Logichain – henvendelse fra "+n+" / "+c)+
+    "&body="+encodeURIComponent("Bedrift: "+c+"\n\n"+m+"\n\n"+n+"\n"+em);
 });
 </script>
 </body>
