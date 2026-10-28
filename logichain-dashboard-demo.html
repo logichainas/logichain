@@ -137,8 +137,10 @@ rect.clickable:hover{fill:#6db3ff}
   <button data-tab="spend">💠 Spend Intelligence</button>
   <button data-tab="lev">🏢 Leverandører</button>
   <button data-tab="po">📦 PO Performance</button>
+  <button data-tab="octo">🌐 Marked (Octopart)</button>
   <button data-tab="spar">💰 Sparingspotensial</button>
   <button data-tab="tiltak">🛠️ Tiltak</button>
+  <button data-tab="upload">📤 Dataopplasting</button>
   <button data-tab="faq">❓ Spørsmål og svar</button>
 </div>
 
@@ -310,6 +312,55 @@ rect.clickable:hover{fill:#6db3ff}
   </div>
 </section>
 
+<!-- ============ MARKED (OCTOPART) ============ -->
+<section id="tab-octo" style="display:none">
+  <div class="card hero" style="padding:22px 24px">
+    <h2 style="font-size:22px;color:#fff;margin-bottom:6px">🌐 Marked (Octopart) <span class="mock-badge">MOCK DATA</span></h2>
+    <p style="color:var(--muted);font-size:13.5px;max-width:860px">Benchmark innkjøpsprisen din mot markedet: priser, beholdning, lead times og alternative kilder fra distributører verden over –
+    målt opp mot dine egne PO-data. I demoen er dataene mock; arkitekturen (Cloudflare Worker mot Nexar/Octopart API) er produksjonsklar – se cloudflare/octopart-worker.js i repoet.</p>
+  </div>
+  <div class="card">
+    <h3 class="sect">Søk etter del, MPN eller materiale</h3>
+    <input type="text" id="octoSearch" placeholder="f.eks. «motor», «M3BP», «kabel», «filter» ..." oninput="octoSearch()" style="margin-bottom:10px">
+    <div id="octoResults"></div>
+  </div>
+  <div class="card">
+    <h3 class="sect">Matchede materialer – pris-gap mot egen innkjøpspris</h3>
+    <div class="grid4" id="octoCards"></div>
+    <div class="note">Gå til materialets egen visning for full detalj (klikkbare leverandører og PO-linjer).</div>
+  </div>
+  <div class="card">
+    <h3 class="sect">Single-source-risiko → Finn alternative kilder</h3>
+    <div style="overflow-x:auto"><table id="octoSS"></table></div>
+    <div class="note">«Sjekk marked» åpner Octopart-panelet for materialet – med distributører, priser, lead time og alternative deler.</div>
+  </div>
+</section>
+
+<!-- ============ DATAOPPLASTING ============ -->
+<section id="tab-upload" style="display:none">
+  <div class="card">
+    <h3 class="sect">Last opp innrapportering – demo</h3>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:16px">Eksportér innrapportering-malen til CSV (eller bruk eksempelfilen), last opp – og se validering og import i sanntid.</p>
+    <div class="grid3" style="margin-bottom:18px">
+      <div class="step"><div class="stepnum">1</div><div><h4>Velg fil</h4><p>CSV fra innrapportering-malen (semikolon eller komma).</p></div></div>
+      <div class="step"><div class="stepnum">2</div><div><h4>Automatisk validering</h4><p>Manglende felt, duplikater, datoformater og verdi-sjekk – samme logikk som i malen.</p></div></div>
+      <div class="step"><div class="stepnum">3</div><div><h4>Importer</h4><p>Linjene legges inn i demoen – KPI-er, grafer og analyser oppdateres med én gang.</p></div></div>
+    </div>
+    <div id="dropZone" style="border:2px dashed var(--line);border-radius:12px;padding:30px;text-align:center;cursor:pointer;transition:border-color .2s" onclick="document.getElementById('upFile').click()">
+      <div style="font-size:28px">📤</div>
+      <p style="font-weight:600;margin-top:6px">Dra filen hit, eller klikk for å velge</p>
+      <p class="note">CSV fra innrapportering-malen (PO-linjer). XLSX må lagres som CSV først i demoen.</p>
+      <input type="file" id="upFile" accept=".csv,.txt" style="display:none" onchange="handleFile(this.files[0])">
+    </div>
+    <div class="mlinks" style="margin-top:14px">
+      <a onclick="downloadSample()">⬇️ Last ned eksempel-CSV (fra demodata)</a>
+      <a onclick="resetImport()">♻️ Nullstill import</a>
+    </div>
+    <div id="importStatus" style="margin-top:14px"></div>
+    <div id="valReport" style="margin-top:8px"></div>
+  </div>
+</section>
+
 <!-- ============ FAQ ============ -->
 <section id="tab-faq" style="display:none">
   <div class="card">
@@ -379,6 +430,25 @@ suppliers.forEach(s=>{
   }
 });
 
+/* ==== Importerte rader fra Dataopplasting (legges inn før all aggregering) ==== */
+try{
+  const imp=JSON.parse(localStorage.getItem("logichain_import")||"null");
+  if(imp&&imp.length){
+    imp.forEach(r=>{
+      const mi=MATS.findIndex(m=>m[0].toUpperCase()===r.matCode.toUpperCase());
+      if(mi<0)return;
+      let sup=suppliers.find(s=>s.name.toLowerCase()===r.supName.toLowerCase());
+      if(!sup){sup={id:suppliers.length,name:r.supName,group:"Ny leverandør",country:"–",rating:"C",otdBase:50};suppliers.push(sup);}
+      const order=new Date(r.order),prom=new Date(r.prom),del=r.del?new Date(r.del):null;
+      let dev=0,status="Ikke levert";
+      if(del){dev=Math.round((del-prom)/864e5);status=dev<0?"For tidlig":dev===0?"I tide":"For sent";}
+      lines.push({po:r.po,line:r.line||1,sup,mat:mi,proj:r.proj||"–",qty:r.qty||1,order,prom,del,dev,status,value:r.value,month:order.getMonth()});
+    });
+    localStorage.removeItem("logichain_import");
+    window.__imported=imp.length;
+  }
+}catch(e){}
+
 /* ================= HELPERS ================= */
 const fmt=n=>Math.round(n).toLocaleString("nb-NO");
 const fmtM=n=>n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" mill kr":fmt(n)+" kr";
@@ -440,14 +510,15 @@ suppliers.forEach(s=>{const a=agg[s.id];const dev=a.n?a.devAbs/a.n:0;
   if(s.rating==="C"||s.rating==="D"){const v=a.spend*0.05;savReneg+=v;savPer[s.id]+=v;}
   if(a.n<5){const v=a.spend*0.08;savConsol+=v;savPer[s.id]+=v;}});
 const savTotal=savExpedite+savBuffer+savReneg+savConsol;
-const overallOTD=Math.round(lines.filter(l=>l.status==="I tide").length/lines.length*1000)/10;
+const evaluated=lines.filter(l=>l.status!=="Ikke levert");
+const overallOTD=Math.round(lines.filter(l=>l.status==="I tide").length/(evaluated.length||1)*1000)/10;
 const lateLines=lines.filter(l=>l.status==="For sent").length;
 const avgAbs=(lines.reduce((a,l)=>a+Math.abs(l.dev),0)/lines.length).toFixed(1);
 const avgPriceTrend=(matTrend.reduce((a,t)=>a+t,0)/matTrend.length*100);
 
 /* ================= TABS ================= */
 function goto(t){document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
-  ["forside","spend","lev","po","spar","tiltak","faq"].forEach(x=>document.getElementById("tab-"+x).style.display=x===t?"":"none");
+  ["forside","spend","lev","po","octo","spar","tiltak","upload","faq"].forEach(x=>document.getElementById("tab-"+x).style.display=x===t?"":"none");
   const h=document.getElementById("hintline");if(h)h.textContent=HINTS[t]||"";
   setCrumbs([["Logichain","goto('forside')"],[TABNAMES[t]||t]]);
   window.scrollTo(0,0);}
@@ -706,7 +777,7 @@ document.getElementById("tiltakList").innerHTML=tiltak.map(x=>{const[cls,c,l]=pr
   return `<div class="tiltak ${cls}"><div class="tag ${c}">${l}</div><h4>${x.t}</h4><p>${x.d}</p>${x.v>1000?`<p style="margin-top:6px"><b class="good">Identifisert potensial: ${fmt(x.v)} kr / år</b> · <a class="evlink" onclick="showEvidence('${x.ev[0]}'${x.ev[1]!==undefined?","+x.ev[1]:""})">Se grunnlag →</a></p>`:""}</div>`}).join("");
 
 /* ================= CROSS-NAVIGATION ================= */
-const TABNAMES={forside:"Executive Overview",spend:"Spend Intelligence",lev:"Leverandører",po:"PO Performance",spar:"Sparingspotensial",tiltak:"Tiltak",faq:"Spørsmål og svar"};
+const TABNAMES={forside:"Executive Overview",spend:"Spend Intelligence",lev:"Leverandører",po:"PO Performance",octo:"Marked (Octopart)",spar:"Sparingspotensial",tiltak:"Tiltak",upload:"Dataopplasting",faq:"Spørsmål og svar"};
 const HINTS={
  forside:"Klikk deg videre via kortene nedenfor – eller bruk søket oppe til høyre for å finne leverandører, materialer og PO-er direkte.",
  spend:"Klikk på en måned i grafene for månedens detaljer – eller på en leverandør/et materiale for å grave dypere.",
@@ -714,6 +785,8 @@ const HINTS={
  po:"Klikk på en PO-linje for full detaljvisning, på en måned for å filtrere, eller på leverandør/materiale i radene.",
  spar:"Klikk «Se dokumentasjon» på et tall for å se nøyaktig hva potensialet bygger på.",
  tiltak:"Hvert tiltak har «Se grunnlag» med dokumentasjon bak estimatet.",
+ octo:"Søk etter en del, eller åpne et av materialene med matchet MPN – gap mot din egen pris er forhandlingskortet.",
+ upload:"Velg en CSV eksportert fra innrapportering-malen – validering viser feil før du importerer, og importen oppdaterer hele demoen.",
  faq:"Klikk på et spørsmål for svaret."};
 window.setCrumbs=function(items){
   const el=document.getElementById("crumbs");if(!el)return;
@@ -902,9 +975,136 @@ document.addEventListener("mousedown",e=>{if(!e.target.closest(".searchbox"))doc
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){hideModal();document.getElementById("searchDD").classList.remove("show");}});
 goto(document.querySelector(".tabs button.active").dataset.tab);
 
+/* ================= OCTOPART-FANE ================= */
+window.renderOctoTab=function(){
+  document.getElementById("octoCards").innerHTML=Object.keys(OCTO_MATCH).map(code=>{
+    const mi=MATS.findIndex(m=>m[0]===code);if(mi<0)return"";
+    const m=OCTO_MATCH[code];
+    const ls=lines.filter(l=>l.mat===mi);const qt=ls.reduce((a,l)=>a+l.qty,0)||1;
+    const avg=ls.reduce((a,l)=>a+l.value,0)/qt;
+    const best=Math.min(...m.offers.map(o=>o[5]));
+    const delta=Math.round((best-avg)/avg*1000)/10;
+    return `<div class="card" style="margin:0">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">${matName(mi)} · ${code}</div>
+      <h4 style="margin:6px 0 2px;font-size:15px">${m.mpn}</h4>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">${m.mfr}</div>
+      <div style="font-size:19px;font-weight:800" class="${delta>0?"bad":"good"}">${fmt(best)} kr <span style="font-size:11px;color:var(--muted);font-weight:400">beste markedspris</span></div>
+      <div style="font-size:12.5px;margin:4px 0 12px">Din snittpris: ${fmt(Math.round(avg))} kr · <b class="${delta>0?"bad":"good"}">gap ${delta>0?"+":""}${delta.toFixed(1).replace(".",",")}%</b></div>
+      <button class="btn btn-demo" style="padding:8px 16px;font-size:12.5px" onclick="showOcto(${mi})">Åpne Octopart-panel →</button>
+    </div>`;}).join("");
+  document.getElementById("octoSS").innerHTML=`<tr><th>Materiale</th><th>Eneste leverandør</th><th style="text-align:right">Spend</th><th>Risiko</th><th></th></tr>`+
+    singleSource.slice(0,10).map(x=>`<tr><td><b>${matName(x.mi)}</b></td><td>${x.sup.name}</td><td style="text-align:right">${fmt(x.spend)}</td><td><span class="pill ${x.spend>1e6?"pD":x.spend>3e5?"pC":"pB"}">${x.spend>1e6?"Høy":x.spend>3e5?"Middels":"Lav"}</span></td><td><a class="evlink" onclick="showOcto(${x.mi})">🌐 Sjekk marked →</a></td></tr>`).join("")+
+    (singleSource.length===0?`<tr><td colspan="5">Ingen single-source-materialer funnet.</td></tr>`:"");
+  octoSearch();
+};
+window.octoSearch=function(){
+  const q=(document.getElementById("octoSearch").value||"").trim().toLowerCase();
+  const hits=Object.keys(OCTO_MATCH).filter(code=>{const mi=MATS.findIndex(m=>m[0]===code);const m=OCTO_MATCH[code];
+    return !q||code.toLowerCase().includes(q)||m.mpn.toLowerCase().includes(q)||m.mfr.toLowerCase().includes(q)||matName(mi).toLowerCase().includes(q);});
+  document.getElementById("octoResults").innerHTML=hits.length?hits.map(code=>{const mi=MATS.findIndex(m=>m[0]===code);const m=OCTO_MATCH[code];
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid rgba(30,42,74,.5);font-size:13px"><span><b>${matName(mi)}</b> · ${m.mpn} <span style="font-size:10.5px;color:var(--muted)">${m.mfr}</span></span><a class="evlink" onclick="showOcto(${mi})">Åpne →</a></div>`;}).join("")
+    :`<div class="note">Ingen match i demoen – prøv «motor», «kabel», «filter» eller «ventil». For full dekning: koble til en Nexar-konto (se cloudflare/octopart-worker.js).</div>`;
+};
+
+/* ================= DATAOPPLASTING ================= */
+let pendingImport=null;
+function csvSplit(s,sep){const out=[];let cur="",q=false;for(let i=0;i<s.length;i++){const ch=s[i];
+  if(ch==='"'){if(q&&s[i+1]==='"'){cur+='"';i++;}else q=!q;}
+  else if(ch===sep&&!q){out.push(cur);cur="";}else cur+=ch;}out.push(cur);return out;}
+function parseCSV(text){
+  const t=text.replace(/^\uFEFF/,"").trim();const arr=t.split(/\r?\n/);
+  const sep=((arr[0].match(/;/g)||[]).length>=(arr[0].match(/,/g)||[]).length)?";":",";
+  const head=csvSplit(arr[0],sep).map(h=>h.trim().toLowerCase());
+  return arr.slice(1).filter(r=>r.trim()).map(r=>{const cells=csvSplit(r,sep);const o={};head.forEach((h,i)=>o[h]=(cells[i]||"").trim());return o;});
+}
+function pDate(s){if(!s)return null;s=s.trim();let m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if(m)return new Date(+m[3],+m[2]-1,+m[1]);m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m)return new Date(+m[1],+m[2]-1,+m[3]);return "BAD";}
+function num(s){return s?Number(String(s).replace(/\s/g,"").replace(",",".")):NaN;}
+window.validateRows=function(rows){
+  const res={errors:[],warnings:[],valid:[],spend:0};const seen={};
+  const get=(r,p)=>{const k=Object.keys(r).find(k=>k.startsWith(p));return k?r[k]:"";};
+  rows.forEach((r,idx)=>{
+    const row=idx+2;
+    const po=get(r,"po-nummer"),sup=get(r,"leverandørnavn"),mat=get(r,"materialnummer");
+    const od=pDate(get(r,"bestillingsdato")),pd=pDate(get(r,"love-dato")),dd=pDate(get(r,"faktisk leveringsdato"));
+    const val=num(get(r,"linjeverdi")),qty=num(get(r,"antall")),up=num(get(r,"enhetspris"));
+    let ok=true;const E=m=>res.errors.push({row,m});const W=m=>res.warnings.push({row,m});
+    if(!po){E("Mangler PO-nummer");ok=false;}
+    if(!sup){E("Mangler leverandørnavn");ok=false;}
+    if(!mat){E("Mangler materialnummer");ok=false;}
+    else if(MATS.findIndex(m=>m[0].toUpperCase()===mat.toUpperCase())<0){E("Ukjent materialnummer: "+mat);ok=false;}
+    if(!(od instanceof Date)){E("Bestillingsdato mangler eller er ugyldig");ok=false;}
+    if(!(pd instanceof Date)){E("Love-dato mangler eller er ugyldig");ok=false;}
+    if(dd==="BAD"){E("Faktisk leveringsdato er ugyldig");ok=false;}
+    if(isNaN(val)||!val){E("Linjeverdi mangler eller er ugyldig");ok=false;}
+    if(od instanceof Date&&od.getFullYear()!==2026)W("Datoen er ikke i 2026 – vises kanskje ikke i månedsgrafene");
+    else if(od instanceof Date&&od.getMonth()>8)W("Måned utenfor demoperioden Jan–Sep – telles i totaler, men vises ikke i månedsgrafene");
+    if(!isNaN(qty)&&!isNaN(up)&&!isNaN(val)&&Math.abs(val-qty*up)>1)W("Linjeverdi ≠ antall × enhetspris");
+    const key=po.toUpperCase()+"#"+(get(r,"linjenr")||"1");
+    if(seen[key]){E("Duplikat: samme PO-nummer + linjenr finnes allerede");ok=false;}else seen[key]=1;
+    if(ok&&od instanceof Date&&pd instanceof Date)res.valid.push({po,line:parseInt(get(r,"linjenr"))||1,supName:sup,matCode:mat,
+      proj:get(r,"prosjektnr")||"–",qty:isNaN(qty)||qty<1?1:qty,order:od.getTime(),prom:pd.getTime(),
+      del:(dd instanceof Date)?dd.getTime():null,value:val});
+    res.spend+=isNaN(val)?0:val;
+  });
+  return res;
+};
+window.handleFile=async function(f){
+  const rep=document.getElementById("valReport");
+  if(!f)return;
+  if(!/\.(csv|txt)$/i.test(f.name)){
+    rep.innerHTML=`<div class="disclaimer">⚠️ Demoen støtter CSV. Åpne XLSX-filen i Excel og velg «Lagre som → CSV (kommadelt)», og last opp den filen.</div>`;return;
+  }
+  const rows=parseCSV(await f.text());
+  if(!rows.length){rep.innerHTML=`<div class="disclaimer">⚠️ Filen inneholder ingen datarader.</div>`;return;}
+  pendingImport=validateRows(rows);
+  const p=pendingImport;const errSet=new Set(p.errors);
+  rep.innerHTML=`
+    <div class="kpis">
+      ${kpi("Rader lest",rows.length,"")}
+      ${kpi("Feil",p.errors.length,p.errors.length?"må rettes før import":"klart til import",p.errors.length?"bad":"good")}
+      ${kpi("Advarsler",p.warnings.length,"importeres likevel",p.warnings.length?"warn":"")}
+      ${kpi("Spend i filen",fmtM(p.spend),"")}
+    </div>`+
+    (p.errors.concat(p.warnings).length?`<h3 class="sect">Funn (viser ${Math.min(p.errors.length+p.warnings.length,30)})</h3>
+    <table><tr><th>Rad</th><th>Type</th><th>Melding</th></tr>`+
+      p.errors.concat(p.warnings).slice(0,30).map(x=>`<tr><td>${x.row}</td><td><span class="pill ${errSet.has(x)?"pD":"pC"}">${errSet.has(x)?"Feil":"Advarsel"}</span></td><td>${x.m}</td></tr>`).join("")+`</table>`:"")+
+    (p.errors.length?`<div class="disclaimer">⚠️ Rett feilene i filen og last opp på nytt for å importere.</div>`
+      :`<p style="margin-top:12px"><button class="btn btn-demo" onclick="doImport()">✅ Importer ${p.valid.length} rader i demoen</button>
+      <span class="note" style="margin-left:10px">Importen oppdaterer hele dashboardet – alle KPI-er, grafer og analyser.</span></p>`);
+  rep.scrollIntoView({behavior:"smooth",block:"nearest"});
+};
+window.doImport=function(){
+  if(!pendingImport||pendingImport.errors.length)return;
+  localStorage.setItem("logichain_import",JSON.stringify(pendingImport.valid));
+  location.hash="upload";location.reload();
+};
+window.resetImport=function(){localStorage.removeItem("logichain_import");location.reload();};
+window.downloadSample=function(){
+  const head=["PO-nummer","Linjenr","Leverandørnavn","Leverandørnr","Materialnummer","Materialebeskrivelse","Kategori","Prosjektnr","Antall","Enhet","Enhetspris (NOK)","Linjeverdi (NOK)","Bestillingsdato","Love-dato","Faktisk leveringsdato","Leveringsstatus","Kommentar"];
+  const rows=lines.slice(0,10).map(l=>[l.po,l.line,l.sup.name,"",matCode(l.mat),matName(l.mat),matCat(l.mat),l.proj,l.qty,"stk",Math.round(l.value/l.qty),l.value,dstr(l.order),dstr(l.prom),l.del?dstr(l.del):"",l.status,""]);
+  const csv=[head,...rows].map(r=>r.map(c=>String(c).includes(";")?'"'+c+'"':c).join(";")).join("\n");
+  const b=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="logichain-demo-eksport.csv";a.click();
+};
+const dz=document.getElementById("dropZone");
+if(dz){
+  dz.addEventListener("dragover",e=>{e.preventDefault();dz.style.borderColor="var(--accent)";});
+  dz.addEventListener("dragleave",()=>dz.style.borderColor="var(--line)");
+  dz.addEventListener("drop",e=>{e.preventDefault();dz.style.borderColor="var(--line)";if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);});
+}
+if(window.__imported){
+  document.getElementById("importStatus").innerHTML=`<div class="disclaimer" style="border-color:rgba(46,204,113,.4);background:rgba(46,204,113,.08);color:var(--good)">✅ ${window.__imported} rader importert i demoen – KPI-er, grafer, spend-analyse og sparepotensial inkluderer nå de nye linjene.</div>`;
+}
+renderOctoTab();
+
 /* ================= FAQ ================= */
 const FAQ=[
 ["Hva er Spend Intelligence?","Spend Intelligence viser hvor pengene går: total spend, spend per leverandør/kategori/måned, topp 10-leverandører, konsentrasjon (topp 5), prisutvikling per materiale, volumutvikling, tail spend og single-source-risiko."],
+["Hva er «Marked (Octopart)»?","En integrasjon mot Octopart/Nexar som benchmark-er innkjøpsprisen din mot sanntids markedspriser, beholdning og lead times fra distributører – og foreslår alternative kilder ved single-source-risiko. I demoen er dataene mock, men arkitekturen (Cloudflare Worker mot Nexar API) er produksjonsklar."],
+["Hvordan får jeg mine egne data inn i demoen?","Gå til Dataopplasting, last ned eksempel-CSV-en, bytt ut radene med egne data (samme kolonner som innrapportering-malen) og last opp. Demoen validerer og viser dataene dine umiddelbart."],
+
 ["Hvor kommer tallene fra?","Leverandørene leverer rapporter i Excel. Logichain validerer og samler dataene automatisk i én modell. I denne demoen er alt generert som demodata."],
 ["Hva betyr OTD?","OTD (On-Time Delivery) er andel leveringer som skjer på love-datoen. «I tide» = levert på avtalt dato."],
 ["Hva betyr ratingene A, B, C og D?","En kombinasjon av leveringspresisjon, avvik og kvalitet. A er beste klasse; C og D bør følges opp med forbedringstiltak."],
@@ -918,7 +1118,7 @@ document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" 
 
 /* deep-link support: logichain-dashboard-demo.html#spend opens that module */
 (function(){const h=location.hash.slice(1);
-  if(["forside","spend","lev","po","spar","tiltak","faq"].indexOf(h)>=0)goto(h);})();
+  if(["forside","spend","lev","po","octo","spar","tiltak","upload","faq"].indexOf(h)>=0)goto(h);})();
 </script>
 </body>
 </html>
