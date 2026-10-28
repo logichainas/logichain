@@ -109,6 +109,8 @@ tr.click{cursor:pointer} tr.click:hover{background:rgba(61,139,255,.07)}
 .mlinks{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
 .mlinks a{background:rgba(61,139,255,.1);border:1px solid rgba(61,139,255,.35);color:var(--accent2);border-radius:8px;padding:7px 14px;font-size:12.5px;cursor:pointer;text-decoration:none;font-weight:600}
 .mlinks a:hover{background:rgba(61,139,255,.2)}
+rect.clickable{cursor:pointer}
+rect.clickable:hover{fill:#6db3ff}
 </style>
 </head>
 <body>
@@ -549,13 +551,13 @@ window.levDetail=function(id){
 };
 
 /* ================= SPEND INTELLIGENCE ================= */
-function vbars(data,fmtY,fmtL){
+function vbars(data,fmtY,fmtL,clickFn){
   const W=760,H=270,pad=46,n=data.length,bw=W/n;
-  let out="",prev=null;const max=Math.max(...data.map(d=>d.v))||1;
+  let out="";const max=Math.max(...data.map(d=>d.v))||1;
   for(let g=0;g<=3;g++){const y=pad+(H-pad-30)*g/3;out+=`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="#1e2a4a"/>`;}
   data.forEach((d,i)=>{
     const cx=pad+i*bw+bw/2, bh=(H-pad-30)*(d.v/max), y=H-26-bh;
-    out+=`<rect x="${cx-16}" y="${y}" width="32" height="${Math.max(bh,2)}" fill="#3d8bff" opacity="${0.35+0.65*d.v/max}" rx="3"/>`;
+    out+=`<rect x="${cx-16}" y="${y}" width="32" height="${Math.max(bh,2)}" fill="#3d8bff" opacity="${0.35+0.65*d.v/max}" rx="3"${clickFn?` class="clickable" onclick="showMonth(${i})"`:""}/>`;
     out+=`<text x="${cx}" y="${y-6}" fill="#6db3ff" font-size="9.5" text-anchor="middle">${fmtY(d.v)}</text>`;
     out+=`<text x="${cx}" y="${H-8}" fill="#8fa0c0" font-size="10" text-anchor="middle">${fmtL(d.l)}</text>`;
   });
@@ -576,13 +578,13 @@ document.getElementById("kpi-spend").innerHTML=
   kpi("Snitt prisutvikling",(avgPriceTrend>0?"+":"")+avgPriceTrend.toFixed(1).replace(".",",")+"%","vekta snitt per materiale, Jan→Sep",avgPriceTrend>2?"bad":"good","Gjennomsnittlig prisendring fra januar til september, vektet per materiale");
 
 document.getElementById("chartSpendMonth").innerHTML=vbars(
-  spendByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmtK(v),l=>l);
+  spendByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmtK(v),l=>l,"showMonth");
 hbars(document.getElementById("chartSpendCat"),
   spendByCat.sort((a,b)=>b.val-a.val).map(c=>({label:c.cat,val:c.val})),fmtM);
 document.getElementById("top10Table").innerHTML=`<tr><th>#</th><th>Leverandør</th><th>Rating</th><th style="text-align:right">Spend</th><th style="text-align:right">Andel</th><th>Andel av total</th></tr>`+
   topSorted.slice(0,10).map((s,i)=>`<tr class="click" onclick="levDetail(${s.id});goto('lev')"><td>${i+1}</td><td><b>${s.name}</b></td><td><span class="pill p${s.rating}">${s.rating}</span></td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right">${(s.spend/totVal*100).toFixed(1).replace(".",",")}%</td><td><div class="bar" style="width:160px"><i style="width:${s.spend/topSorted[0].spend*100}%"></i></div></td></tr>`).join("");
 document.getElementById("chartVolMonth").innerHTML=vbars(
-  qtyByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmt(v),l=>l);
+  qtyByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmt(v),l=>l,"showMonth");
 document.getElementById("priceTable").innerHTML=`<tr><th>Materiale</th><th>Kategori</th><th style="text-align:right">Spend</th><th style="text-align:right">Prisindeks Jan→Sep</th><th style="text-align:right">Endring</th><th>Utvikling</th></tr>`+
   priceIdx.map(p=>({p,spend:lines.filter(l=>l.mat===p.mi).reduce((a,l)=>a+l.value,0)}))
     .sort((a,b)=>b.spend-a.spend).slice(0,8).map(({p,spend})=>{
@@ -705,7 +707,7 @@ document.getElementById("tiltakList").innerHTML=tiltak.map(x=>{const[cls,c,l]=pr
 const TABNAMES={forside:"Executive Overview",spend:"Spend Intelligence",lev:"Leverandører",po:"PO Performance",spar:"Sparingspotensial",tiltak:"Tiltak",faq:"Spørsmål og svar"};
 const HINTS={
  forside:"Klikk deg videre via kortene nedenfor – eller bruk søket oppe til høyre for å finne leverandører, materialer og PO-er direkte.",
- spend:"Klikk på en leverandør eller et materiale for å grave dypere – alt henger sammen.",
+ spend:"Klikk på en måned i grafene for månedens detaljer – eller på en leverandør/et materiale for å grave dypere.",
  lev:"Klikk på en rad for leverandørdetaljer. Potensialstallet har «dok»-lenke med full dokumentasjon.",
  po:"Klikk på en PO-linje for full detaljvisning, på en måned for å filtrere, eller på leverandør/materiale i radene.",
  spar:"Klikk «Se dokumentasjon» på et tall for å se nøyaktig hva potensialet bygger på.",
@@ -721,6 +723,34 @@ window.filterMonth=function(i){
   poMonth=i;
   document.querySelectorAll("#chartMonths .chips button").forEach(b=>b.classList.toggle("active",b.dataset.m===(i===null?"":String(i))));
   renderPO();
+};
+window.showMonth=function(i){
+  const ls=lines.filter(l=>l.month===i);
+  const spend=ls.reduce((a,l)=>a+l.value,0);
+  const prev=i>0?lines.filter(l=>l.month===i-1).reduce((a,l)=>a+l.value,0):null;
+  const d=prev?Math.round((spend-prev)/prev*1000)/10:null;
+  const per={};ls.forEach(l=>{per[l.sup.id]=(per[l.sup.id]||0)+l.value;});
+  const top=Object.entries(per).map(([id,v])=>({id,v})).sort((a,b)=>b.v-a.v).slice(0,6);
+  const cats=CATS.map(c=>({c,v:ls.filter(l=>matCat(l.mat)===c).reduce((a,l)=>a+l.value,0)})).sort((a,b)=>b.v-a.v);
+  const catMax=cats.length?cats[0].v:1;
+  let html=`<div class="mh"><div><h2>📅 Spend · ${MONTHS[i]} 2026</h2>
+    <div style="font-size:12px;color:var(--muted)">Månedens innkjøpsaktivitet</div></div>
+    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+  <div class="kpis" style="margin:12px 0">
+    ${kpi("Spend i måneden",fmtM(spend),fmt(ls.length)+" PO-linjer")}
+    ${kpi("Vs. forrige måned",prev===null?"–":(d>0?"+":"")+d.toFixed(1).replace(".",",")+"%",prev?fmtM(prev)+" i "+MONTHS[i-1]:"første måned i serien",d===null?"":d>0?"bad":"good")}
+    ${kpi("Snitt per linje",fmt(spend/(ls.length||1))+" kr","")}
+    ${kpi("Aktive leverandører",Object.keys(per).length,"i denne måneden")}
+  </div>
+  <h3 class="sect">Topp leverandører i ${MONTHS[i]} – klikk for detaljer</h3>
+  <table><tr><th>Leverandør</th><th>Rating</th><th style="text-align:right">Spend</th><th style="text-align:right">Andel av måneden</th></tr>`+
+  top.map(t=>{const sv=suppliers.find(x=>x.id===+t.id);return `<tr class="click" onclick="openSup(${t.id})"><td><b>${sv.name}</b></td><td><span class="pill p${sv.rating}">${sv.rating}</span></td><td style="text-align:right">${fmt(t.v)}</td><td style="text-align:right">${spend?Math.round(t.v/spend*100):0}%</td></tr>`}).join("")+`</table>
+  <h3 class="sect" style="margin-top:14px">Spend per kategori</h3>`+
+  cats.map(c=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${c.c}</span><span style="color:var(--accent2)">${fmtM(c.v)}</span></div><div class="bar"><i style="width:${c.v/catMax*100}%"></i></div></div>`).join("")+
+  `<p style="margin-top:14px"><a class="evlink" onclick="hideModal();goto('po');filterMonth(${i});document.getElementById('poSearch').scrollIntoView({behavior:'smooth'})">Se alle PO-linjer for ${MONTHS[i]} i PO Performance →</a></p>`;
+  document.getElementById("modalBox").innerHTML=html;
+  document.getElementById("modalBg").classList.add("show");
+  setCrumbs([["Logichain","goto('forside')"],["Spend Intelligence","goto('spend')"],["Måned: "+MONTHS[i]]]);
 };
 window.showMat=function(mi){
   const mt=MATS[mi];
