@@ -323,9 +323,21 @@ rect.clickable:hover{fill:#6db3ff}
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
       <h3 class="sect" style="margin:0">Prioriterte tiltak – automatisk foreslått av Logichain</h3>
-      <div class="chips" style="margin:0">
-        <button class="active" id="tv-kort" onclick="tiltakView('kort')">Kortvisning</button>
-        <button id="tv-tabell" onclick="tiltakView('tabell')">Tabellvisning</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <select id="tiltakPrioSel" onchange="tiltakPrioChange(this.value)">
+          <option value="alle">Alle prioriteter</option>
+          <option value="høy">Høy prioritet</option>
+          <option value="midt">Middels prioritet</option>
+          <option value="lav">Lav prioritet</option>
+        </select>
+        <select id="tiltakSortSel" onchange="tiltakSortChange(this.value)">
+          <option value="potensial">Sorter: Potensial (størst først)</option>
+          <option value="prioritet">Sorter: Prioritet</option>
+        </select>
+        <div class="chips" style="margin:0">
+          <button class="active" id="tv-kort" onclick="tiltakView('kort')">Kortvisning</button>
+          <button id="tv-tabell" onclick="tiltakView('tabell')">Tabellvisning</button>
+        </div>
       </div>
     </div>
     <div id="tiltakList"></div>
@@ -753,46 +765,62 @@ tiltak.forEach(x=>{x.kat=/Konsolid/.test(x.t)?"Konsolidering":/Renegoti|Forhandl
 const prioLbl={h\u00f8y:["prio-h\u00f8y","bad","H\u00d8Y PRIORITET"],midt:["prio-midt","warn","MIDDELS PRIORITET"],lav:["prio-lav","acc","LAV PRIORITET"]};
 const prioShort={h\u00f8y:"H\u00f8y",midt:"Middels",lav:"Lav"};
 let tiltakViewMode="kort";
+let tiltakPrio="alle";
+let tiltakSort="potensial";
 window.tiltakView=function(m){tiltakViewMode=m;
   document.getElementById("tv-kort").classList.toggle("active",m==="kort");
   document.getElementById("tv-tabell").classList.toggle("active",m==="tabell");
   renderTiltak();};
+window.tiltakPrioChange=function(v){tiltakPrio=v;renderTiltak();};
+window.tiltakSortChange=function(v){tiltakSort=v;renderTiltak();};
+function cardFor(x){
+  const[cls,c]=prioLbl[x.prio];
+  const chip=x.kat==="Risiko"?`<a class="chip" onclick="goto('octo')">🌐 Se single-source-materialer</a>`:x.ev&&x.ev[0]==="sup"?`<a class="chip" onclick="openSup(${x.ev[1]})">🏢 ${suppliers.find(s=>s.id===x.ev[1]).name}</a>`:"";
+  return `<div class="tiltak ${cls}">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+      <span class="tag ${c}" style="opacity:.85">${prioShort[x.prio]} · ${x.kat}</span>
+      <span class="val">${x.v>1000?`<b class="good">${fmt(x.v)} kr / år</b>`:""}</span>
+    </div>
+    <h4>${x.t}</h4><p>${x.d}</p>
+    <div style="margin-top:6px">${chip}${x.v>1000?`<a class="evlink" style="${chip?"margin-left:8px":""}" onclick="showEvidence('${x.ev[0]}'${x.ev[1]!==undefined?","+x.ev[1]:""})">Se grunnlag →</a>`:""}</div>
+  </div>`;
+}
 function renderTiltak(){
   const box=document.getElementById("tiltakList");
   const tot=tiltak.reduce((a,x)=>a+x.v,0);
-  const cnt={h\u00f8y:tiltak.filter(x=>x.prio==="h\u00f8y").length,midt:tiltak.filter(x=>x.prio==="midt").length,lav:tiltak.filter(x=>x.prio==="lav").length};
+  const cnt={høy:tiltak.filter(x=>x.prio==="høy").length,midt:tiltak.filter(x=>x.prio==="midt").length,lav:tiltak.filter(x=>x.prio==="lav").length};
   document.getElementById("tiltakKpis").innerHTML=
     kpi("Totalt identifisert potensial",fmtM(tot),"summen av tiltakene","good")+
-    kpi("Antall tiltak",tiltak.length,"automatisk foresl\u00e5tt")+
-    kpi("H\u00f8y prioritet",cnt.h\u00f8y,"tiltak","bad")+
+    kpi("Antall tiltak",tiltak.length,"automatisk foreslått")+
+    kpi("Høy prioritet",cnt.høy,"tiltak","bad")+
     kpi("Dekningsgrad",Math.min(100,Math.round(tot/savTotal*100))+"%","av identifisert potensial i demoen");
+  let list=tiltak.filter(x=>tiltakPrio==="alle"||x.prio===tiltakPrio);
+  if(tiltakSort==="potensial")list=[...list].sort((a,b)=>b.v-a.v);
+  else list=[...list].sort((a,b)=>({høy:0,midt:1,lav:2}[a.prio]-{høy:0,midt:1,lav:2}[b.prio])||b.v-a.v);
+  if(!list.length){box.innerHTML=`<div class="note">Ingen tiltak på dette prioritetsnivået.</div>`;return;}
   if(tiltakViewMode==="tabell"){
-    box.innerHTML=`<div style="overflow-x:auto"><table><tr><th>Prioritet</th><th>Tiltak</th><th>Kategori</th><th style="text-align:right">Potensial / \u00e5r</th><th>Grunnlag</th></tr>`+
-      tiltak.map(x=>`<tr><td><span class="pill ${x.prio==="h\u00f8y"?"pD":x.prio==="midt"?"pC":"pB"}">${prioShort[x.prio]}</span></td><td><b>${x.t}</b></td><td>${x.kat}</td><td style="text-align:right" class="good">${x.v>1000?fmt(x.v)+" kr":"\u2013"}</td><td>${x.v>1000?`<a class="evlink" onclick="showEvidence('${x.ev[0]}'${x.ev[1]!==undefined?","+x.ev[1]:""})">Se grunnlag \u2192</a>`:"\u2013"}</td></tr>`).join("")+`</table></div>`;
+    box.innerHTML=`<div style="overflow-x:auto"><table><tr><th>Prioritet</th><th>Tiltak</th><th>Kategori</th><th style="text-align:right">Potensial / år</th><th>Grunnlag</th></tr>`+
+      list.map(x=>`<tr><td><span class="pill ${x.prio==="høy"?"pD":x.prio==="midt"?"pC":"pB"}">${prioShort[x.prio]}</span></td><td><b>${x.t}</b></td><td>${x.kat}</td><td style="text-align:right" class="good">${x.v>1000?fmt(x.v)+" kr":"–"}</td><td>${x.v>1000?`<a class="evlink" onclick="showEvidence('${x.ev[0]}'${x.ev[1]!==undefined?","+x.ev[1]:""})">Se grunnlag →</a>`:"–"}</td></tr>`).join("")+`</table></div>`;
     return;
   }
-  const grp={h\u00f8y:[],midt:[],lav:[]};
-  tiltak.forEach(x=>grp[x.prio].push(x));
-  let html="";
-  ["h\u00f8y","midt","lav"].forEach(p=>{
-    if(!grp[p].length)return;
-    const[cls,c,l]=prioLbl[p];
-    const sum=grp[p].reduce((a,x)=>a+x.v,0);
-    html+=`<div class="prio-head" style="border-left-color:${p==="h\u00f8y"?"var(--bad)":p==="midt"?"var(--warn)":"var(--accent)"}">
-      <span class="tag ${c}">${l}</span><span style="color:var(--muted);font-size:12px">${grp[p].length} tiltak</span>
-      <span style="margin-left:auto;font-weight:700;color:${sum>0?"var(--good)":"var(--muted)"}">${sum>1000?fmt(sum)+" kr / \u00e5r":""}</span></div>`;
-    html+=grp[p].map(x=>{
-      const chip=x.kat==="Risiko"?`<a class="chip" onclick="goto('octo')">\u1f310 Se single-source-materialer</a>`:x.ev&&x.ev[0]==="sup"?`<a class="chip" onclick="openSup(${x.ev[1]})">\ud83c\udfe2 ${suppliers.find(s=>s.id===x.ev[1]).name}</a>`:"";
-      return `<div class="tiltak ${cls}">
-        <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
-          <span class="tag ${c}" style="opacity:.85">${x.kat}</span>
-          <span class="val">${x.v>1000?`<b class="good">${fmt(x.v)} kr / \u00e5r</b>`:""}</span>
-        </div>
-        <h4>${x.t}</h4><p>${x.d}</p>
-        <div style="margin-top:6px">${chip}${x.v>1000?`<a class="evlink" style="${chip?"margin-left:8px":""}" onclick="showEvidence('${x.ev[0]}'${x.ev[1]!==undefined?","+x.ev[1]:""})">Se grunnlag \u2192</a>`:""}</div>
-      </div>`}).join("");
-  });
-  box.innerHTML=html;
+  if(tiltakPrio!=="alle"){box.innerHTML=list.map(cardFor).join("");return;}
+  if(tiltakSort==="prioritet"){
+    const grp={høy:[],midt:[],lav:[]};
+    list.forEach(x=>grp[x.prio].push(x));
+    let html="";
+    ["høy","midt","lav"].forEach(p=>{
+      if(!grp[p].length)return;
+      const[cls,c,l]=prioLbl[p];
+      const sum=grp[p].reduce((a,x)=>a+x.v,0);
+      html+=`<div class="prio-head" style="border-left-color:${p==="høy"?"var(--bad)":p==="midt"?"var(--warn)":"var(--accent)"}">
+        <span class="tag ${c}">${l}</span><span style="color:var(--muted);font-size:12px">${grp[p].length} tiltak</span>
+        <span style="margin-left:auto;font-weight:700;color:${sum>0?"var(--good)":"var(--muted)"}">${sum>1000?fmt(sum)+" kr / år":""}</span></div>`;
+      html+=grp[p].map(cardFor).join("");
+    });
+    box.innerHTML=html;
+    return;
+  }
+  box.innerHTML=list.map(cardFor).join("");
 }
 renderTiltak();
 
