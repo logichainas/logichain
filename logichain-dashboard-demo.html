@@ -88,6 +88,27 @@ tr.click{cursor:pointer} tr.click:hover{background:rgba(61,139,255,.07)}
 .modal .mh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
 .mclose{background:#1a2444;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700}
 .assump{background:rgba(61,139,255,.08);border:1px solid rgba(61,139,255,.35);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--accent2);line-height:1.5;margin:10px 0}
+.crumbbar{display:none;gap:8px;align-items:center;font-size:12px;color:var(--muted);margin-bottom:10px}
+.crumbbar.show{display:flex}
+.crumbbar a{color:var(--accent2);cursor:pointer;text-decoration:none;font-weight:600}
+.crumbbar a:hover{text-decoration:underline}
+.crumbbar .sep{color:#3a4a75}
+.crumbbar .cur{color:var(--txt);font-weight:600}
+.hint-line{background:rgba(61,139,255,.08);border:1px solid rgba(61,139,255,.25);border-radius:10px;padding:9px 14px;font-size:12.5px;color:var(--accent2);margin-bottom:14px}
+.cellink{color:var(--accent2);cursor:pointer;text-decoration:none;font-weight:600}
+.cellink:hover{text-decoration:underline}
+.kpi-help{font-size:10px;color:var(--muted);cursor:help;margin-left:4px}
+.searchbox{position:relative}
+.searchbox input{min-width:240px}
+.sdd{position:absolute;top:calc(100% + 6px);right:0;background:#101830;border:1px solid #24407a;border-radius:10px;min-width:340px;max-height:420px;overflow:auto;z-index:60;display:none;box-shadow:0 16px 40px rgba(0,0,0,.55)}
+.sdd.show{display:block}
+.sdd .grp{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:9px 12px 3px}
+.sdd .item{padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;font-size:12.5px;align-items:center}
+.sdd .item:hover{background:rgba(61,139,255,.12)}
+.sdd .tag{font-size:10px;color:var(--muted);white-space:nowrap}
+.mlinks{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.mlinks a{background:rgba(61,139,255,.1);border:1px solid rgba(61,139,255,.35);color:var(--accent2);border-radius:8px;padding:7px 14px;font-size:12.5px;cursor:pointer;text-decoration:none;font-weight:600}
+.mlinks a:hover{background:rgba(61,139,255,.2)}
 </style>
 </head>
 <body>
@@ -98,6 +119,10 @@ tr.click{cursor:pointer} tr.click:hover{background:rgba(61,139,255,.07)}
     <div class="topsub">Turn purchasing data into decisions.</div>
   </div>
   <div class="spacer"></div>
+  <div class="searchbox">
+    <input type="text" id="globalSearch" placeholder="🔍 Søk leverandør, materiale, PO ..." oninput="doSearch()" onfocus="doSearch()">
+    <div class="sdd" id="searchDD"></div>
+  </div>
   <a class="home-btn" href="index.html">← Tilbake til nettsiden</a>
   <span class="demo-badge">DEMO DATA</span>
   <span class="online">● Online</span>
@@ -114,6 +139,8 @@ tr.click{cursor:pointer} tr.click:hover{background:rgba(61,139,255,.07)}
 </div>
 
 <main>
+<div class="crumbbar" id="crumbs"></div>
+<div class="hint-line" id="hintline"></div>
 
 <!-- ============ EXECUTIVE OVERVIEW ============ -->
 <section id="tab-forside">
@@ -417,30 +444,33 @@ const avgPriceTrend=(matTrend.reduce((a,t)=>a+t,0)/matTrend.length*100);
 /* ================= TABS ================= */
 function goto(t){document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
   ["forside","spend","lev","po","spar","tiltak","faq"].forEach(x=>document.getElementById("tab-"+x).style.display=x===t?"":"none");
+  const h=document.getElementById("hintline");if(h)h.textContent=HINTS[t]||"";
+  setCrumbs([["Logichain","goto('forside')"],[TABNAMES[t]||t]]);
   window.scrollTo(0,0);}
 document.getElementById("tabs").addEventListener("click",e=>{if(e.target.dataset.tab)goto(e.target.dataset.tab)});
 
-const kpi=(lbl,val,sub,cls="")=>`<div class="kpi"><div class="lbl">${lbl}</div><div class="val ${cls}">${val}</div><div class="sub">${sub}</div></div>`;
+const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl}${help?` <span class="kpi-help" title="${help}">ⓘ</span>`:""}</div><div class="val ${cls}">${val}</div><div class="sub">${sub}</div></div>`;
 
 /* ================= EXECUTIVE OVERVIEW ================= */
 document.getElementById("kpi-forside").innerHTML=
-  kpi("Totalt innkjøp 2026",fmtM(totVal),`${fmt(lines.length)} PO-linjer · ${suppliers.length} leverandører`)+
-  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(lines.length)} i tide`,overallOTD>=80?"good":"bad")+
-  kpi("Aktive leverandører",suppliers.length,"med leveringer i perioden")+
-  kpi("Top 5-konsentrasjon",top5Share+"%","andel av total spend hos topp 5")+
-  kpi("Single-source materialer",singleSource.length,"uten alternativ leverandør",singleSource.length>3?"warn":"")+
-  kpi("Identifisert sparepotensial",fmtM(savTotal),"per år – se dokumentasjon","good");
+  kpi("Totalt innkjøp 2026",fmtM(totVal),`${fmt(lines.length)} PO-linjer · ${suppliers.length} leverandører`,"","Summen av alle linjeverdier i perioden")+
+  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(lines.length)} i tide`,overallOTD>=80?"good":"bad","On-Time Delivery: andel leveringer levert på love-datoen")+
+  kpi("Aktive leverandører",suppliers.length,"med leveringer i perioden","","Leverandører med minst én PO-linje i perioden")+
+  kpi("Top 5-konsentrasjon",top5Share+"%","andel av total spend hos topp 5","","Hvor stor del av innkjøpet som går til de fem største leverandørene – høy andel betyr leverandøravhengighet")+
+  kpi("Single-source materialer",singleSource.length,"uten alternativ leverandør",singleSource.length>3?"warn":"","Materialer som kun leveres av én leverandør – se Spend Intelligence")+
+  kpi("Identifisert sparepotensial",fmtM(savTotal),"per år – se dokumentasjon","good","Summen av fire kilder. Klikk deg inn i Sparingspotensial for dokumentasjon bak tallet");
 
 /* ================= PO PERFORMANCE ================= */
+var poMonth=null;
 function renderPO(){
   const q=(document.getElementById("poSearch").value||"").toLowerCase();
   const st=document.getElementById("poStatus").value;
-  const rows=lines.filter(l=>(!st||l.status===st)&&(
+  const rows=lines.filter(l=>(!st||l.status===st)&&(poMonth===null||l.month===poMonth)&&(
     !q||l.po.toLowerCase().includes(q)||l.sup.name.toLowerCase().includes(q)||
     matName(l.mat).toLowerCase().includes(q)||matCode(l.mat).toLowerCase().includes(q)||l.proj.includes(q)));
   document.getElementById("poTable").innerHTML=`<tr><th>PO-nr</th><th>Linje</th><th>Leverandør</th><th>Materiale</th><th>Prosj.</th><th>Bestilt</th><th>Love-dato</th><th>Levert</th><th>Avvik</th><th>Status</th><th style="text-align:right">Verdi</th></tr>`+
-    rows.slice(0,120).map(l=>`<tr class="click"><td><b>${l.po}</b></td><td>${l.line}</td><td>${l.sup.name}</td><td>${matName(l.mat)}</td><td>${l.proj}</td><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.dev>0?"+":""}${l.dev} dgr</td><td><span class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</span></td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("");
-  document.getElementById("poCount").textContent=`Viser ${Math.min(rows.length,120)} av ${fmt(rows.length)} treff · ${fmt(lines.length)} PO-linjer totalt`;
+    rows.slice(0,120).map(l=>`<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.line}</td><td><a class="cellink" onclick="event.stopPropagation();openSup(${l.sup.id})">${l.sup.name}</a></td><td><a class="cellink" onclick="event.stopPropagation();showMat(${l.mat})">${matName(l.mat)}</a></td><td>${l.proj}</td><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.dev>0?"+":""}${l.dev} dgr</td><td><span class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</span></td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("");
+  document.getElementById("poCount").textContent=`Viser ${Math.min(rows.length,120)} av ${fmt(rows.length)} treff · ${fmt(lines.length)} PO-linjer totalt · ${poMonth===null?"alle måneder":MONTHS[poMonth]} · klikk på en rad for detaljer`;
 }
 renderPO();
 
@@ -472,7 +502,7 @@ document.getElementById("kpi-po").innerHTML=
   });
   const my=pad+(H-pad-30)*(1-0.9);
   document.getElementById("chartOTD").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%">${grid}<line x1="${pad}" x2="${W}" y1="${my}" y2="${my}" stroke="#2ecc71" stroke-dasharray="6 5" opacity=".6"/><text x="${W-60}" y="${my-6}" fill="#2ecc71" font-size="10">Mål 90%</text>${bars}${dots}</svg>`;
-  document.getElementById("chartMonths").innerHTML=`<div class="chips"><button class="active">Hele året · ${fmt(lines.length)}</button>${monthsData.map(d=>`<button>${d.m} · ${d.n}</button>`).join("")}</div>`;
+  document.getElementById("chartMonths").innerHTML=`<div class="chips"><button class="active" data-m="" onclick="filterMonth(null)">Hele året · ${fmt(lines.length)}</button>${monthsData.map((d,i)=>`<button data-m="${i}" onclick="filterMonth(${i})">${d.m} · ${d.n}</button>`).join("")}</div>`;
 })();
 
 (function(){
@@ -513,7 +543,8 @@ window.levDetail=function(id){
   ${savPer[id]>5000?`<p style="margin-bottom:10px"><a class="evlink" onclick="showEvidence('sup',${id})">Se dokumentasjon for potensialet →</a></p>`:""}
   <h3 class="sect">Største avvik (nyeste leveringer)</h3>
   <table><tr><th>PO</th><th>Materiale</th><th>Love-dato</th><th>Levert</th><th>Avvik</th><th>Status</th><th style="text-align:right">Verdi</th></tr>
-  ${lv.map(l=>`<tr><td>${l.po}</td><td>${matName(l.mat)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.dev>0?"+":""}${l.dev} dgr</td><td class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")}</table>`;
+  ${lv.map(l=>`<tr><td>${l.po}</td><td><a class="cellink" onclick="showMat(${l.mat})">${matName(l.mat)}</a></td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.dev>0?"+":""}${l.dev} dgr</td><td class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")}</table>`;
+  setCrumbs([["Logichain","goto('forside')"],["Leverandører","goto('lev')"],[s.name]]);
   el.scrollIntoView({behavior:"smooth",block:"nearest"});
 };
 
@@ -537,12 +568,12 @@ function hbars(el,rows,fmtV){
     <div class="bar"><i style="width:${r.val/max*100}%;background:${r.color||"linear-gradient(90deg,#2e7cf6,#6db3ff)"}"></i></div></div>`).join("");
 }
 document.getElementById("kpi-spend").innerHTML=
-  kpi("Total spend 2026",fmtM(totVal),fmt(lines.length)+" PO-linjer")+
-  kpi("Spend per måned (snitt)",fmtM(totVal/9),"Jan – Sep")+
-  kpi("Top 5-konsentrasjon",top5Share+"%","av total spend hos topp 5 leverandører",top5Share>60?"warn":"")+
-  kpi("Tail spend",tailShare+"%",tailSup.length+" leverandører står for andel > 80 %-kutten")+
-  kpi("Single-source materialer",singleSource.length,"uten dokumentert alternativ",singleSource.length>2?"warn":"")+
-  kpi("Snitt prisutvikling",(avgPriceTrend>0?"+":"")+avgPriceTrend.toFixed(1).replace(".",",")+"%","vekta snitt per materiale, Jan→Sep",avgPriceTrend>2?"bad":"good");
+  kpi("Total spend 2026",fmtM(totVal),fmt(lines.length)+" PO-linjer","","Summen av alle PO-linjene i perioden")+
+  kpi("Spend per måned (snitt)",fmtM(totVal/9),"Jan – Sep","","Gjennomsnittlig månedlig innkjøpsvolum")+
+  kpi("Top 5-konsentrasjon",top5Share+"%","av total spend hos topp 5 leverandører",top5Share>60?"warn":"","Leverandøravhengighet: andel av spenden hos de fem største – klikk på listen under for å se dem")+
+  kpi("Tail spend",tailShare+"%",tailSup.length+" leverandører står for andel > 80 %-kutten","","De små leverandørene etter 80 %-kutten – ofte mye administrasjon per krone")+
+  kpi("Single-source materialer",singleSource.length,"uten dokumentert alternativ",singleSource.length>2?"warn":"","Materialer som kun én leverandør kan levere – forsyningssrisiko")+
+  kpi("Snitt prisutvikling",(avgPriceTrend>0?"+":"")+avgPriceTrend.toFixed(1).replace(".",",")+"%","vekta snitt per materiale, Jan→Sep",avgPriceTrend>2?"bad":"good","Gjennomsnittlig prisendring fra januar til september, vektet per materiale");
 
 document.getElementById("chartSpendMonth").innerHTML=vbars(
   spendByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmtK(v),l=>l);
@@ -558,7 +589,7 @@ document.getElementById("priceTable").innerHTML=`<tr><th>Materiale</th><th>Kateg
       const pts=p.rows.map((v,i)=>v?`${8+i*(150/8)},${34-(v-90)*0.6}`:"").filter(Boolean).join(" ");
       const first=p.rows.find(v=>v!==null),last=[...p.rows].reverse().find(v=>v!==null);
       const chg=last&&first?Math.round((last-first)/first*1000)/10:0;
-      return `<tr><td><b>${matName(p.mi)}</b> <span style="color:var(--muted);font-size:10.5px">${matCode(p.mi)}</span></td><td>${matCat(p.mi)}</td><td style="text-align:right">${fmt(spend)}</td><td style="text-align:right">${first} → ${last}</td><td style="text-align:right" class="${chg>1?"bad":chg<-1?"good":""}">${chg>0?"+":""}${chg.toFixed(1).replace(".",",")}%</td><td><svg width="160" height="38"><line x1="8" x2="158" y1="34" y2="34" stroke="#1e2a4a"/><polyline points="${pts}" fill="none" stroke="${chg>1?"#e05d5d":chg<-1?"#2ecc71":"#3d8bff"}" stroke-width="2"/></svg></td></tr>`}).join("");
+      return `<tr><td><a class="cellink" onclick="showMat(${p.mi})"><b>${matName(p.mi)}</b></a> <span style="color:var(--muted);font-size:10.5px">${matCode(p.mi)}</span></td><td>${matCat(p.mi)}</td><td style="text-align:right">${fmt(spend)}</td><td style="text-align:right">${first} → ${last}</td><td style="text-align:right" class="${chg>1?"bad":chg<-1?"good":""}">${chg>0?"+":""}${chg.toFixed(1).replace(".",",")}%</td><td><svg width="160" height="38"><line x1="8" x2="158" y1="34" y2="34" stroke="#1e2a4a"/><polyline points="${pts}" fill="none" stroke="${chg>1?"#e05d5d":chg<-1?"#2ecc71":"#3d8bff"}" stroke-width="2"/></svg></td></tr>`}).join("");
 document.getElementById("tailBox").innerHTML=`
   ${kpi("Leverandører i tail",tailSup.length,"etter topp-leverandører som dekker 80 % av spend")}
   ${kpi("Tail spend",fmtM(tailSpend),tailShare+"% av total spend")}
@@ -669,6 +700,106 @@ tiltak.sort((a,b)=>b.v-a.v);
 const prioLbl={høy:["prio-hoy","bad","HØY PRIORITET"],midt:["prio-midt","warn","MIDDELS"],lav:["prio-lav","acc","LAV"]};
 document.getElementById("tiltakList").innerHTML=tiltak.map(x=>{const[cls,c,l]=prioLbl[x.prio];
   return `<div class="tiltak ${cls}"><div class="tag ${c}">${l}</div><h4>${x.t}</h4><p>${x.d}</p>${x.v>1000?`<p style="margin-top:6px"><b class="good">Identifisert potensial: ${fmt(x.v)} kr / år</b> · <a class="evlink" onclick="showEvidence('${x.ev[0]}'${x.ev[1]!==undefined?","+x.ev[1]:""})">Se grunnlag →</a></p>`:""}</div>`}).join("");
+
+/* ================= CROSS-NAVIGATION ================= */
+const TABNAMES={forside:"Executive Overview",spend:"Spend Intelligence",lev:"Leverandører",po:"PO Performance",spar:"Sparingspotensial",tiltak:"Tiltak",faq:"Spørsmål og svar"};
+const HINTS={
+ forside:"Klikk deg videre via kortene nedenfor – eller bruk søket oppe til høyre for å finne leverandører, materialer og PO-er direkte.",
+ spend:"Klikk på en leverandør eller et materiale for å grave dypere – alt henger sammen.",
+ lev:"Klikk på en rad for leverandørdetaljer. Potensialstallet har «dok»-lenke med full dokumentasjon.",
+ po:"Klikk på en PO-linje for full detaljvisning, på en måned for å filtrere, eller på leverandør/materiale i radene.",
+ spar:"Klikk «Se dokumentasjon» på et tall for å se nøyaktig hva potensialet bygger på.",
+ tiltak:"Hvert tiltak har «Se grunnlag» med dokumentasjon bak estimatet.",
+ faq:"Klikk på et spørsmål for svaret."};
+window.setCrumbs=function(items){
+  const el=document.getElementById("crumbs");if(!el)return;
+  el.innerHTML=items.map((it,i)=>(i?`<span class="sep">›</span>`:"")+(it[1]?`<a onclick="${it[1]}">${it[0]}</a>`:`<span class="cur">${it[0]}</span>`)).join("");
+  el.classList.add("show");
+};
+window.openSup=function(id){hideModal();goto("lev");levDetail(id);};
+window.filterMonth=function(i){
+  poMonth=i;
+  document.querySelectorAll("#chartMonths .chips button").forEach(b=>b.classList.toggle("active",b.dataset.m===(i===null?"":String(i))));
+  renderPO();
+};
+window.showMat=function(mi){
+  const mt=MATS[mi];
+  const ls=lines.filter(l=>l.mat===mi);
+  const spend=ls.reduce((a,l)=>a+l.value,0);
+  const qty=ls.reduce((a,l)=>a+l.qty,0);
+  const p=priceIdx[mi];
+  const first=p.rows.find(v=>v!==null),last=[...p.rows].reverse().find(v=>v!==null);
+  const chg=last&&first?Math.round((last-first)/first*1000)/10:0;
+  const per={};ls.forEach(l=>{per[l.sup.id]=(per[l.sup.id]||0)+l.value;});
+  const sups=matSups[mi].map(id=>({id,spend:per[id]||0})).sort((a,b)=>b.spend-a.spend);
+  const ss=matSups[mi].length===1;
+  let html=`<div class="mh"><div><h2>📦 ${mt[1]}</h2>
+    <div style="font-size:12px;color:var(--muted)">${mt[0]} · ${mt[2]}</div></div>
+    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>`;
+  if(ss)html+=`<div class="assump" style="border-color:rgba(224,93,93,.4);color:var(--bad)">⚠️ <b>Single-source:</b> dette materialet leveres kun av én leverandør (${suppliers[matSups[mi][0]].name}). Vurder å sikre alternative kilder.</div>`;
+  html+=`<div class="kpis" style="margin:12px 0">
+    ${kpi("Spend totalt",fmt(spend)+" kr",fmt(ls.length)+" PO-linjer")}
+    ${kpi("Totalt antall",fmt(qty),"enheter")}
+    ${kpi("Prisindeks Jan→Sep",first+" → "+last,`${chg>0?"+":""}${chg.toFixed(1).replace(".",",")} %`,chg>1?"bad":chg<-1?"good":"")}
+    ${kpi("Leverandører",matSups[mi].length,ss?"single-source":"aktive leverandører",ss?"warn":"")}
+  </div>`;
+  html+=`<h3 class="sect">Leverandører for dette materialet – klikk for detaljer</h3>
+  <table><tr><th>Leverandør</th><th>Rating</th><th>OTD</th><th style="text-align:right">Spend på materialet</th><th style="text-align:right">Andel</th></tr>`+
+  sups.map(s=>{const sv=suppliers.find(x=>x.id===s.id);
+    return `<tr class="click" onclick="openSup(${s.id})"><td><b>${sv.name}</b></td><td><span class="pill p${sv.rating}">${sv.rating}</span></td><td>${sv.otd}%</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right">${spend?Math.round(s.spend/spend*100):0}%</td></tr>`}).join("")+`</table>`;
+  const pts=p.rows.map((v,i)=>v?`${8+i*(150/8)},${34-(v-90)*0.6}`:"").filter(Boolean).join(" ");
+  html+=`<h3 class="sect" style="margin-top:14px">Prisutvikling (indeks, første måned = 100)</h3>
+  <svg width="100%" height="60" viewBox="0 0 160 38" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${chg>1?"#e05d5d":chg<-1?"#2ecc71":"#3d8bff"}" stroke-width="2"/></svg>
+  <h3 class="sect" style="margin-top:14px">PO-linjer (viser ${Math.min(ls.length,15)} av ${ls.length}) – klikk for detaljer</h3>
+  <table><tr><th>PO</th><th>Leverandør</th><th>Prosj.</th><th>Antall</th><th style="text-align:right">Verdi</th><th>Status</th></tr>`+
+  ls.slice(0,15).map(l=>`<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.sup.name}</td><td>${l.proj}</td><td>${l.qty}</td><td style="text-align:right">${fmt(l.value)}</td><td class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</td></tr>`).join("")+`</table>`;
+  document.getElementById("modalBox").innerHTML=html;
+  document.getElementById("modalBg").classList.add("show");
+  setCrumbs([["Logichain","goto('forside')"],["Spend Intelligence","goto('spend')"],["Materiale: "+mt[1]]]);
+};
+window.showLine=function(po,line){
+  const l=lines.find(x=>x.po===po&&x.line===line);if(!l)return;
+  const others=lines.filter(x=>x.po===po&&x.line!==line).slice(0,10);
+  let html=`<div class="mh"><div><h2>📦 ${l.po} · linje ${l.line}</h2>
+    <div style="font-size:12px;color:var(--muted)">Prosjekt ${l.proj}</div></div>
+    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+  <div class="mlinks">
+    <a onclick="openSup(${l.sup.id})">🏢 Leverandør: ${l.sup.name}</a>
+    <a onclick="showMat(${l.mat})">📦 Materiale: ${matName(l.mat)}</a>
+  </div>
+  <div class="kpis" style="margin:12px 0">
+    ${kpi("Linjeverdi",fmt(l.value)+" kr","")}
+    ${kpi("Avvik",(l.dev>0?"+":"")+l.dev+" dgr","levert vs. love-dato",l.dev>0?"bad":l.dev<0?"warn":"good")}
+    ${kpi("Status",l.status,"",l.status==="I tide"?"good":l.status==="For sent"?"bad":"warn")}
+    ${kpi("Antall",l.qty,"enheter")}
+  </div>
+  <table><tr><th>Bestillingsdato</th><th>Love-dato</th><th>Faktisk levert</th><th>Prosjekt</th></tr>
+  <tr><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.proj}</td></tr></table>`;
+  if(others.length)html+=`<h3 class="sect" style="margin-top:14px">Andre linjer på samme PO – klikk for detaljer</h3>
+  <table><tr><th>Linje</th><th>Materiale</th><th>Antall</th><th style="text-align:right">Verdi</th><th>Status</th></tr>`+
+  others.map(o=>`<tr class="click" onclick="showLine('${o.po}',${o.line})"><td>${o.line}</td><td><a class="cellink" onclick="event.stopPropagation();showMat(${o.mat})">${matName(o.mat)}</a></td><td>${o.qty}</td><td style="text-align:right">${fmt(o.value)}</td><td class="${o.status==="I tide"?"st-ok":o.status==="For sent"?"st-late":"st-early"}">${o.status}</td></tr>`).join("")+`</table>`;
+  document.getElementById("modalBox").innerHTML=html;
+  document.getElementById("modalBg").classList.add("show");
+  setCrumbs([["Logichain","goto('forside')"],["PO Performance","goto('po')"],["PO "+l.po]]);
+};
+window.doSearch=function(){
+  const q=(document.getElementById("globalSearch").value||"").trim().toLowerCase();
+  const dd=document.getElementById("searchDD");
+  if(!q){dd.classList.remove("show");return;}
+  let out="";
+  const sups=suppliers.filter(s=>s.name.toLowerCase().includes(q)).slice(0,4);
+  if(sups.length)out+=`<div class="grp">Leverandører</div>`+sups.map(s=>`<div class="item" onclick="openSup(${s.id})"><span>${s.name}</span><span class="tag">${s.group}</span></div>`).join("");
+  const mats=MATS.map((m,i)=>i).filter(i=>matName(i).toLowerCase().includes(q)||matCode(i).toLowerCase().includes(q)).slice(0,4);
+  if(mats.length)out+=`<div class="grp">Materialer</div>`+mats.map(i=>`<div class="item" onclick="showMat(${i})"><span>${matName(i)}</span><span class="tag">${matCode(i)}</span></div>`).join("");
+  const seen={};lines.filter(l=>l.po.toLowerCase().includes(q)).forEach(l=>{if(!seen[l.po])seen[l.po]=l.line;});
+  const pos=Object.keys(seen).slice(0,4);
+  if(pos.length)out+=`<div class="grp">Innkjøpsordre</div>`+pos.map(p=>`<div class="item" onclick="showLine('${p}',${seen[p]})"><span>${p}</span><span class="tag">PO</span></div>`).join("");
+  if(!out)out=`<div class="grp">Ingen treff på «${q}»</div>`;
+  dd.innerHTML=out;dd.classList.add("show");
+};
+document.addEventListener("mousedown",e=>{if(!e.target.closest(".searchbox"))document.getElementById("searchDD").classList.remove("show");});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){hideModal();document.getElementById("searchDD").classList.remove("show");}});
+goto(document.querySelector(".tabs button.active").dataset.tab);
 
 /* ================= FAQ ================= */
 const FAQ=[
