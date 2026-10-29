@@ -554,7 +554,7 @@ const __KUNDE={firma:"MacGregor Norway",seed:4211};
 const rnd=mulberry32(__KUNDE?__KUNDE.seed:2026);
 const SUPABASE={url:"https://iksnoymoqvweudilfuzy.supabase.co",anonKey:"sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH"};let sb=null;
 if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUPABASE.url,SUPABASE.anonKey);}
-  let suppliers,MATS,lines,MONTHS,matSups,matTrend;let REAL=false;
+  let suppliers,MATS,lines,MONTHS,matSups,matTrend,CATS;let REAL=false;
   try{
     const sr=await sb.auth.getSession();const sess=sr&&sr.data&&sr.data.session;
     if(sess){
@@ -585,6 +585,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
           MONTHS=mset.map(m=>["Jan","Feb","Mar","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Des"][m]);
           matSups=MATS.map((m,i)=>[...new Set(lines.filter(l=>l.mat===i).map(l=>l.sup.id))]);
           matTrend=MATS.map(()=>0);
+          CATS=[...new Set(MATS.map(m=>m[2]))];
         }
       }
     }
@@ -593,7 +594,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
 const pick=a=>a[Math.floor(rnd()*a.length)];
 const NAMES=["Nordic Steel AS","Hydraflow Systems AB","Bergen Mek. Verksted","Trondheim Maritim AS","Fjell Metall AS","Aalborg Industri A/S","Stavanger Vekst AS","Øresund Komponenter AB","Halden Presisjon AS","Luleå Verkstad AB","Grenland Teknikk AS","Aarhus Metal Parts A/S","Vestfold Hydraulikk AS","Sandnes Stålprodusent","Kongsberg Drift AS","Malmö Processteknik AB","Oslo Fjord Industri AS","Drammen Rørforsyning","Ålesund Maskin AS","Umeå Maskinering AB","Kristiansand Kjetil AS","Södertälje Smed AB","Molde Profil AS","Haugesund Bolt AS","Karlskrona Verkstad AB","Tønsberg Tårn AS","Fredrikstad Fittings","Sundsvall Snurrning AB","Moss Montasje AS","Göteborg Gjutning AB","Skien Sveiseverksted","Randers Rustfritt A/S","Bodø Befestning AS","Västerås Ventiler AB","Arendal Aluminium","Porsgrunn Pumper AS","Helsingborg Hylsor AB","Mo i Rana Mekanisk","Tromsø Teknikk AS","Jönköping Jern AB","Hamar Hubstang AS","Esbjerg Ekstra A/S","Notodden Nippring","Sarpsborg Systemer AS","Linköping Laser AB"];
 const GROUPS=["Strukturelle komponenter","Hydraulikk","Elektro","Mekaniske komponenter","Forbruksmateriell"];
-const CATS=["Hydraulikk","Stål & metall","Elektro","Mekanisk","Forbruk"];
+CATS=["Hydraulikk","Stål & metall","Elektro","Mekanisk","Forbruk"];
 MATS=[["HYD-250T","Hydraulikksylinder 250T","Hydraulikk",38000],["SLI-DN200","Slirør DN200 med flens","Stål & metall",9500],["STA-S355","Stålplater S355 20 mm","Stål & metall",3100],["MOT-75KW","Elektrisk motor 75 kW","Elektro",42000],["VIN-25T","Vinsj 25T med trommel","Mekanisk",145000],["LGR-M16","Lågering M16 forsinket","Forbruk",38],["BOR-3m","Boltsett M36 x 3 m","Forbruk",850],["PKK-HYD","Pumpepakning hydraulikk","Hydraulikk",1200],["KBL-4G","Kabel 4G25 100 m","Elektro",4600],["VENT-150","Ventil DN150 PN16","Mekanisk",12500],["GIR-S235","Bjelke S235 400 mm","Stål & metall",7800],["TNK-500L","Tank 500 L rustfri","Stål & metall",32000],["KJT-80","Kjetting 80 mm (m)","Stål & metall",540],["FLT-200","Filter 200 micron","Forbruk",2900],["SENG-A20","Sengemutter A20 stål","Mekanisk",640]];
 const PROJECTS=["2188","2210","2214","2231","2246","2253"];
 MONTHS=["Jan","Feb","Mar","Apr","Mai","Jun","Jul","Aug","Sep"];
