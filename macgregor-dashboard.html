@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-<script>(function(){var V="v20261029e";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261029f";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
@@ -445,6 +445,7 @@ rect.clickable:hover{fill:#6db3ff}
     </div>
     <p style="font-size:12.5px;color:#8fa0c0;margin-bottom:14px">Last opp CSV-rapporten (innrapportering-malen). Logichain validerer filen, og <b style="color:#dbe4f5">Einar kvalitetssikrer og oppdaterer dashboardet</b> – du blir varslet når det er gjort.</p>
     <div style="margin-bottom:14px"><input type="file" id="upFile" accept=".csv,.txt" style="width:100%;background:#0b1226;border:1px solid #1e2a4a;color:#dbe4f5;padding:10px;border-radius:10px"></div>
+    <p style="font-size:12.5px;margin:-6px 0 14px"><a href="#" onclick="upSample();return false" style="color:#6db3ff">⬇️ Last ned mal (CSV med eksempelrader)</a> — fyll ut i Excel → «Lagre som → CSV» → last opp her.</p>
     <div id="upReport" style="font-size:12.5px;margin-bottom:14px"></div>
     <button id="upSend" style="width:100%;padding:12px;border:none;border-radius:10px;font-weight:700;font-size:14px;color:#fff;background:linear-gradient(135deg,#2e7cf6,#1a5fd0);cursor:pointer" disabled>Send til Logichain ✓</button>
     <p style="font-size:11px;color:#8fa0c0;margin-top:10px">Filen lagres i et sikret mottaksområde. Ingen data oppdateres automatisk.</p>
@@ -456,6 +457,16 @@ window.openSend=async function(){
   var s=await __SBC.auth.getSession();var sess=s&&s.data&&s.data.session;
   if(!sess){document.getElementById("upReport").innerHTML="<p style='color:#e05d5d'>Ikke innlogget.</p>";return;}
 };
+function upSample(){
+  var head=["PO-nummer","Linjenr","Leverandørnavn","Leverandørnr","Materialnummer","Materialebeskrivelse","Kategori","Prosjektnr","Antall","Enhet","Enhetspris (NOK)","Linjeverdi (NOK)","Bestillingsdato","Love-dato","Faktisk leveringsdato","Leveringsstatus","Kommentar"];
+  var rows=[
+   ["PO30001",1,"Eksempel Leverandør AS","10001","EKSEMPEL-1","Eksempelvare A","Mekanisk","3001",10,"stk",1200,12000,"01.01.2026","01.02.2026","01.02.2026","I tide",""],
+   ["PO30002",1,"Eksempel Leverandør 2 AB","10002","EKSEMPEL-2","Eksempelvare B","Elektro","3001",4,"stk",8500,34000,"15.01.2026","01.03.2026","05.03.2026","For sent","Levert 4 dager for sent"],
+   ["PO30003",1,"Eksempel Leverandør AS","10001","EKSEMPEL-3","Eksempelvare C","Stål & metall","3002",25,"stk",310,7750,"01.02.2026","15.02.2026","","","Ikke levert ennå"]];
+  var csv=[head].concat(rows).map(function(r){return r.join(";");}).join("\n");
+  var b=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="macgregor-innrapportering-mal.csv";a.click();
+}
 function upSplit(s,sep){var out=[],cur="",q=false;for(var i=0;i<s.length;i++){var ch=s[i];
   if(ch==='"'){if(q&&s[i+1]==='"'){cur+='"';i++;}else q=!q;}
   else if(ch===sep&&!q){out.push(cur);cur="";}else cur+=ch;}out.push(cur);return out;}
