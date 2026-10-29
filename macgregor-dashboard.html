@@ -1,16 +1,9 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-<script>(function(){var V="v20261029m";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261029n";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-window.__ERRS=[];
-function __showErr(){try{var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.3 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap;max-height:45vh;overflow:auto";(document.body||document.documentElement).appendChild(b);}b.textContent=window.__ERRS.slice(0,4).join("\n————\n");}catch(_){}}
-window.addEventListener("error",function(e){var s="";try{if(e.error&&e.error.stack)s="\n"+String(e.error.stack).split("\n").slice(0,2).join("\n");}catch(_){}
-window.__ERRS.push("FEIL: "+(e.message||"?")+" (linje "+e.lineno+")"+s);__showErr();});
-window.addEventListener("unhandledrejection",function(e){var r=e.reason;var s="";try{if(r&&r.stack)s="\n"+String(r.stack).split("\n").slice(0,2).join("\n");}catch(_){}
-window.__ERRS.push("PROMISE-FEIL: "+(r&&r.message?r.message:String(r))+s);__showErr();});
-</script>
+
 <script>
 (function(){
   document.documentElement.style.visibility="hidden";
@@ -55,7 +48,7 @@ window.__ERRS.push("PROMISE-FEIL: "+(r&&r.message?r.message:String(r))+s);__show
   if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
 })();
 </script>
-<script>window.addEventListener("error",function(e){try{var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.4 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);}b.textContent="JS-FEIL: "+(e.message||"ukjent")+" (linje "+e.lineno+")";}catch(_){}});</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MacGregor Norway · Logichain</title>
@@ -558,13 +551,10 @@ const __KUNDE={firma:"MacGregor Norway",seed:4211};
 const rnd=mulberry32(__KUNDE?__KUNDE.seed:2026);
 const SUPABASE={url:"https://iksnoymoqvweudilfuzy.supabase.co",anonKey:"sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH"};let sb=null;
 if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUPABASE.url,SUPABASE.anonKey);}
-  let suppliers,MATS,lines,MONTHS,matSups,matTrend,CATS,PROJECTS;let REAL=false;let DIAG="";
   try{
     const sr=await sb.auth.getSession();const sess=sr&&sr.data&&sr.data.session;
-    DIAG+="session="+(sess?"ja":"NEI")+" | ";
     if(sess){
       const prof=await sb.from("kunder").select("id,firma,seed,admin").eq("user_id",sess.user.id).maybeSingle();
-      DIAG+="profil="+(prof&&prof.data?("ja (seed "+prof.data.seed+", admin "+prof.data.admin+")"):"MANGLER")+" | ";
       if(prof&&prof.data){
         const kid=prof.data.id;
         const fetchAll=async function(tbl,ord){
@@ -582,11 +572,8 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
         };
         let lev=[],levE=null,mat=[],matE=null,po=[],poE=null;
         try{lev=await fetchAll("leverandorer","id");}catch(e){levE=e.message||String(e);}
-        DIAG+="lev="+(levE?("FEIL: "+levE):String(lev.length))+" | ";
         try{mat=await fetchAll("materialer","id");}catch(e){matE=e.message||String(e);}
-        DIAG+="mat="+(matE?("FEIL: "+matE):String(mat.length))+" | ";
         try{po=await fetchAll("po_linjer","id");}catch(e){poE=e.message||String(e);}
-        DIAG+="po="+(poE?("FEIL: "+poE):String(po.length))+" | ";
         if(!levE&&!matE&&!poE&&po.length){
           REAL=true;
           suppliers=lev.map(r=>({id:r.id,name:r.navn,group:r.gruppe||"\u2013",country:r.land||"\u2013",rating:r.rating||"C",otdBase:50}));
@@ -613,8 +600,6 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
         }
       }
     }
-  }catch(e){DIAG+="unntak: "+(e.message||e);}
-  try{window.__ERRS.push("DIAGNOSE: "+DIAG+" | REAL="+REAL);__showErr();}catch(_){}
 if(!REAL){
 const pick=a=>a[Math.floor(rnd()*a.length)];
 const NAMES=["Nordic Steel AS","Hydraflow Systems AB","Bergen Mek. Verksted","Trondheim Maritim AS","Fjell Metall AS","Aalborg Industri A/S","Stavanger Vekst AS","Øresund Komponenter AB","Halden Presisjon AS","Luleå Verkstad AB","Grenland Teknikk AS","Aarhus Metal Parts A/S","Vestfold Hydraulikk AS","Sandnes Stålprodusent","Kongsberg Drift AS","Malmö Processteknik AB","Oslo Fjord Industri AS","Drammen Rørforsyning","Ålesund Maskin AS","Umeå Maskinering AB","Kristiansand Kjetil AS","Södertälje Smed AB","Molde Profil AS","Haugesund Bolt AS","Karlskrona Verkstad AB","Tønsberg Tårn AS","Fredrikstad Fittings","Sundsvall Snurrning AB","Moss Montasje AS","Göteborg Gjutning AB","Skien Sveiseverksted","Randers Rustfritt A/S","Bodø Befestning AS","Västerås Ventiler AB","Arendal Aluminium","Porsgrunn Pumper AS","Helsingborg Hylsor AB","Mo i Rana Mekanisk","Tromsø Teknikk AS","Jönköping Jern AB","Hamar Hubstang AS","Esbjerg Ekstra A/S","Notodden Nippring","Sarpsborg Systemer AS","Linköping Laser AB"];
@@ -1350,7 +1335,6 @@ document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" 
   try{const u=document.querySelector(".updated");if(u&&REAL)u.textContent="Sist oppdatert: "+new Date().toLocaleDateString("no-NO")+" \u00b7 Datakilde: Supabase (ekte data)";}catch(_){}
   window.goto=goto;window.renderPO=renderPO;window.renderLev=renderLev;
 }
-boot();
-</script>
+boot();</script>
 </body>
 </html>
