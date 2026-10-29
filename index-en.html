@@ -598,10 +598,6 @@ document.getElementById("cform").addEventListener("submit",e=>{
   location.href="mailto:einar@logichain.no?subject="+encodeURIComponent("Logichain – enquiry from "+n+" / "+c)+
     "&body="+encodeURIComponent("Company: "+c+"\n\n"+m+"\n\n"+n+"\n"+em);
 });
-const KUNDER=[
-  {id:"norsk-industri",firma:"Norsk Industri AS",epost:"demo@norskindustri.no",passord:"demo1234",seed:4211},
-  {id:"nordisk-marine",firma:"Nordisk Marine Group",epost:"demo@nordiskmarine.no",passord:"demo1234",seed:9317}
-];
 function openLogin(){document.getElementById("loginBg").classList.add("show");}
 function closeLogin(){document.getElementById("loginBg").classList.remove("show");}
 function closeLogin(){document.getElementById("loginBg").classList.remove("show");}
@@ -637,27 +633,18 @@ document.getElementById("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const em=document.getElementById("lmail").value.trim(),pw=document.getElementById("lpass").value;
   const err=document.getElementById("lerr");
-  let supErr=null;
-  if(sb){
-    const{data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
-    if(!error){
-      let firma=em,seed=2026;
-      try{const{data:p}=await sb.from("kunder").select("firma,seed").eq("user_id",data.user.id).maybeSingle();
-        if(p){firma=p.firma;seed=p.seed;}}catch(_){}
-      localStorage.setItem("logichain_session",JSON.stringify({id:data.user.id,firma,seed,src:"supabase"}));
-      location.href="logichain-dashboard-demo-en.html";return;
-    }
-    supErr=error.message;
+  if(!sb){err.textContent="Login is temporarily unavailable. Please try again shortly.";err.style.display="block";return;}
+  const{data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
+  if(error){
+    if(error.message.toLowerCase().includes("confirm")){err.textContent="The email is not confirmed yet – confirm the user in Supabase (Authentication → Users).";}
+    else{err.textContent="Wrong email or password.";}
+    err.style.display="block";return;
   }
-  const k=KUNDER.find(x=>x.epost===em.trim().toLowerCase()&&x.passord===pw);
-  if(k){
-    localStorage.setItem("logichain_session",JSON.stringify({id:k.id,firma:k.firma,seed:k.seed}));
-    location.href="logichain-dashboard-demo-en.html";return;
-  }
-  if(supErr&&supErr.toLowerCase().includes("confirm")){err.textContent="The email is not confirmed yet – confirm the user in Supabase (Authentication → Users) or turn off “Confirm email”.";}
-  else if(supErr){err.textContent="Login failed: "+supErr;}
-  else{err.textContent="Wrong email or password.";}
-  err.style.display="block";
+  let firma=em,seed=2026;
+  try{const{data:p}=await sb.from("kunder").select("firma,seed").eq("user_id",data.user.id).maybeSingle();
+    if(p){firma=p.firma;seed=p.seed;}}catch(_){}
+  localStorage.setItem("logichain_session",JSON.stringify({id:data.user.id,firma,seed,src:"supabase"}));
+  location.href="logichain-dashboard-demo-en.html";
 });
 (function(){
   const s=JSON.parse(localStorage.getItem("logichain_session")||"null");
