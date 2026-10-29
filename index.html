@@ -625,6 +625,35 @@ const KUNDER=[
 ];
 function openLogin(){document.getElementById("loginBg").classList.add("show");}
 function closeLogin(){document.getElementById("loginBg").classList.remove("show");}
+function closeLogin(){document.getElementById("loginBg").classList.remove("show");}
+(function(){
+  if(!location.hash||location.hash.indexOf("access_token")<0||!sb)return;
+  const p=new URLSearchParams(location.hash.slice(1));
+  const at=p.get("access_token"),rt=p.get("refresh_token");
+  if(!at||!rt)return;
+  history.replaceState(null,"",location.pathname+location.search);
+  sb.auth.setSession({access_token:at,refresh_token:rt}).then(({error})=>{
+    if(error)return;
+    const m=document.getElementById("loginBg");
+    m.querySelector(".modal").innerHTML=
+      '<div class="mh"><div><h2>🔐 Sett ditt passord</h2><div style="font-size:12.5px;color:var(--muted)">Invitasjonen er akseptert \u2014 velg et passord for \u00e5 fullf\u00f8re</div></div></div>'+
+      '<form id="pwForm">'+
+      '<div class="fld"><input type="password" id="pw1" placeholder="Nytt passord (min. 6 tegn)" required minlength="6"></div>'+
+      '<div class="fld"><input type="password" id="pw2" placeholder="Gjenta passordet" required></div>'+
+      '<div id="pwErr" style="color:var(--bad);font-size:12.5px;margin-bottom:10px;display:none"></div>'+
+      '<button class="btn btn-demo" type="submit" style="width:100%">Lagre passord \u2713</button></form>';
+    m.classList.add("show");
+    document.getElementById("pwForm").addEventListener("submit",async e=>{
+      e.preventDefault();
+      const a=document.getElementById("pw1").value,b=document.getElementById("pw2").value;
+      const err=document.getElementById("pwErr");
+      if(a!==b){err.textContent="Passordene er ikke like.";err.style.display="block";return;}
+      const{error}=await sb.auth.updateUser({password:a});
+      if(error){err.textContent=error.message;err.style.display="block";return;}
+      m.querySelector(".modal").innerHTML='<div style="text-align:center;padding:10px"><div style="font-size:34px">\u2705</div><h2 style="margin:10px 0">Passord satt!</h2><p style="color:var(--muted);font-size:13px">Du kan n\u00e5 logge inn med e-posten din og dette passordet.</p><button class="btn btn-demo" style="margin-top:14px" onclick="openLogin();return false;">Logg inn \u2192</button></div>';
+    });
+  });
+})();
 document.getElementById("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const em=document.getElementById("lmail").value.trim(),pw=document.getElementById("lpass").value;
