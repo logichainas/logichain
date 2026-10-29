@@ -4,8 +4,12 @@
 <script>(function(){var V="v20261029h";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-window.addEventListener("error",function(e){try{var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.4 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);}b.textContent="JS-FEIL: "+(e.message||"ukjent")+" (linje "+e.lineno+")";}catch(_){}});
-window.addEventListener("unhandledrejection",function(e){try{var r=e.reason&&e.reason.message?e.reason.message:String(e.reason);var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.4 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);}b.textContent="FEIL: "+r;}catch(_){}});
+window.__ERRS=[];
+function __showErr(){try{var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.3 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap;max-height:45vh;overflow:auto";(document.body||document.documentElement).appendChild(b);}b.textContent=window.__ERRS.slice(0,4).join("\n————\n");}catch(_){}}
+window.addEventListener("error",function(e){var s="";try{if(e.error&&e.error.stack)s="\n"+String(e.error.stack).split("\n").slice(0,2).join("\n");}catch(_){}
+window.__ERRS.push("FEIL: "+(e.message||"?")+" (linje "+e.lineno+")"+s);__showErr();});
+window.addEventListener("unhandledrejection",function(e){var r=e.reason;var s="";try{if(r&&r.stack)s="\n"+String(r.stack).split("\n").slice(0,2).join("\n");}catch(_){}
+window.__ERRS.push("PROMISE-FEIL: "+(r&&r.message?r.message:String(r))+s);__showErr();});
 </script>
 <script>
 (function(){
