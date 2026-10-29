@@ -126,8 +126,8 @@ document.getElementById("file").addEventListener("change",async e=>{
     if(!po)E("Mangler PO-nummer");
     if(!sup)E("Mangler leverandørnavn");
     if(!mat)E("Mangler materialnummer");
-    if(!(bd instanceof Date)||bd==="BAD")E("Bestillingsdato mangler/ugyldig");
-    if(!(ld instanceof Date)||ld==="BAD")E("Love-dato mangler/ugyldig");
+    if(!bd||bd==="BAD")E("Bestillingsdato mangler/ugyldig");
+    if(!ld||ld==="BAD")E("Love-dato mangler/ugyldig");
     if(dd==="BAD")E("Faktisk leveringsdato ugyldig");
     if(isNaN(val))E("Linjeverdi mangler/ugyldig");
     if(sup&&mat){const key=po.toUpperCase()+"#"+(get(r,"linjenr")||"1");
@@ -137,7 +137,7 @@ document.getElementById("file").addEventListener("change",async e=>{
     valid.push({po,line:parseInt(get(r,"linjenr"))||1,supName:sup,matCode:mat,
       desc:get(r,"materialebeskrivelse"),cat:get(r,"kategori"),proj:get(r,"prosjektnr"),
       qty,unit:get(r,"enhet")||"stk",up:isNaN(up)?0:up,val:isNaN(val)?0:val,
-      order:bd instanceof Date?bd:null,prom:ld instanceof Date?ld:null,del:dd instanceof Date?dd:null});
+      order:bd&&bd!=="BAD"?bd:null,prom:ld&&ld!=="BAD"?ld:null,del:dd&&dd!=="BAD"?dd:null});
   });
   PENDING={valid,spend};
   document.getElementById("importBtn").disabled=errs.length>0;
