@@ -640,11 +640,11 @@ document.getElementById("loginForm").addEventListener("submit",async e=>{
     else{err.textContent="Wrong email or password.";}
     err.style.display="block";return;
   }
-  let firma=em,seed=2026;
-  try{const{data:p}=await sb.from("kunder").select("firma,seed").eq("user_id",data.user.id).maybeSingle();
-    if(p){firma=p.firma;seed=p.seed;}}catch(_){}
-  localStorage.setItem("logichain_session",JSON.stringify({id:data.user.id,firma,seed,src:"supabase"}));
-  location.href="logichain-dashboard-demo-en.html";
+  let firma=em,seed=2026,portal=null;
+  try{const{data:p}=await sb.from("kunder").select("firma,seed,portal").eq("user_id",data.user.id).maybeSingle();
+    if(p){firma=p.firma;seed=p.seed;portal=p.portal;}}catch(_){}
+  localStorage.setItem("logichain_session",JSON.stringify({id:data.user.id,firma,seed,portal,src:"supabase"}));
+  location.href=portal||"logichain-dashboard-demo-en.html";
 });
 (function(){
   const s=JSON.parse(localStorage.getItem("logichain_session")||"null");
@@ -653,7 +653,7 @@ document.getElementById("loginForm").addEventListener("submit",async e=>{
     b.textContent="🏢 Your dashboard";
     b.className="btn btn-demo";
     b.style.padding="9px 14px";b.style.fontSize="13px";
-    b.onclick=function(){location.href="logichain-dashboard-demo-en.html";return false;};
+    b.onclick=function(){location.href=(s.portal||"logichain-dashboard-demo-en.html");return false;};
     const demo=document.querySelector("header .btn-demo");
     if(demo)demo.style.display="none";
     const out=document.createElement("a");out.className="btn btn-ghost";out.textContent="Log out";out.href="#";
