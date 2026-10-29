@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Logichain · Dataopplasting</title>
-<script>(function(){var V="v20261029c";try{var s=localStorage.getItem("lc_ver"+location.pathname);if(s!==V){localStorage.setItem("lc_ver"+location.pathname,V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261029d";try{var s=localStorage.getItem("lc_ver"+location.pathname);if(s!==V){localStorage.setItem("lc_ver"+location.pathname,V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--bg:#070b16;--panel:#101830;--line:#1e2a4a;--txt:#dbe4f5;--muted:#8fa0c0;--accent:#2e7cf6;--accent2:#6db3ff;--good:#2ecc71;--bad:#e05d5d;--warn:#f0b429}
@@ -157,7 +157,17 @@ document.getElementById("importBtn").addEventListener("click",async ()=>{
       await sb.from("leverandorer").delete().eq("kunde_id",KID);
       await sb.from("materialer").delete().eq("kunde_id",KID);
     }
-    const exL=await sb.from("leverandorer").select("id,navn").eq("kunde_id",KID);
+    const fetchAll=async function(tbl,cols){
+      var out=[],from=0,done=false;
+      while(!done){
+        var r=await sb.from(tbl).select(cols).eq("kunde_id",KID).range(from,from+999);
+        if(r.error)throw r.error;
+        out=out.concat(r.data||[]);
+        if((r.data||[]).length<1000)done=true;else from+=1000;
+      }
+      return out;
+    };
+    const exL=await fetchAll("leverandorer","id,navn");
     const supMap={};(exL.data||[]).forEach(r=>supMap[r.navn.toLowerCase()]=r.id);
     const missingSup=[...new Set(PENDING.valid.map(r=>r.supName.toLowerCase()))].filter(n=>!supMap[n]);
     if(missingSup.length){
@@ -165,7 +175,7 @@ document.getElementById("importBtn").addEventListener("click",async ()=>{
       if(ins.error)throw ins.error;
       (ins.data||[]).forEach(r=>supMap[r.navn.toLowerCase()]=r.id);
     }
-    const exM=await sb.from("materialer").select("id,kode").eq("kunde_id",KID);
+    const exM=await fetchAll("materialer","id,kode");
     const matMap={};(exM.data||[]).forEach(r=>matMap[r.kode.toLowerCase()]=r.id);
     const seenMat={};const missingMat=[];
     PENDING.valid.forEach(r=>{const k=r.matCode.toLowerCase();

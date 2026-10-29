@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-<script>(function(){var V="v20261029j";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261029k";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 window.__ERRS=[];
@@ -565,9 +565,19 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
       const prof=await sb.from("kunder").select("id,firma,seed").eq("user_id",sess.user.id).maybeSingle();
       if(prof&&prof.data){
         const kid=prof.data.id;
-        const lev=await sb.from("leverandorer").select("*").eq("kunde_id",kid).order("id").range(0,4999);
-        const mat=await sb.from("materialer").select("*").eq("kunde_id",kid).order("id").range(0,4999);
-        const po=await sb.from("po_linjer").select("*").eq("kunde_id",kid).range(0,4999);
+        const fetchAll=async function(tbl,ord){
+          var out=[],from=0,done=false;
+          while(!done){
+            var r=await sb.from(tbl).select("*").eq("kunde_id",kid).order(ord).range(from,from+999);
+            if(r.error)throw r.error;
+            out=out.concat(r.data||[]);
+            if((r.data||[]).length<1000)done=true;else from+=1000;
+          }
+          return out;
+        };
+        const lev=await fetchAll("leverandorer","id");
+        const mat=await fetchAll("materialer","id");
+        const po=await fetchAll("po_linjer","id");
         if(!lev.error&&!mat.error&&!po.error&&(po.data||[]).length){
           REAL=true;
           suppliers=lev.data.map(r=>({id:r.id,name:r.navn,group:r.gruppe||"\u2013",country:r.land||"\u2013",rating:r.rating||"C",otdBase:50}));
