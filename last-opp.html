@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Logichain · Dataopplasting</title>
+<script>(function(){var V="v20261029c";try{var s=localStorage.getItem("lc_ver"+location.pathname);if(s!==V){localStorage.setItem("lc_ver"+location.pathname,V);location.reload();}}catch(e){}})();</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--bg:#070b16;--panel:#101830;--line:#1e2a4a;--txt:#dbe4f5;--muted:#8fa0c0;--accent:#2e7cf6;--accent2:#6db3ff;--good:#2ecc71;--bad:#e05d5d;--warn:#f0b429}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:"Segoe UI",Arial,sans-serif;font-size:14px;line-height:1.55;min-height:100vh}
+.wrap{max-width:900px;margin:0 auto;padding:40px 24px}
+.logo{font-weight:800;font-size:26px;color:#fff;letter-spacing:1px}
+.logo b{color:#4d9fff}
+h1{font-size:26px;color:#fff;margin:18px 0 8px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:24px;margin-bottom:18px}
+.sect{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+input[type=file]{color:var(--txt)}
+.btn{display:inline-block;padding:11px 22px;border-radius:10px;font-weight:700;font-size:14px;cursor:pointer;border:none;color:#fff;background:linear-gradient(135deg,#2e7cf6,#1a5fd0)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.fld{margin-bottom:12px}
+input,select{width:100%;background:#0b1226;border:1px solid var(--line);color:var(--txt);padding:12px 14px;border-radius:10px;font-size:14px;font-family:inherit}
+.note{font-size:11.5px;color:var(--muted);font-style:italic;margin-top:8px}
+.err{color:var(--bad);font-size:12.5px;margin:10px 0;display:none}
+.kpi{display:inline-block;background:#0b1226;border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin:0 8px 8px 0}
+.kpi b{font-size:18px;display:block}
+.kpi span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:10px}
+th{color:var(--muted);text-transform:uppercase;font-size:10px;text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid rgba(30,42,74,.5)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">LOGIC<b>HAIN</b> <span style="font-size:12px;color:#8fa0c0">· Dataopplasting</span></div>
+  <div id="gate">
+    <h1>🔐 Logg inn</h1>
+    <div class="card">
+      <form id="gForm">
+        <div class="fld"><input type="email" id="gMail" placeholder="E-post" required></div>
+        <div class="fld"><input type="password" id="gPass" placeholder="Passord" required></div>
+        <div class="err" id="gErr"></div>
+        <button class="btn" type="submit" style="width:100%">Logg inn →</button>
+        <p class="note">Opplasting er kun for Logichain-admin. Kundedata lastes opp hit og beskyttes av Supabase RLS.</p>
+      </form>
+    </div>
+  </div>
+  <div id="app" style="display:none">
+    <h1>📤 Last opp kundedata</h1>
+    <div class="card">
+      <div class="sect">Mål</div>
+      <div id="target" style="font-size:15px">…</div>
+      <div class="note">Data importeres til din kundeprofil i Supabase. RLS sikrer at kun tilhørende brukere kan lese dem.</div>
+    </div>
+    <div class="card">
+      <div class="sect">1 · Fil</div>
+      <input type="file" id="file" accept=".csv,.txt">
+      <p class="note">CSV eksportert fra innrapportering-malen (semikolon eller komma). XLSX: lagre som CSV først.</p>
+      <p style="margin-top:12px"><a href="#" id="sample" style="color:#6db3ff">⬇️ Last ned eksempel-CSV (hode + eksempelrad)</a></p>
+    </div>
+    <div class="card">
+      <div class="sect">2 · Import</div>
+      <label style="display:flex;gap:8px;align-items:center;margin-bottom:14px"><input type="checkbox" id="replace" style="width:auto"> Erstatt eksisterende data for denne kunden (sletter gamle leverandører/materialer/PO-linjer først)</label>
+      <div id="report"></div>
+      <button class="btn" id="importBtn" disabled style="width:100%">Importér</button>
+    </div>
+    <div class="card">
+      <div class="sect">Ferdig?</div>
+      <a class="btn" href="macgregor-dashboard.html" style="text-decoration:none;text-align:center;display:block">Åpne MacGregor-dashboardet →</a>
+      <div class="note">Dashboardet leser dataene direkte fra Supabase etter import.</div>
+    </div>
+  </div>
+</div>
+<script>
+const SUPABASE={url:"https://iksnoymoqvweudilfuzy.supabase.co",anonKey:"sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH"};
+const sb=supabase.createClient(SUPABASE.url,SUPABASE.anonKey);
+let KID=null,FIRMA=null,PROFILE=null,PENDING=null;
+function gErr(m){const e=document.getElementById("gErr");e.textContent=m;e.style.display="block";}
+document.getElementById("gForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const em=document.getElementById("gMail").value.trim(),pw=document.getElementById("gPass").value;
+  const r=await sb.auth.signInWithPassword({email:em,password:pw});
+  if(r.error){gErr(r.error.message);return;}
+  const p=await sb.from("kunder").select("id,firma,seed").eq("user_id",r.data.user.id).maybeSingle();
+  if(!p.data){gErr("Ingen kundeprofil for denne brukeren.");return;}
+  KID=p.data.id;FIRMA=p.data.firma;PROFILE=p.data;
+  document.getElementById("gate").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("target").innerHTML="<b style='color:#fff'>"+FIRMA+"</b> · seed "+p.data.seed;
+});
+document.getElementById("sample").addEventListener("click",e=>{
+  e.preventDefault();
+  const head=["PO-nummer","Linjenr","Leverandørnavn","Leverandørnr","Materialnummer","Materialebeskrivelse","Kategori","Prosjektnr","Antall","Enhet","Enhetspris (NOK)","Linjeverdi (NOK)","Bestillingsdato","Love-dato","Faktisk leveringsdato","Leveringsstatus","Kommentar"];
+  const row=["PO27001",1,"Eksempel Leverandør AS","10001","EKSEMPEL-1","Eksempelvare","Mekanisk","1001",10,"stk",1000,10000,"01.01.2026","01.02.2026","01.02.2026","I tide",""];
+  const b=new Blob(["\uFEFF"+[head,row].map(r=>r.join(";")).join("\n")],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="logichain-mal-eksempel.csv";a.click();
+});
+function csvSplit(s,sep){const out=[];let cur="",q=false;for(let i=0;i<s.length;i++){const ch=s[i];
+  if(ch==='"'){if(q&&s[i+1]==='"'){cur+='"';i++;}else q=!q;}
+  else if(ch===sep&&!q){out.push(cur);cur="";}else cur+=ch;}out.push(cur);return out;}
+function parseCSV(text){
+  const t=text.replace(/^\uFEFF/,"").trim();const arr=t.split(/\r?\n/);
+  const sep=((arr[0].match(/;/g)||[]).length>=(arr[0].match(/,/g)||[]).length)?";":",";
+  const head=csvSplit(arr[0],sep).map(h=>h.trim().toLowerCase());
+  return arr.slice(1).filter(r=>r.trim()).map(r=>{const c=csvSplit(r,sep);const o={};head.forEach((h,i)=>o[h]=(c[i]||"").trim());return o;});
+}
+function pDate(s){if(!s)return null;s=s.trim();let m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if(m)return m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");
+  m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return m[1]+"-"+m[2].padStart(2,"0")+"-"+m[3].padStart(2,"0");return "BAD";}
+function num(s){return s?Number(String(s).replace(/\s/g,"").replace(",",".")):NaN;}
+document.getElementById("file").addEventListener("change",async e=>{
+  const f=e.target.files[0];if(!f)return;
+  const rep=document.getElementById("report");rep.innerHTML="";
+  const rows=parseCSV(await f.text());
+  if(!rows.length){rep.innerHTML="<div class='err' style='display:block'>Filen har ingen datarader.</div>";return;}
+  const get=(r,p)=>{const k=Object.keys(r).find(k=>k.startsWith(p));return k?r[k]:"";};
+  const errs=[];const seen={};let spend=0;
+  const valid=[];
+  rows.forEach((r,idx)=>{
+    const row=idx+2;
+    const po=get(r,"po-nummer"),sup=get(r,"leverandørnavn"),mat=get(r,"materialnummer");
+    const bd=pDate(get(r,"bestillingsdato")),ld=pDate(get(r,"love-dato")),dd=pDate(get(r,"faktisk leveringsdato"));
+    const val=num(get(r,"linjeverdi")),qty=num(get(r,"antall"))||1,up=num(get(r,"enhetspris"));
+    const E=m=>errs.push({row,t:"Feil",m});
+    if(!po)E("Mangler PO-nummer");
+    if(!sup)E("Mangler leverandørnavn");
+    if(!mat)E("Mangler materialnummer");
+    if(!(bd instanceof Date)||bd==="BAD")E("Bestillingsdato mangler/ugyldig");
+    if(!(ld instanceof Date)||ld==="BAD")E("Love-dato mangler/ugyldig");
+    if(dd==="BAD")E("Faktisk leveringsdato ugyldig");
+    if(isNaN(val))E("Linjeverdi mangler/ugyldig");
+    if(sup&&mat){const key=po.toUpperCase()+"#"+(get(r,"linjenr")||"1");
+      if(seen[key])E("Duplikat PO+linje");else seen[key]=1;}
+    else errs.push({row,t:"Feil",m:"Ufullstendig rad"});
+    if(!isNaN(val))spend+=val;
+    valid.push({po,line:parseInt(get(r,"linjenr"))||1,supName:sup,matCode:mat,
+      desc:get(r,"materialebeskrivelse"),cat:get(r,"kategori"),proj:get(r,"prosjektnr"),
+      qty,unit:get(r,"enhet")||"stk",up:isNaN(up)?0:up,val:isNaN(val)?0:val,
+      order:bd instanceof Date?bd:null,prom:ld instanceof Date?ld:null,del:dd instanceof Date?dd:null});
+  });
+  PENDING={valid,spend};
+  document.getElementById("importBtn").disabled=errs.length>0;
+  rep.innerHTML="<div class='sect'>Validering</div>"+
+   "<span class='kpi'><b>"+rows.length+"</b><span>rader</span></span>"+
+   "<span class='kpi'><b style='color:"+(errs.length?"#e05d5d":"#2ecc71")+"'>"+errs.length+"</b><span>feil</span></span>"+
+   "<span class='kpi'><b>"+spend.toLocaleString("no-NO")+"</b><span>spend (NOK)</span></span>"+
+   (errs.length?"<table><tr><th>Rad</th><th>Feil</th></tr>"+errs.slice(0,25).map(x=>"<tr><td>"+x.row+"</td><td>"+x.m+"</td></tr>").join("")+"</table>":
+    "<p style='color:#2ecc71;font-weight:700'>✓ Filen er klar til import.</p>");
+});
+document.getElementById("importBtn").addEventListener("click",async ()=>{
+  const btn=document.getElementById("importBtn");btn.disabled=true;btn.textContent="Importerer …";
+  const rep=document.getElementById("report");
+  try{
+    if(document.getElementById("replace").checked){
+      await sb.from("po_linjer").delete().eq("kunde_id",KID);
+      await sb.from("leverandorer").delete().eq("kunde_id",KID);
+      await sb.from("materialer").delete().eq("kunde_id",KID);
+    }
+    const exL=await sb.from("leverandorer").select("id,navn").eq("kunde_id",KID);
+    const supMap={};(exL.data||[]).forEach(r=>supMap[r.navn.toLowerCase()]=r.id);
+    const missingSup=[...new Set(PENDING.valid.map(r=>r.supName.toLowerCase()))].filter(n=>!supMap[n]);
+    if(missingSup.length){
+      const ins=await sb.from("leverandorer").insert(missingSup.map(n=>({kunde_id:KID,navn:n.charAt(0).toUpperCase()+n.slice(1)}))).select("id,navn");
+      if(ins.error)throw ins.error;
+      (ins.data||[]).forEach(r=>supMap[r.navn.toLowerCase()]=r.id);
+    }
+    const exM=await sb.from("materialer").select("id,kode").eq("kunde_id",KID);
+    const matMap={};(exM.data||[]).forEach(r=>matMap[r.kode.toLowerCase()]=r.id);
+    const seenMat={};const missingMat=[];
+    PENDING.valid.forEach(r=>{const k=r.matCode.toLowerCase();
+      if(!seenMat[k]){seenMat[k]=true;if(!matMap[k])missingMat.push({kunde_id:KID,kode:r.matCode,beskrivelse:r.desc||r.matCode,kategori:r.cat||"–",standardpris:r.up||0});}});
+    if(missingMat.length){
+      const ins=await sb.from("materialer").insert(missingMat).select("id,kode");
+      if(ins.error)throw ins.error;
+      (ins.data||[]).forEach(r=>matMap[r.kode.toLowerCase()]=r.id);
+    }
+    const payload=PENDING.valid.map(r=>({kunde_id:KID,po:r.po,linjenr:r.line,
+      leverandor_id:supMap[r.supName.toLowerCase()],material_id:matMap[r.matCode.toLowerCase()],
+      prosjekt:r.proj||null,antall:r.qty,enhetspris:r.up,verdi:r.val,
+      bestillingsdato:r.order,love_dato:r.prom,leveringsdato:r.del}));
+    let imported=0;
+    for(let i=0;i<payload.length;i+=100){
+      const ins=await sb.from("po_linjer").insert(payload.slice(i,i+100));
+      if(ins.error)throw ins.error;
+      imported+=Math.min(100,payload.length-i);
+    }
+    rep.innerHTML="<p style='color:#2ecc71;font-weight:700'>✅ Import ferdig: "+imported+" PO-linjer, "+missingSup.length+" nye leverandører, "+missingMat.length+" nye materialer.</p><p><a href='macgregor-dashboard.html' style='color:#6db3ff'>Åpne dashboardet →</a></p>";
+    btn.textContent="Import ferdig ✓";
+  }catch(err){
+    rep.innerHTML="<div class='err' style='display:block'>Import feilet: "+(err.message||err)+"</div>";
+    btn.disabled=false;btn.textContent="Importér";
+  }
+});
+</script>
+</body>
+</html>
