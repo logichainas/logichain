@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<script>(function(){var V="v20261029b";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
+<script>window.addEventListener("error",function(e){try{var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.4 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);}b.textContent="JS-FEIL: "+(e.message||"ukjent")+" (linje "+e.lineno+")";}catch(_){}});</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MacGregor Norway · Logichain</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<style>
+:root{
+  --bg:#0a0f1e; --panel:#101830; --panel2:#0d1428; --line:#1e2a4a;
+  --txt:#dbe4f5; --muted:#8fa0c0; --accent:#3d8bff; --accent2:#6db3ff;
+  --good:#2ecc71; --bad:#e05d5d; --warn:#f0b429;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);font-family:"Segoe UI",Arial,sans-serif;font-size:14px}
+.topbar{background:linear-gradient(180deg,#0c1330,#0a0f1e);border-bottom:1px solid var(--line);padding:10px 22px;display:flex;align-items:center;gap:16px}
+.logo{font-weight:800;font-size:26px;letter-spacing:1px;color:#fff}
+.logo b{color:#4d9fff}
+.topsub{font-size:11px;color:var(--muted)}
+.topbar .spacer{flex:1}
+.online{background:rgba(46,204,113,.15);color:var(--good);border:1px solid rgba(46,204,113,.4);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600}
+.kunde-chip{display:none;background:rgba(240,180,41,.15);color:var(--warn);border:1px solid rgba(240,180,41,.4);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;white-space:nowrap}
+.home-btn{background:rgba(46,124,246,.12);border:1px solid rgba(46,124,246,.45);color:var(--accent2);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s,color .15s}
+.home-btn:hover{background:rgba(46,124,246,.22);color:#fff}
+.demo-badge{background:rgba(240,180,41,.15);color:var(--warn);border:1px solid rgba(240,180,41,.4);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600}
+.tabs{display:flex;gap:8px;padding:12px 22px;flex-wrap:wrap;border-bottom:1px solid var(--line);background:var(--panel2)}
+.tabs button{background:var(--panel);border:1px solid var(--line);color:var(--txt);padding:9px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600}
+.tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+main{max-width:1400px;margin:0 auto;padding:18px 22px 60px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+.hero{background:linear-gradient(135deg,#0e2a5c,#101830 70%);border:1px solid #23407a}
+.hero h1{font-size:24px;margin:8px 0 10px}
+.hero p{color:var(--muted);max-width:860px;line-height:1.55}
+.updated{font-size:11px;color:var(--muted);text-align:right;margin-bottom:4px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi .lbl{font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.kpi .val{font-size:24px;font-weight:800}
+.kpi .sub{font-size:11px;color:var(--muted);margin-top:4px}
+.good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)} .acc{color:var(--accent2)}
+.grid2{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+@media(max-width:1000px){.grid3{grid-template-columns:1fr}}
+h3.sect{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+input[type=text],select{background:#0b1226;border:1px solid var(--line);color:var(--txt);padding:9px 12px;border-radius:8px;font-size:13px;min-width:260px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{color:var(--muted);text-transform:uppercase;font-size:10px;letter-spacing:.6px;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+td{padding:8px 10px;border-bottom:1px solid rgba(30,42,74,.5)}
+tr.click{cursor:pointer} tr.click:hover{background:rgba(61,139,255,.07)}
+.pill{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700}
+.pA{background:rgba(46,204,113,.15);color:var(--good)}.pB{background:rgba(61,139,255,.15);color:var(--accent2)}
+.pC{background:rgba(240,180,41,.15);color:var(--warn)}.pD{background:rgba(224,93,93,.15);color:var(--bad)}
+.st-ok{color:var(--good);font-weight:600}.st-late{color:var(--bad);font-weight:600}.st-early{color:var(--warn);font-weight:600}
+.bar{height:14px;border-radius:7px;background:#1a2444;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:7px}
+.feature{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+.feature h4{margin:6px 0 8px;font-size:15px}
+.feature p{color:var(--muted);font-size:12.5px;line-height:1.5;margin-bottom:10px}
+.feature a{color:var(--accent2);cursor:pointer;font-weight:600;text-decoration:none}
+.step{display:flex;gap:12px;align-items:flex-start}
+.stepnum{background:var(--accent);color:#fff;font-weight:800;border-radius:10px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step h4{font-size:14px;margin-bottom:4px}
+.step p{color:var(--muted);font-size:12.5px;line-height:1.5}
+.legend{display:flex;gap:16px;font-size:11.5px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.faq{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;margin-bottom:10px}
+.faq h4{font-size:13.5px}
+.faq .ans{display:none;color:var(--muted);font-size:12.5px;line-height:1.55;margin-top:8px}
+.faq.open .ans{display:block}
+.tiltak{border-left:4px solid var(--accent);padding-left:14px;margin-bottom:16px}
+.tiltak.prio-hoy{border-left-color:var(--bad)} .tiltak.prio-midt{border-left-color:var(--warn)} .tiltak.prio-lav{border-left-color:var(--accent)}
+.tiltak .tag{font-size:10px;letter-spacing:1px;font-weight:800;text-transform:uppercase}
+.tiltak h4{margin:4px 0 6px;font-size:14.5px}
+.tiltak p{color:var(--muted);font-size:12.5px;line-height:1.5}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chips button{background:var(--panel);border:1px solid var(--line);color:var(--txt);padding:6px 12px;border-radius:16px;cursor:pointer;font-size:12px}
+.chips button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.detail{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:14px;display:none}
+.detail.show{display:block}
+.note{font-size:11.5px;color:var(--muted);font-style:italic;margin-top:8px}
+.disclaimer{background:rgba(240,180,41,.08);border:1px solid rgba(240,180,41,.35);border-radius:10px;padding:12px 16px;font-size:12.5px;color:var(--warn);line-height:1.55;margin-bottom:16px}
+.evlink{color:var(--accent2);cursor:pointer;font-weight:600;font-size:12px;text-decoration:none}
+.modal-bg{position:fixed;inset:0;background:rgba(4,8,20,.75);display:none;z-index:50;align-items:flex-start;justify-content:center;overflow:auto;padding:40px 20px}
+.modal-bg.show{display:flex}
+.modal{background:#101830;border:1px solid #24407a;border-radius:14px;max-width:1000px;width:100%;padding:22px 24px}
+.modal h2{font-size:18px;margin-bottom:6px}
+.modal .mh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.mclose{background:#1a2444;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700}
+.assump{background:rgba(61,139,255,.08);border:1px solid rgba(61,139,255,.35);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--accent2);line-height:1.5;margin:10px 0}
+.crumbbar{display:none;gap:8px;align-items:center;font-size:12px;color:var(--muted);margin-bottom:10px}
+.crumbbar.show{display:flex}
+.crumbbar a{color:var(--accent2);cursor:pointer;text-decoration:none;font-weight:600}
+.crumbbar a:hover{text-decoration:underline}
+.crumbbar .sep{color:#3a4a75}
+.crumbbar .cur{color:var(--txt);font-weight:600}
+.hint-line{background:rgba(61,139,255,.08);border:1px solid rgba(61,139,255,.25);border-radius:10px;padding:9px 14px;font-size:12.5px;color:var(--accent2);margin-bottom:14px}
+.cellink{color:var(--accent2);cursor:pointer;text-decoration:none;font-weight:600}
+.cellink:hover{text-decoration:underline}
+.kpi-help{font-size:10px;color:var(--muted);cursor:help;margin-left:4px}
+.btn{display:inline-block;padding:11px 22px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;border:none;font-family:inherit;transition:transform .15s,box-shadow .15s}
+.btn-demo{background:linear-gradient(135deg,#2e7cf6,#1a5fd0);color:#fff;box-shadow:0 6px 24px rgba(46,124,246,.35)}
+.btn:hover{transform:translateY(-2px)}
+.searchbox{position:relative}
+.searchbox input{min-width:240px}
+.sdd{position:absolute;top:calc(100% + 6px);right:0;background:#101830;border:1px solid #24407a;border-radius:10px;min-width:340px;max-height:420px;overflow:auto;z-index:60;display:none;box-shadow:0 16px 40px rgba(0,0,0,.55)}
+.sdd.show{display:block}
+.sdd .grp{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:9px 12px 3px}
+.sdd .item{padding:8px 12px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;font-size:12.5px;align-items:center}
+.sdd .item:hover{background:rgba(61,139,255,.12)}
+.sdd .tag{font-size:10px;color:var(--muted);white-space:nowrap}
+.mlinks{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.mlinks a{background:rgba(61,139,255,.1);border:1px solid rgba(61,139,255,.35);color:var(--accent2);border-radius:8px;padding:7px 14px;font-size:12.5px;cursor:pointer;text-decoration:none;font-weight:600}
+.mlinks a:hover{background:rgba(61,139,255,.2)}
+rect.clickable{cursor:pointer}
+rect.clickable:hover{fill:#6db3ff}
+.mock-badge{background:rgba(240,180,41,.15);color:var(--warn);border:1px solid rgba(240,180,41,.4);border-radius:12px;padding:2px 10px;font-size:10px;font-weight:700;vertical-align:middle}
+.best{color:var(--good);font-weight:700}
+.octo-hero{background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.35);border-radius:12px;padding:16px 18px;margin:12px 0}
+.octo-hero.red{background:rgba(224,93,93,.08);border-color:rgba(224,93,93,.45)}
+.octo-hero .lbl{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+.octo-hero .big{font-size:30px;font-weight:800}
+.octo-hero input{background:#0b1226;border:1px solid var(--line);color:var(--txt);padding:8px 12px;border-radius:8px;font-size:14px;margin:8px 0;width:150px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="logo" style="color:#e2001a">MACGREGOR <span style="font-size:11px;color:#8fa0c0;font-weight:600;letter-spacing:1px">× LOGICHAIN</span></div>
+    <div class="topsub">Designed to perform with the sea.</div>
+  </div>
+  <span class="kunde-chip" id="kundeChip" style="display:inline-block">🏢 MacGregor Norway</span>
+  <div class="spacer"></div>
+  <div class="searchbox">
+    <input type="text" id="globalSearch" placeholder="🔍 Søk leverandør, materiale, PO ..." oninput="doSearch()" onfocus="doSearch()">
+    <div class="sdd" id="searchDD"></div>
+  </div>
+  
+  <a class="home-btn" href="index.html">← Tilbake til nettsiden</a>
+  <a class="home-btn" id="logoutBtn" href="#" onclick="doLogout();return false" style="display:none">Logg ut</a>
+  <span class="demo-badge">DEMO DATA</span>
+  <span class="online">● Online</span>
+</div>
+
+<div class="tabs" id="tabs">
+  <button data-tab="forside" class="active">📊 Executive Overview</button>
+  <button data-tab="spend">💠 Spend Intelligence</button>
+  <button data-tab="lev">🏢 Leverandører</button>
+  <button data-tab="po">📦 PO Performance</button>
+  <button data-tab="octo">🌐 Marked (Octopart)</button>
+  <button data-tab="spar">💰 Sparingspotensial</button>
+  <button data-tab="tiltak">🛠️ Tiltak</button>
+  <button data-tab="faq">❓ Spørsmål og svar</button>
+</div>
+
+<main>
+<div class="crumbbar" id="crumbs"></div>
+<div class="hint-line" id="hintline"></div>
+
+<!-- ============ EXECUTIVE OVERVIEW ============ -->
+<section id="tab-forside">
+  <div class="card hero">
+    <div class="updated">Sist oppdatert: 02.10.2026 kl. 10:33 · Datakilde: MacGregor Norway – leverandørrapporter (demo)</div>
+    <div class="logo" style="font-size:34px;color:#e2001a">MACGREGOR <span style="font-size:13px;color:#8fa0c0;font-weight:600">Performance Dashboard</span></div>
+    <h1>Executive Overview</h1>
+    <p>Logichain samler innkjøpsdata fra dine leverandører i én procurement intelligence-plattform:
+    totalt innkjøp og spend-struktur, leverandør-ytelse, leveringspresisjon, identifisert
+    sparepotensial og konkrete tiltak – med full dokumentasjon bak hvert tall.</p>
+  </div>
+
+  <div class="kpis" id="kpi-forside"></div>
+
+  <div class="grid3" style="margin-bottom:16px">
+    <div class="feature">
+      <div style="font-size:24px">💠</div>
+      <h4>Spend Intelligence</h4>
+      <p>Total spend, spend per leverandør/kategori/måned, topp 10, konsentrasjon, prisutvikling, tail spend og single-source-risiko.</p>
+      <a onclick="goto('spend')">Åpne →</a>
+    </div>
+    <div class="feature">
+      <div style="font-size:24px">🏢</div>
+      <h4>Leverandører</h4>
+      <p>Rating, OTD, snittavvik, spend og leveringshistorikk per leverandør – klikk deg inn i hver enkelt.</p>
+      <a onclick="goto('lev')">Åpne →</a>
+    </div>
+    <div class="feature">
+      <div style="font-size:24px">📦</div>
+      <h4>PO Performance</h4>
+      <p>Slå opp alle innkjøpsordre og PO-linjer: datoer, avvik, status og OTD-utvikling per måned.</p>
+      <a onclick="goto('po')">Åpne →</a>
+    </div>
+  </div>
+  <div class="grid4" style="margin-bottom:16px">
+    <div class="feature">
+      <div style="font-size:24px">💰</div>
+      <h4>Sparingspotensial</h4>
+      <p>Identifisert potensial med full dokumentasjon: hvilke materialer, PO-er og forutsetninger som ligger bak.</p>
+      <a onclick="goto('spar')">Åpne →</a>
+    </div>
+    <div class="feature">
+      <div style="font-size:24px">🛠️</div>
+      <h4>Tiltak</h4>
+      <p>Prioriterte tiltak med estimert verdi og grunnlag – klare til bruk i leverandøroppfølging.</p>
+      <a onclick="goto('tiltak')">Åpne →</a>
+    </div>
+    <div class="feature">
+      <div style="font-size:24px">🌐</div>
+      <h4>Marked (Octopart)</h4>
+      <p>Markedspriser, beholdning og lead times fra distributører – benchmark mot dine egne priser, med alternative kilder ved single-source-risiko.</p>
+      <a onclick="goto('octo')">Åpne →</a>
+    </div>
+    <div class="feature">
+      <div style="font-size:24px">❓</div>
+      <h4>Spørsmål og svar</h4>
+      <p>Hvordan estimater beregnes, hvor tallene kommer fra og hvordan data oppdateres.</p>
+      <a onclick="goto('faq')">Åpne →</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="sect">Slik fungerer Logichain</h3>
+    <div class="grid3">
+      <div class="step"><div class="stepnum">1</div><div><h4>Last opp Excel</h4><p>Leverandørene sender rapportene sine i Excel. Logichain leser filene direkte – ingen manuell kopiering.</p></div></div>
+      <div class="step"><div class="stepnum">2</div><div><h4>Logichain validerer og samler</h4><p>Data kontrolleres, standardiseres og samles i én modell: ordrer, leveringer, avvik, priser og volum.</p></div></div>
+      <div class="step"><div class="stepnum">3</div><div><h4>Beslutninger</h4><p>Dashboardet viser KPI-er, identifisert potensial og prioriterte tiltak – klart til bruk i ledelsesmøter.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SPEND INTELLIGENCE ============ -->
+<section id="tab-spend" style="display:none">
+  <div class="kpis" id="kpi-spend"></div>
+  <div class="grid2">
+    <div class="card"><h3 class="sect">Spend per måned</h3><div id="chartSpendMonth"></div></div>
+    <div class="card"><h3 class="sect">Spend per kategori</h3><div id="chartSpendCat"></div></div>
+  </div>
+  <div class="grid2" style="margin-top:16px">
+    <div class="card">
+      <h3 class="sect">Top 10 leverandører etter spend</h3>
+      <div style="overflow-x:auto"><table id="top10Table"></table></div>
+    </div>
+    <div class="card"><h3 class="sect">Volumutvikling per måned (antall enheter)</h3><div id="chartVolMonth"></div></div>
+  </div>
+  <div class="card">
+    <h3 class="sect">Prisutvikling per materiale (vektede enhetspriser, indeks første måned = 100)</h3>
+    <div style="overflow-x:auto"><table id="priceTable"></table></div>
+    <div class="note">Basert på faktiske PO-linjer (verdi / antall) per måned – demodata.</div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h3 class="sect">Tail spend</h3>
+      <div id="tailBox"></div>
+    </div>
+    <div class="card">
+      <h3 class="sect">Single-source risiko</h3>
+      <div style="overflow-x:auto"><table id="ssTable"></table></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LEVERANDØR ============ -->
+<section id="tab-lev" style="display:none">
+  <div class="card">
+    <h3 class="sect">Leverandøroversikt – klikk på raden for detaljer</h3>
+    <input type="text" id="levSearch" placeholder="Søk på leverandørnavn ..." oninput="renderLev()" style="margin-bottom:14px">
+    <div style="overflow-x:auto"><table id="levTable"></table></div>
+    <div class="detail" id="levDetail"></div>
+  </div>
+</section>
+
+<!-- ============ PO PERFORMANCE ============ -->
+<section id="tab-po" style="display:none">
+  <div class="kpis" id="kpi-po"></div>
+  <div class="grid2">
+    <div class="card">
+      <h3 class="sect">OTD-utvikling pr. måned · klikk på måned for detaljer</h3>
+      <div id="chartMonths" style="margin-bottom:14px"></div>
+      <div id="chartOTD"></div>
+      <div class="legend"><span><i style="background:#3d8bff"></i>OTD %</span><span><i style="background:#22305c"></i>Evaluerte leveringer</span><span><i style="background:#2ecc71"></i>Mål 90 %</span></div>
+    </div>
+    <div class="card">
+      <h3 class="sect">Leveringsstatus</h3>
+      <div id="chartDonut" style="text-align:center"></div>
+      <div style="margin-top:18px">
+        <h3 class="sect">Topp 5 – beste OTD</h3><div id="chartTop"></div>
+        <h3 class="sect" style="margin-top:14px">Topp 5 – dårligste OTD</h3><div id="chartBottom"></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h3 class="sect">Søk etter innkjøpsordre / PO-linje</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+      <input type="text" id="poSearch" placeholder="Søk på PO-nr, leverandør, materiale ..." oninput="renderPO()">
+      <select id="poStatus" onchange="renderPO()">
+        <option value="">Alle statuser</option><option value="I tide">I tide</option>
+        <option value="For sent">For sent</option><option value="For tidlig">For tidlig</option>
+      </select>
+    </div>
+    <div style="overflow-x:auto"><table id="poTable"></table></div>
+    <div class="note" id="poCount"></div>
+  </div>
+</section>
+
+<!-- ============ SAVINGS ============ -->
+<section id="tab-spar" style="display:none">
+  <div class="disclaimer">⚠️ <b>Viktig:</b> Logichain viser <b>identifisert potensial</b> basert på kundens egne data og eksplisitte forutsetninger.
+  Dette er et utgangspunkt for videre sourcing-arbeid – <b>ikke en garanti for realisert sparing</b>, og det erstatter ikke detaljert sourcing-analyse.
+  Klikk «Se dokumentasjon» på et tall for å se nøyaktig hvilke materialer, PO-er, leverandører og forutsetninger det bygger på.</div>
+  <div class="kpis" id="kpi-spar"></div>
+  <div class="card">
+    <h3 class="sect">Hvor kommer potensialet fra?</h3>
+    <div class="grid4" id="sparBreakdown"></div>
+  </div>
+  <div class="card">
+    <h3 class="sect">Størst identifisert potensial per leverandør</h3>
+    <div style="overflow-x:auto"><table id="sparTable"></table></div>
+    <div class="note">Estimatene er basert på demodata og viste forutsetninger (ekspeditionskost, lagerføring, benchmark-priser). Identifisert potensial som bør undersøkes – erstatter ikke detaljert sourcing-analyse.</div>
+  </div>
+</section>
+
+<!-- ============ ACTIONS ============ -->
+<section id="tab-tiltak" style="display:none">
+  <div class="kpis" id="tiltakKpis"></div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <h3 class="sect" style="margin:0">Prioriterte tiltak – automatisk foreslått av Logichain</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <select id="tiltakPrioSel" onchange="tiltakPrioChange(this.value)">
+          <option value="alle">Alle prioriteter</option>
+          <option value="høy">Høy prioritet</option>
+          <option value="midt">Middels prioritet</option>
+          <option value="lav">Lav prioritet</option>
+        </select>
+        <select id="tiltakSortSel" onchange="tiltakSortChange(this.value)">
+          <option value="potensial">Sorter: Potensial (størst først)</option>
+          <option value="prioritet">Sorter: Prioritet</option>
+        </select>
+        <div class="chips" style="margin:0">
+          <button class="active" id="tv-kort" onclick="tiltakView('kort')">Kortvisning</button>
+          <button id="tv-tabell" onclick="tiltakView('tabell')">Tabellvisning</button>
+        </div>
+      </div>
+    </div>
+    <div id="tiltakList"></div>
+    <div class="note">Hvert tiltak viser identifisert potensial – ikke garantert sparing. Klikk «Se grunnlag» for dokumentasjon.</div>
+  </div>
+</section>
+
+<!-- ============ MARKED (OCTOPART) ============ -->
+<section id="tab-octo" style="display:none">
+  <div class="card hero" style="padding:22px 24px">
+    <h2 style="font-size:22px;color:#fff;margin-bottom:6px">🌐 Marked (Octopart) <span class="mock-badge">MOCK DATA</span></h2>
+    <p style="color:var(--muted);font-size:13.5px;max-width:860px">Benchmark innkjøpsprisen din mot markedet: priser, beholdning, lead times og alternative kilder fra distributører verden over –
+    målt opp mot dine egne PO-data. I demoen er dataene mock; arkitekturen (Cloudflare Worker mot Nexar/Octopart API) er produksjonsklar – se cloudflare/octopart-worker.js i repoet.</p>
+  </div>
+  <div class="card">
+    <h3 class="sect">Søk etter del, MPN eller materiale</h3>
+    <input type="text" id="octoSearch" placeholder="f.eks. «motor», «M3BP», «kabel», «filter» ..." oninput="octoSearch()" style="margin-bottom:10px">
+    <div id="octoResults"></div>
+  </div>
+  <div class="card">
+    <h3 class="sect">Matchede materialer – pris-gap mot egen innkjøpspris</h3>
+    <div class="grid4" id="octoCards"></div>
+    <div class="note">Gå til materialets egen visning for full detalj (klikkbare leverandører og PO-linjer).</div>
+  </div>
+  <div class="card">
+    <h3 class="sect">Single-source-risiko → Finn alternative kilder</h3>
+    <div style="overflow-x:auto"><table id="octoSS"></table></div>
+    <div class="note">«Sjekk marked» åpner Octopart-panelet for materialet – med distributører, priser, lead time og alternative deler.</div>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="tab-faq" style="display:none">
+  <div class="card">
+    <h3 class="sect">Spørsmål og svar</h3>
+    <div id="faqList"></div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ EVIDENCE MODAL ============ -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)hideModal()">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ================= DEMO DATA ================= */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const KUNDER=[
+  {id:"norsk-industri",firma:"Norsk Industri AS",epost:"demo@norskindustri.no",passord:"demo1234",seed:4211},
+  {id:"nordisk-marine",firma:"Nordisk Marine Group",epost:"demo@nordiskmarine.no",passord:"demo1234",seed:9317}
+];
+const __QS=new URLSearchParams(location.search);
+const __SESS=JSON.parse(localStorage.getItem("logichain_session")||"null");
+const __KUNDE={firma:"MacGregor Norway",seed:4211};
+const rnd=mulberry32(__KUNDE?__KUNDE.seed:2026);
+const SUPABASE={url:"https://iksnoymoqvweudilfuzy.supabase.co",anonKey:"sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH"};let sb=null;
+if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUPABASE.url,SUPABASE.anonKey);}
+const pick=a=>a[Math.floor(rnd()*a.length)];
+const NAMES=["Nordic Steel AS","Hydraflow Systems AB","Bergen Mek. Verksted","Trondheim Maritim AS","Fjell Metall AS","Aalborg Industri A/S","Stavanger Vekst AS","Øresund Komponenter AB","Halden Presisjon AS","Luleå Verkstad AB","Grenland Teknikk AS","Aarhus Metal Parts A/S","Vestfold Hydraulikk AS","Sandnes Stålprodusent","Kongsberg Drift AS","Malmö Processteknik AB","Oslo Fjord Industri AS","Drammen Rørforsyning","Ålesund Maskin AS","Umeå Maskinering AB","Kristiansand Kjetil AS","Södertälje Smed AB","Molde Profil AS","Haugesund Bolt AS","Karlskrona Verkstad AB","Tønsberg Tårn AS","Fredrikstad Fittings","Sundsvall Snurrning AB","Moss Montasje AS","Göteborg Gjutning AB","Skien Sveiseverksted","Randers Rustfritt A/S","Bodø Befestning AS","Västerås Ventiler AB","Arendal Aluminium","Porsgrunn Pumper AS","Helsingborg Hylsor AB","Mo i Rana Mekanisk","Tromsø Teknikk AS","Jönköping Jern AB","Hamar Hubstang AS","Esbjerg Ekstra A/S","Notodden Nippring","Sarpsborg Systemer AS","Linköping Laser AB"];
+const GROUPS=["Strukturelle komponenter","Hydraulikk","Elektro","Mekaniske komponenter","Forbruksmateriell"];
+const CATS=["Hydraulikk","Stål & metall","Elektro","Mekanisk","Forbruk"];
+const MATS=[["HYD-250T","Hydraulikksylinder 250T","Hydraulikk",38000],["SLI-DN200","Slirør DN200 med flens","Stål & metall",9500],["STA-S355","Stålplater S355 20 mm","Stål & metall",3100],["MOT-75KW","Elektrisk motor 75 kW","Elektro",42000],["VIN-25T","Vinsj 25T med trommel","Mekanisk",145000],["LGR-M16","Lågering M16 forsinket","Forbruk",38],["BOR-3m","Boltsett M36 x 3 m","Forbruk",850],["PKK-HYD","Pumpepakning hydraulikk","Hydraulikk",1200],["KBL-4G","Kabel 4G25 100 m","Elektro",4600],["VENT-150","Ventil DN150 PN16","Mekanisk",12500],["GIR-S235","Bjelke S235 400 mm","Stål & metall",7800],["TNK-500L","Tank 500 L rustfri","Stål & metall",32000],["KJT-80","Kjetting 80 mm (m)","Stål & metall",540],["FLT-200","Filter 200 micron","Forbruk",2900],["SENG-A20","Sengemutter A20 stål","Mekanisk",640]];
+const PROJECTS=["2188","2210","2214","2231","2246","2253"];
+const MONTHS=["Jan","Feb","Mar","Apr","Mai","Jun","Jul","Aug","Sep"];
+const MW=[0.8,0.9,1.1,1.2,1.3,1.0,0.7,0.9,1.1];
+
+const suppliers=NAMES.map((n,i)=>({
+  id:i,name:n,group:pick(GROUPS),country:pick(["NO","SE","DK"]),
+  rating:rnd()<.16?"A":rnd()<.45?"B":rnd()<.75?"C":"D",
+  otdBase:Math.round(20+rnd()*68)
+}));
+
+/* each material draws from a fixed supplier pool => realistic sourcing structure */
+const matSups=MATS.map(()=>{
+  const k=rnd()<0.3?1:2+Math.floor(rnd()*4);
+  const set=new Set(); while(set.size<k) set.add(pick(suppliers).id);
+  return [...set];
+});
+/* make sure every supplier appears at least once */
+suppliers.forEach(s=>{
+  if(!matSups.some(m=>m.includes(s.id))) matSups[Math.floor(rnd()*matSups.length)].push(s.id);
+});
+/* price drift per material: -3 % .. +7 % over periodet */
+const matTrend=MATS.map(()=>(-3+rnd()*10)/100);
+
+const lines=[];
+suppliers.forEach(s=>{
+  const n=4+Math.floor(rnd()*24);
+  for(let k=0;k<n;k++){
+    const mi=Math.floor(rnd()*MATS.length);
+    const pool=matSups[mi];
+    const sup=pool.includes(s.id)?s:suppliers[pool[Math.floor(rnd()*pool.length)]];
+    const m=Math.floor(rnd()*9);
+    const price=MATS[mi][3]*(1+matTrend[mi]*m/8);
+    const qty=MATS[mi][3]>20000?1+Math.floor(rnd()*8):2+Math.floor(rnd()*60);
+    const value=Math.round(price*qty/100)*100*Math.round(0.85+rnd()*0.3);
+    const order=new Date(2026,m,1+Math.floor(rnd()*27));
+    const prom=new Date(order.getTime()+(14+Math.floor(rnd()*70))*864e5);
+    const r=rnd();
+    const devDays=r<sup.otdBase/100*0.55?(Math.floor(rnd()*4)-1):Math.ceil(rnd()*35);
+    const del=new Date(prom.getTime()+devDays*864e5);
+    const status=devDays<0?"For tidlig":devDays===0?"I tide":"For sent";
+    lines.push({po:"PO"+(26000+Math.floor(rnd()*4000)),line:1+Math.floor(rnd()*40),
+      sup,mat:mi,proj:pick(PROJECTS),qty,order,prom,del,dev:devDays,status,value,month:m});
+  }
+});
+
+/* ================= HELPERS ================= */
+const fmt=n=>Math.round(n).toLocaleString("nb-NO");
+const fmtM=n=>n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" mill kr":fmt(n)+" kr";
+const fmtK=n=>n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" M":n>=1e3?Math.round(n/1e3)+" k":fmt(n);
+const dstr=d=>d.toLocaleDateString("no-NO",{day:"2-digit",month:"2-digit",year:"numeric"});
+const matName=i=>MATS[i][1], matCat=i=>MATS[i][2], matCode=i=>MATS[i][0];
+
+const totVal=lines.reduce((a,l)=>a+l.value,0);
+const totQty=lines.reduce((a,l)=>a+l.qty,0);
+
+const agg={};
+suppliers.forEach(s=>agg[s.id]={n:0,onTime:0,late:0,early:0,devSum:0,devAbs:0,spend:0});
+lines.forEach(l=>{const a=agg[l.sup.id];a.n++;a.spend+=l.value;a.devSum+=l.dev;a.devAbs+=Math.abs(l.dev);
+  if(l.status==="I tide")a.onTime++;else if(l.status==="For sent")a.late++;else a.early++;});
+
+suppliers.forEach(s=>{const a=agg[s.id];
+  s.lines=a.n;s.otd=a.n?Math.round(a.onTime/a.n*100):0;
+  s.avgDev=a.n?(a.devSum/a.n).toFixed(1):"0";s.avgAbs=a.n?(a.devAbs/a.n).toFixed(1):"0";
+  s.latePct=a.n?Math.round(a.late/a.n*100):0;s.spend=a.spend;});
+
+/* ---- spend aggregations ---- */
+const spendByMonth=MONTHS.map((m,i)=>lines.filter(l=>l.month===i).reduce((a,l)=>a+l.value,0));
+const qtyByMonth=MONTHS.map((m,i)=>lines.filter(l=>l.month===i).reduce((a,l)=>a+l.qty,0));
+const spendByCat=CATS.map(c=>({cat:c,val:lines.filter(l=>matCat(l.mat)===c).reduce((a,l)=>a+l.value,0)}));
+const topSorted=[...suppliers].filter(s=>s.spend>0).sort((a,b)=>b.spend-a.spend);
+const top5Share=Math.round(topSorted.slice(0,5).reduce((a,s)=>a+s.spend,0)/totVal*100);
+
+/* material price index per month */
+const priceIdx=MATS.map((mt,mi)=>{
+  const rows=MONTHS.map((_,m)=>{
+    const ml=lines.filter(l=>l.mat===mi&&l.month===m);
+    const q=ml.reduce((a,l)=>a+l.qty,0), v=ml.reduce((a,l)=>a+l.value,0);
+    return q?v/q:null;});
+  const base=rows.find(r=>r!==null);
+  return{mi,rows:rows.map(r=>r?Math.round(r/base*100):null)};
+});
+
+/* tail spend: suppliers after top suppliers covering 80 % of spend */
+let cum=0,tailFrom=topSorted.length;
+for(let i=0;i<topSorted.length;i++){cum+=topSorted[i].spend;if(cum/totVal>=0.8){tailFrom=i+1;break;}}
+const tailSup=topSorted.slice(tailFrom);
+const tailSpend=tailSup.reduce((a,s)=>a+s.spend,0);
+const tailShare=Math.round(tailSpend/totVal*100);
+
+/* single-source */
+const singleSource=MATS.map((mt,mi)=>({mi,sups:matSups[mi]}))
+  .filter(x=>x.sups.length===1)
+  .map(x=>{const sl=lines.filter(l=>l.mat===x.mi);
+    return{mi:x.mi,sup:suppliers[x.sups[0]],spend:sl.reduce((a,l)=>a+l.value,0),n:sl.length};})
+  .sort((a,b)=>b.spend-a.spend);
+
+/* ---- savings model ---- */
+const EXPEDITE_COST=2500;
+let savExpedite=0,savBuffer=0,savReneg=0,savConsol=0;
+const savPer={}; suppliers.forEach(s=>savPer[s.id]=0);
+lines.filter(l=>l.status==="For sent").forEach(l=>{savExpedite+=EXPEDITE_COST;savPer[l.sup.id]+=EXPEDITE_COST;});
+suppliers.forEach(s=>{const a=agg[s.id];const dev=a.n?a.devAbs/a.n:0;
+  if(dev>7&&a.spend>0){const v=a.spend*0.12*(dev/30);savBuffer+=v;savPer[s.id]+=v;}
+  if(s.rating==="C"||s.rating==="D"){const v=a.spend*0.05;savReneg+=v;savPer[s.id]+=v;}
+  if(a.n<5){const v=a.spend*0.08;savConsol+=v;savPer[s.id]+=v;}});
+const savTotal=savExpedite+savBuffer+savReneg+savConsol;
+const evaluated=lines.filter(l=>l.status!=="Ikke levert");
+const overallOTD=Math.round(lines.filter(l=>l.status==="I tide").length/(evaluated.length||1)*1000)/10;
+const lateLines=lines.filter(l=>l.status==="For sent").length;
+const avgAbs=(lines.reduce((a,l)=>a+Math.abs(l.dev),0)/lines.length).toFixed(1);
+const avgPriceTrend=(matTrend.reduce((a,t)=>a+t,0)/matTrend.length*100);
+
+/* ================= TABS ================= */
+function goto(t){document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
+  ["forside","spend","lev","po","octo","spar","tiltak","faq"].forEach(x=>document.getElementById("tab-"+x).style.display=x===t?"":"none");
+  const h=document.getElementById("hintline");if(h)h.textContent=HINTS[t]||"";
+  setCrumbs([["Logichain","goto('forside')"],[TABNAMES[t]||t]]);
+  window.scrollTo(0,0);}
+document.getElementById("tabs").addEventListener("click",e=>{if(e.target.dataset.tab)goto(e.target.dataset.tab)});
+
+const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl}${help?` <span class="kpi-help" title="${help}">ⓘ</span>`:""}</div><div class="val ${cls}">${val}</div><div class="sub">${sub}</div></div>`;
+
+/* ================= EXECUTIVE OVERVIEW ================= */
+document.getElementById("kpi-forside").innerHTML=
+  kpi("Totalt innkjøp 2026",fmtM(totVal),`${fmt(lines.length)} PO-linjer · ${suppliers.length} leverandører`,"","Summen av alle linjeverdier i perioden")+
+  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(lines.length)} i tide`,overallOTD>=80?"good":"bad","On-Time Delivery: andel leveringer levert på love-datoen")+
+  kpi("Aktive leverandører",suppliers.length,"med leveringer i perioden","","Leverandører med minst én PO-linje i perioden")+
+  kpi("Top 5-konsentrasjon",top5Share+"%","andel av total spend hos topp 5","","Hvor stor del av innkjøpet som går til de fem største leverandørene – høy andel betyr leverandøravhengighet")+
+  kpi("Single-source materialer",singleSource.length,"uten alternativ leverandør",singleSource.length>3?"warn":"","Materialer som kun leveres av én leverandør – se Spend Intelligence")+
+  kpi("Identifisert sparepotensial",fmtM(savTotal),"per år – se dokumentasjon","good","Summen av fire kilder. Klikk deg inn i Sparingspotensial for dokumentasjon bak tallet");
+
+/* ================= PO PERFORMANCE ================= */
+var poMonth=null;
+function renderPO(){
+  const q=(document.getElementById("poSearch").value||"").toLowerCase();
+  const st=document.getElementById("poStatus").value;
+  const rows=lines.filter(l=>(!st||l.status===st)&&(poMonth===null||l.month===poMonth)&&(
+    !q||l.po.toLowerCase().includes(q)||l.sup.name.toLowerCase().includes(q)||
+    matName(l.mat).toLowerCase().includes(q)||matCode(l.mat).toLowerCase().includes(q)||l.proj.includes(q)));
+  document.getElementById("poTable").innerHTML=`<tr><th>PO-nr</th><th>Linje</th><th>Leverandør</th><th>Materiale</th><th>Prosj.</th><th>Bestilt</th><th>Love-dato</th><th>Levert</th><th>Avvik</th><th>Status</th><th style="text-align:right">Verdi</th></tr>`+
+    rows.slice(0,120).map(l=>`<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.line}</td><td><a class="cellink" onclick="event.stopPropagation();openSup(${l.sup.id})">${l.sup.name}</a></td><td><a class="cellink" onclick="event.stopPropagation();showMat(${l.mat})">${matName(l.mat)}</a></td><td>${l.proj}</td><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.dev>0?"+":""}${l.dev} dgr</td><td><span class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</span></td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("");
+  document.getElementById("poCount").textContent=`Viser ${Math.min(rows.length,120)} av ${fmt(rows.length)} treff · ${fmt(lines.length)} PO-linjer totalt · ${poMonth===null?"alle måneder":MONTHS[poMonth]} · klikk på en rad for detaljer`;
+}
+renderPO();
+
+const monthsData=MONTHS.map((m,i)=>{
+  const ml=lines.filter(l=>l.month===i);
+  return{m,n:ml.length,otd:ml.length?Math.round(ml.filter(l=>l.status==="I tide").length/ml.length*100):0}});
+document.getElementById("kpi-po").innerHTML=
+  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(lines.length)} i tide`,overallOTD>=80?"good":"bad")+
+  kpi("Evaluerte leveringer",fmt(lines.length),"PO-linjer i utvalget")+
+  kpi("For sent",Math.round(lateLines/lines.length*100)+"%",fmt(lateLines)+" forsinkede leveringer","bad")+
+  kpi("Snitt |avvik|",avgAbs+" dgr","absolutt avvik pr. levering")+
+  kpi("PO-dokumenter",fmt(new Set(lines.map(l=>l.po)).size),"unikke innkjøpsordre")+
+  kpi("Prosjekter",PROJECTS.length,"aktive prosjektnumre");
+
+(function(){
+  const W=760,H=290,pad=34,bw=W/monthsData.length;
+  let bars="",dots="",grid="",prev=null;
+  for(let g=0;g<=4;g++){const y=pad+(H-pad-30)*g/4;grid+=`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="#1e2a4a"/><text x="2" y="${y+4}" fill="#8fa0c0" font-size="10">${100-g*25}%</text>`;}
+  monthsData.forEach((d,i)=>{
+    const cx=pad+i*bw+bw/2;
+    const bh=(H-pad-30)*(d.n/300);
+    bars+=`<rect x="${cx-14}" y="${H-26-bh}" width="28" height="${bh}" fill="#22305c" rx="3"/>`;
+    const ly=pad+(H-pad-30)*(1-d.otd/100);
+    if(prev) dots+=`<line x1="${prev.x}" y1="${prev.y}" x2="${cx}" y2="${ly}" stroke="#3d8bff" stroke-width="2"/>`;
+    dots+=`<circle cx="${cx}" cy="${ly}" r="4" fill="#0a0f1e" stroke="#3d8bff" stroke-width="2"/>`;
+    dots+=`<text x="${cx}" y="${H-8}" fill="#8fa0c0" font-size="10" text-anchor="middle">${d.m}</text>`;
+    dots+=`<text x="${cx}" y="${ly-8}" fill="#6db3ff" font-size="10" text-anchor="middle">${d.otd}%</text>`;
+    prev={x:cx,y:ly};
+  });
+  const my=pad+(H-pad-30)*(1-0.9);
+  document.getElementById("chartOTD").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%">${grid}<line x1="${pad}" x2="${W}" y1="${my}" y2="${my}" stroke="#2ecc71" stroke-dasharray="6 5" opacity=".6"/><text x="${W-60}" y="${my-6}" fill="#2ecc71" font-size="10">Mål 90%</text>${bars}${dots}</svg>`;
+  document.getElementById("chartMonths").innerHTML=`<div class="chips"><button class="active" data-m="" onclick="filterMonth(null)">Hele året · ${fmt(lines.length)}</button>${monthsData.map((d,i)=>`<button data-m="${i}" onclick="filterMonth(${i})">${d.m} · ${d.n}</button>`).join("")}</div>`;
+})();
+
+(function(){
+  const total=lines.length,on=lines.filter(l=>l.status==="I tide").length,early=lines.filter(l=>l.status==="For tidlig").length;
+  const C=251.33;let cumf=0,paths="";
+  [["I tide · "+fmt(on),on,"#2ecc71"],["For sent · "+fmt(lateLines),lateLines,"#e05d5d"],["For tidlig · "+fmt(early),early,"#f0b429"]].forEach(([lbl,v,c])=>{
+    const f=v/total;
+    paths+=`<circle r="40" cx="100" cy="100" fill="none" stroke="${c}" stroke-width="26" stroke-dasharray="${(f*C).toFixed(2)} ${(C-f*C).toFixed(2)}" stroke-dashoffset="${(C*(0.25-cumf)).toFixed(2)}" transform="rotate(-90 100 100)"/>`;
+    cumf+=f;});
+  document.getElementById("chartDonut").innerHTML=`<svg viewBox="0 0 200 200" width="190">${paths}<text x="100" y="96" text-anchor="middle" fill="#fff" font-size="26" font-weight="800">${overallOTD}%</text><text x="100" y="114" text-anchor="middle" fill="#8fa0c0" font-size="10">Overall OTD</text></svg>
+  <div class="legend" style="justify-content:center;margin-top:10px"><span><i style="background:#2ecc71"></i>I tide</span><span><i style="background:#e05d5d"></i>For sent</span><span><i style="background:#f0b429"></i>For tidlig</span></div>`;
+  const mk=(arr,good)=>arr.map(s=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(30,42,74,.5);font-size:12.5px"><span>${s.name}</span><b class="${good?"good":"bad"}">${s.otd}%</b></div>`).join("");
+  document.getElementById("chartTop").innerHTML=mk([...suppliers].filter(s=>s.lines>=3).sort((a,b)=>b.otd-a.otd).slice(0,5),true);
+  document.getElementById("chartBottom").innerHTML=mk([...suppliers].filter(s=>s.lines>=3).sort((a,b)=>a.otd-b.otd).slice(0,5),false);
+})();
+
+/* ================= LEVERANDØR ================= */
+function renderLev(){
+  const q=(document.getElementById("levSearch").value||"").toLowerCase();
+  const rows=suppliers.filter(s=>!q||s.name.toLowerCase().includes(q)).sort((a,b)=>b.spend-a.spend);
+  document.getElementById("levTable").innerHTML=`<tr><th>Leverandør</th><th>Gruppe</th><th>Rating</th><th>OTD</th><th>Leveringer</th><th>For sent</th><th>Snitt |avvik|</th><th style="text-align:right">Spend</th><th style="text-align:right">Identifisert potensial</th></tr>`+
+    rows.map(s=>`<tr class="click" onclick="levDetail(${s.id})"><td><b>${s.name}</b></td><td>${s.group}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.otd}%</td><td>${s.lines}</td><td>${s.latePct}%</td><td>${s.avgAbs} dgr</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${savPer[s.id]>5000?fmt(savPer[s.id])+" kr":"–"} ${savPer[s.id]>5000?`<a class="evlink" onclick="event.stopPropagation();showEvidence('sup',${s.id})">[dok]</a>`:""}</td></tr>`).join("");
+}
+renderLev();
+window.levDetail=function(id){
+  const s=suppliers.find(x=>x.id===id);const a=agg[id];
+  const lv=lines.filter(l=>l.sup.id===id).sort((x,y)=>y.dev-x.dev).slice(0,8);
+  const el=document.getElementById("levDetail");
+  el.classList.add("show");
+  el.innerHTML=`<h3 class="sect">${s.name} · <span class="pill p${s.rating}">${s.rating}</span></h3>
+  <div class="kpis" style="margin-bottom:12px">
+    ${kpi("Spend 2026",fmt(s.spend)+" kr",s.group)}
+    ${kpi("OTD",s.otd+"%","i tide av "+s.lines+" leveringer",s.otd>=80?"good":s.otd<50?"bad":"warn")}
+    ${kpi("For sent",s.latePct+"%",a.late+" leveringer","bad")}
+    ${kpi("Snitt |avvik|",s.avgAbs+" dgr","per levering")}
+    ${kpi("Identifisert potensial",savPer[id]>5000?fmt(savPer[id])+" kr":"Litet","se dokumentasjon","good")}
+  </div>
+  ${savPer[id]>5000?`<p style="margin-bottom:10px"><a class="evlink" onclick="showEvidence('sup',${id})">Se dokumentasjon for potensialet →</a></p>`:""}
+  <h3 class="sect">Største avvik (nyeste leveringer)</h3>
+  <table><tr><th>PO</th><th>Materiale</th><th>Love-dato</th><th>Levert</th><th>Avvik</th><th>Status</th><th style="text-align:right">Verdi</th></tr>
+  ${lv.map(l=>`<tr><td>${l.po}</td><td><a class="cellink" onclick="showMat(${l.mat})">${matName(l.mat)}</a></td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.dev>0?"+":""}${l.dev} dgr</td><td class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")}</table>`;
+  setCrumbs([["Logichain","goto('forside')"],["Leverandører","goto('lev')"],[s.name]]);
+  el.scrollIntoView({behavior:"smooth",block:"nearest"});
+};
+
+/* ================= SPEND INTELLIGENCE ================= */
+function vbars(data,fmtY,fmtL,clickFn){
+  const W=760,H=270,pad=46,n=data.length,bw=W/n;
+  let out="";const max=Math.max(...data.map(d=>d.v))||1;
+  for(let g=0;g<=3;g++){const y=pad+(H-pad-30)*g/3;out+=`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="#1e2a4a"/>`;}
+  data.forEach((d,i)=>{
+    const cx=pad+i*bw+bw/2, bh=(H-pad-30)*(d.v/max), y=H-26-bh;
+    out+=`<rect x="${cx-16}" y="${y}" width="32" height="${Math.max(bh,2)}" fill="#3d8bff" opacity="${0.35+0.65*d.v/max}" rx="3"${clickFn?` class="clickable" onclick="showMonth(${i})"`:""}/>`;
+    out+=`<text x="${cx}" y="${y-6}" fill="#6db3ff" font-size="9.5" text-anchor="middle">${fmtY(d.v)}</text>`;
+    out+=`<text x="${cx}" y="${H-8}" fill="#8fa0c0" font-size="10" text-anchor="middle">${fmtL(d.l)}</text>`;
+  });
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%">${out}</svg>`;
+}
+function hbars(el,rows,fmtV){
+  const max=Math.max(...rows.map(r=>r.val))||1;
+  el.innerHTML=rows.map(r=>`<div style="margin-bottom:11px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${r.label}</span><span style="color:var(--accent2)">${fmtV(r.val)} · ${Math.round(r.val/totVal*100)}%</span></div>
+    <div class="bar"><i style="width:${r.val/max*100}%;background:${r.color||"linear-gradient(90deg,#2e7cf6,#6db3ff)"}"></i></div></div>`).join("");
+}
+document.getElementById("kpi-spend").innerHTML=
+  kpi("Total spend 2026",fmtM(totVal),fmt(lines.length)+" PO-linjer","","Summen av alle PO-linjene i perioden")+
+  kpi("Spend per måned (snitt)",fmtM(totVal/9),"Jan – Sep","","Gjennomsnittlig månedlig innkjøpsvolum")+
+  kpi("Top 5-konsentrasjon",top5Share+"%","av total spend hos topp 5 leverandører",top5Share>60?"warn":"","Leverandøravhengighet: andel av spenden hos de fem største – klikk på listen under for å se dem")+
+  kpi("Tail spend",tailShare+"%",tailSup.length+" leverandører står for andel > 80 %-kutten","","De små leverandørene etter 80 %-kutten – ofte mye administrasjon per krone")+
+  kpi("Single-source materialer",singleSource.length,"uten dokumentert alternativ",singleSource.length>2?"warn":"","Materialer som kun én leverandør kan levere – forsyningssrisiko")+
+  kpi("Snitt prisutvikling",(avgPriceTrend>0?"+":"")+avgPriceTrend.toFixed(1).replace(".",",")+"%","vekta snitt per materiale, Jan→Sep",avgPriceTrend>2?"bad":"good","Gjennomsnittlig prisendring fra januar til september, vektet per materiale");
+
+document.getElementById("chartSpendMonth").innerHTML=vbars(
+  spendByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmtK(v),l=>l,"showMonth");
+hbars(document.getElementById("chartSpendCat"),
+  spendByCat.sort((a,b)=>b.val-a.val).map(c=>({label:c.cat,val:c.val})),fmtM);
+document.getElementById("top10Table").innerHTML=`<tr><th>#</th><th>Leverandør</th><th>Rating</th><th style="text-align:right">Spend</th><th style="text-align:right">Andel</th><th>Andel av total</th></tr>`+
+  topSorted.slice(0,10).map((s,i)=>`<tr class="click" onclick="levDetail(${s.id});goto('lev')"><td>${i+1}</td><td><b>${s.name}</b></td><td><span class="pill p${s.rating}">${s.rating}</span></td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right">${(s.spend/totVal*100).toFixed(1).replace(".",",")}%</td><td><div class="bar" style="width:160px"><i style="width:${s.spend/topSorted[0].spend*100}%"></i></div></td></tr>`).join("");
+document.getElementById("chartVolMonth").innerHTML=vbars(
+  qtyByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmt(v),l=>l,"showMonth");
+document.getElementById("priceTable").innerHTML=`<tr><th>Materiale</th><th>Kategori</th><th style="text-align:right">Spend</th><th style="text-align:right">Prisindeks Jan→Sep</th><th style="text-align:right">Endring</th><th>Utvikling</th></tr>`+
+  priceIdx.map(p=>({p,spend:lines.filter(l=>l.mat===p.mi).reduce((a,l)=>a+l.value,0)}))
+    .sort((a,b)=>b.spend-a.spend).slice(0,8).map(({p,spend})=>{
+      const pts=p.rows.map((v,i)=>v?`${8+i*(150/8)},${34-(v-90)*0.6}`:"").filter(Boolean).join(" ");
+      const first=p.rows.find(v=>v!==null),last=[...p.rows].reverse().find(v=>v!==null);
+      const chg=last&&first?Math.round((last-first)/first*1000)/10:0;
+      return `<tr><td><a class="cellink" onclick="showMat(${p.mi})"><b>${matName(p.mi)}</b></a> <span style="color:var(--muted);font-size:10.5px">${matCode(p.mi)}</span></td><td>${matCat(p.mi)}</td><td style="text-align:right">${fmt(spend)}</td><td style="text-align:right">${first} → ${last}</td><td style="text-align:right" class="${chg>1?"bad":chg<-1?"good":""}">${chg>0?"+":""}${chg.toFixed(1).replace(".",",")}%</td><td><svg width="160" height="38"><line x1="8" x2="158" y1="34" y2="34" stroke="#1e2a4a"/><polyline points="${pts}" fill="none" stroke="${chg>1?"#e05d5d":chg<-1?"#2ecc71":"#3d8bff"}" stroke-width="2"/></svg></td></tr>`}).join("");
+document.getElementById("tailBox").innerHTML=`
+  ${kpi("Leverandører i tail",tailSup.length,"etter topp-leverandører som dekker 80 % av spend")}
+  ${kpi("Tail spend",fmtM(tailSpend),tailShare+"% av total spend")}
+  <p style="color:var(--muted);font-size:12.5px;line-height:1.55;margin-top:8px">Tail spend er de små leverandørene etter 80 %-kutten. De representerer ofte uforholdsmessig mye administrativt arbeid (ordre, følging, fakturaer) per krone spend – og er et klassisk konsoliderings- og automatiseringsområde. Logichain identifiserer kandidater og estimerer potensialet under Sparingspotensial.</p>
+  <p style="margin-top:8px"><a class="evlink" onclick="showEvidence('consol')">Se dokumentasjon for konsolideringspotensial →</a></p>`;
+document.getElementById("ssTable").innerHTML=`<tr><th>Materiale</th><th>Kategori</th><th>Eneste leverandør</th><th style="text-align:right">Spend</th><th>Risiko</th></tr>`+
+  singleSource.slice(0,10).map(x=>`<tr><td><b>${matName(x.mi)}</b></td><td>${matCat(x.mi)}</td><td>${x.sup.name}</td><td style="text-align:right">${fmt(x.spend)}</td><td><span class="pill ${x.spend>1e6?"pD":x.spend>3e5?"pC":"pB"}">${x.spend>1e6?"Høy":x.spend>3e5?"Middels":"Lav"}</span></td></tr>`).join("")+
+  (singleSource.length===0?`<tr><td colspan="5">Ingen single-source-materialer funnet.</td></tr>`:"");
+
+/* ================= SAVINGS ================= */
+const cats=[
+  ["expedite","🚚 Ekspedisjon & premiumfrakt",savExpedite,`${fmt(lateLines)} forsinkede leveringer antas å gi ekstrakostnader (ekspeditering, frakt, overtid). Est. ${fmt(EXPEDITE_COST)} kr per forsinket linje.`],
+  ["buffer","📦 Overflødig sikkerhetslager",savBuffer,`Leverandører med snittavvik over 7 dgr tvinger frem for høye bufferlager. Estimert reduksjon av lagerføringskost ved bedre leveringsdisiplin.`],
+  ["reneg","✍️ Revisjon av C/D-leverandører",savReneg,`Prisbenchmark mot beste praksis for C- og D-ratede leverandører antas å gi ca. 5 % besparelse på innkjøpsvolumet dit.`],
+  ["consol","🧩 Konsolidering av småleverandører",savConsol,`Leverandører med færre enn 5 leveringer har lav forhandlingsstyrke. Konsolidering est. 8 % på volumet dit.`]];
+document.getElementById("kpi-spar").innerHTML=
+  kpi("Identifisert potensial",fmtM(savTotal),"per år (demodata) · <a class='evlink' style='color:inherit' onclick=\"showEvidence('total')\">Se dokumentasjon</a>","good")+
+  kpi("Andel av innkjøpsvolum",(savTotal/totVal*100).toFixed(1).replace(".",",")+"%","av "+fmtM(totVal)+" totalt")+
+  kpi("Leverandører med tiltak",suppliers.filter(s=>savPer[s.id]>5000).length,"over 5 000 kr identifisert potensial")+
+  kpi("Forsinkede leveringer",fmt(lateLines),fmt(lateLines*EXPEDITE_COST)+" kr est. ekspedisjonskost","bad");
+document.getElementById("sparBreakdown").innerHTML=cats.map(([key,t,v,desc])=>
+  `<div class="card" style="margin:0"><div style="font-size:22px;font-weight:800" class="good">${fmtM(v)}</div><h4 style="margin:6px 0">${t}</h4><p style="color:var(--muted);font-size:12px;line-height:1.5">${desc}</p><p style="margin-top:8px"><a class="evlink" onclick="showEvidence('${key}')">Se dokumentasjon →</a></p></div>`).join("");
+document.getElementById("sparTable").innerHTML=`<tr><th>Leverandør</th><th>Rating</th><th>OTD</th><th style="text-align:right">Spend</th><th>Hovedkilde</th><th style="text-align:right">Identifisert potensial / år</th><th></th></tr>`+
+  [...suppliers].sort((a,b)=>savPer[b.id]-savPer[a.id]).slice(0,10).map(s=>{
+    const a=agg[s.id];const dev=a.n?a.devAbs/a.n:0;
+    let src=(s.rating==="C"||s.rating==="D")?"Pris / rating":dev>7?"Sikkerhetslager":a.late>0?"Ekspedisjon":"Konsolidering";
+    return `<tr class="click" onclick="showEvidence('sup',${s.id})"><td><b>${s.name}</b></td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.otd}%</td><td style="text-align:right">${fmt(s.spend)}</td><td>${src}</td><td style="text-align:right" class="good"><b>${fmt(savPer[s.id])} kr</b></td><td><a class="evlink">Se dokumentasjon →</a></td></tr>`}).join("");
+
+/* ================= EVIDENCE MODAL ================= */
+function evHeader(title,amt){
+  return `<div class="mh"><div><h2>📄 ${title}</h2>
+    <div style="font-size:13px" class="good">Identifisert potensial: <b>${fmtM(amt)}</b> / år</div></div>
+    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+    <div class="assump">Logichain viser <b>identifisert potensial</b> basert på kundens egne data og forutsetningene nedenfor. Det er et utgangspunkt for videre undersøkelse – <b>ikke en garanti for realisert sparing</b> og ikke en erstatning for detaljert sourcing-analyse. (Demodata.)</div>`;
+}
+function linesTable(ls){
+  return `<table><tr><th>PO</th><th>Linje</th><th>Leverandør</th><th>Materiale</th><th>Love-dato</th><th>Levert</th><th>Avvik</th><th style="text-align:right">Verdi</th></tr>`+
+    ls.map(l=>`<tr><td>${l.po}</td><td>${l.line}</td><td>${l.sup.name}</td><td>${matName(l.mat)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td class="st-late">+${l.dev} dgr</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")+`</table>`;
+}
+window.showEvidence=function(type,id){
+  let html="";
+  if(type==="expedite"){
+    const ls=lines.filter(l=>l.status==="For sent").sort((a,b)=>b.value-a.value);
+    html=evHeader("Ekspedisjon & premiumfrakt",savExpedite)+
+      `<div class="assump"><b>Forutsetninger:</b> ${fmt(lateLines)} forsinkede PO-linjer × ${fmt(EXPEDITE_COST)} kr antatt ekstra kost per forsinket linje (ekspeditering, premiumfrakt, overtid). Beløpet er justerbart per kunde.</div>
+      <h3 class="sect">Underliggende PO-linjer (viser ${Math.min(ls.length,25)} av ${fmt(ls.length)})</h3>`+linesTable(ls.slice(0,25));
+  }else if(type==="buffer"){
+    const rows=suppliers.filter(s=>parseFloat(s.avgAbs)>7&&s.spend>0).sort((a,b)=>b.spend-a.spend);
+    html=evHeader("Overflødig sikkerhetslager",savBuffer)+
+      `<div class="assump"><b>Forutsetninger:</b> Leverandører med snittavvik &gt; 7 dgr antas å tvinge frem for høye bufferlager. Estimat per leverandør: 12 % av årlig spend × (snittavvik / 30). Redusert lagerføringskost ved bedre leveringsdisiplin.</div>
+      <table><tr><th>Leverandør</th><th>Rating</th><th>Snitt |avvik|</th><th style="text-align:right">Spend</th><th style="text-align:right">Estimert potensial</th></tr>`+
+      rows.map(s=>`<tr><td>${s.name}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.avgAbs} dgr</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${fmt(agg[s.id].spend*0.12*(parseFloat(s.avgAbs)/30))} kr</td></tr>`).join("")+`</table>`;
+  }else if(type==="reneg"){
+    const rows=suppliers.filter(s=>s.rating==="C"||s.rating==="D").sort((a,b)=>b.spend-a.spend);
+    html=evHeader("Revisjon av C/D-leverandører",savReneg)+
+      `<div class="assump"><b>Forutsetninger:</b> Prisbenchmark mot beste praksis antas å gi 5 % besparelse på innkjøpsvolum til C- og D-ratede leverandører. Underlag: alle PO-linjer til disse leverandørene i perioden.</div>
+      <table><tr><th>Leverandør</th><th>Rating</th><th>Leveringer</th><th style="text-align:right">Spend</th><th style="text-align:right">Estimert potensial</th></tr>`+
+      rows.slice(0,20).map(s=>`<tr><td>${s.name}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.lines}</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${fmt(s.spend*0.05)} kr</td></tr>`).join("")+`</table>`;
+  }else if(type==="consol"){
+    const rows=suppliers.filter(s=>agg[s.id].n<5).sort((a,b)=>b.spend-a.spend);
+    html=evHeader("Konsolidering av småleverandører",savConsol)+
+      `<div class="assump"><b>Forutsetninger:</b> Leverandører med &lt; 5 leveringer i perioden har lav forhandlingsstyrke. Konsolidering av volumet est. 8 % besparelse.</div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:8px">Viser ${Math.min(rows.length,25)} av ${rows.length} leverandører.</p>
+      <table><tr><th>Leverandør</th><th>Rating</th><th>Leveringer</th><th style="text-align:right">Spend</th><th style="text-align:right">Estimert potensial</th></tr>`+
+      rows.slice(0,25).map(s=>`<tr><td>${s.name}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.lines}</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${fmt(s.spend*0.08)} kr</td></tr>`).join("")+`</table>`;
+  }else if(type==="sup"){
+    const s=suppliers.find(x=>x.id===id);const a=agg[s.id];
+    const parts=[];
+    const lateN=a.late;
+    if(lateN>0)parts.push(["Ekspedisjon & frakt",lateN*EXPEDITE_COST,`${lateN} forsinkede leveringer × ${fmt(EXPEDITE_COST)} kr`]);
+    const dev=a.n?a.devAbs/a.n:0;
+    if(dev>7)parts.push(["Sikkerhetslager",a.spend*0.12*(dev/30),`Snittavvik ${dev.toFixed(1)} dgr × 12 % av spend (${fmt(a.spend)} kr) ÷ 30`]);
+    if(s.rating==="C"||s.rating==="D")parts.push(["Prisrevisjon",a.spend*0.05,`${s.rating}-rating × 5 % av spend`]);
+    if(a.n<5)parts.push(["Konsolidering",a.spend*0.08,`${a.n} leveringer (< 5) × 8 % av spend`]);
+    const tot=parts.reduce((x,p)=>x+p[1],0);
+    html=evHeader(s.name+" – identifisert potensial",tot)+
+      `<div class="assump"><b>Slik er tallet bygget:</b> hver kilde under viser formelen og datagrunnlaget. Ingen av postene er garantert sparing – de er kandidater som bør undersøkes i sourcing-prosessen.</div>
+      <table><tr><th>Kilde</th><th style="text-align:right">Beløp</th><th>Beregning</th></tr>`+
+      parts.map(p=>`<tr><td><b>${p[0]}</b></td><td style="text-align:right" class="good">${fmt(p[1])} kr</td><td style="color:var(--muted)">${p[2]}</td></tr>`).join("")+
+      (parts.length===0?`<tr><td colspan="3">Ingen identifisert potensial over terskel for denne leverandøren.</td></tr>`:"")+`</table>
+      <h3 class="sect" style="margin-top:14px">Underliggende PO-linjer (viser ${Math.min(a.n,15)} av ${a.n})</h3>`+
+      linesTable(lines.filter(l=>l.sup.id===id).slice(0,15));
+  }else{
+    html=evHeader("Totalt identifisert potensial",savTotal)+
+      `<div class="assump">Summen av fire uavhengige kilder. Klikk på en kilde for full dokumentasjon.</div>
+      <table><tr><th>Kilde</th><th style="text-align:right">Beløp</th><th></th></tr>`+
+      cats.map(c=>`<tr><td><b>${c[1]}</b></td><td style="text-align:right" class="good">${fmtM(c[2])}</td><td><a class="evlink" onclick="showEvidence('${c[0]}')">Se dokumentasjon →</a></td></tr>`).join("")+`</table>`;
+  }
+  document.getElementById("modalBox").innerHTML=html;
+  document.getElementById("modalBg").classList.add("show");
+};
+window.hideModal=function(){document.getElementById("modalBg").classList.remove("show")};
+
+/* ================= TILTAK ================= */
+const tiltak=[];
+suppliers.filter(s=>s.rating==="D"&&s.otd<45).sort((a,b)=>b.spend-a.spend).slice(0,3).forEach(s=>{
+  tiltak.push({prio:"høy",t:"Kritisk: oppfølgingsplan for "+s.name,d:`${s.name} er D-rated med OTD på kun ${s.otd} % og ${s.lines} leveringer i 2026. Sett opp forbedringsplan med ukentlig oppfølging, eskaler til leverandørledelse, og koble betaling til leveringspresisjon.`,v:savPer[s.id],ev:["sup",s.id]});});
+const small=suppliers.filter(s=>agg[s.id].n<5);
+if(small.length)tiltak.push({prio:"midt",t:`Konsolidér ${small.length} småleverandører`,d:`${small.length} leverandører har færre enn 5 leveringer og lav forhandlingsstyrke. Samle volumet hos færre, større leverandører og estimer ca. 8 % sparing på dette volumet.`,v:savConsol,ev:["consol"]});
+const cdTop=[...suppliers].filter(s=>s.rating==="C"||s.rating==="D").sort((a,b)=>b.spend-a.spend)[0];
+if(cdTop)tiltak.push({prio:"midt",t:"Renegotier priser med "+cdTop.name,d:`${cdTop.name} er ${cdTop.rating}-rated, men står for ${fmt(cdTop.spend)} kr i innkjøp. Benchmark priser mot beste praksis og bruk volum som forhandlingskort – est. 5 % besparelse.`,v:agg[cdTop.id].spend*0.05,ev:["reneg"]});
+const devBad=suppliers.filter(s=>parseFloat(s.avgAbs)>10).sort((a,b)=>b.avgAbs-a.avgAbs).slice(0,2);
+devBad.forEach(s=>tiltak.push({prio:"midt",t:"Innfør faste leveringsvinduer for "+s.name,d:`Snittavvik på ${s.avgAbs} dgr gir unødvendig sikkerhetslager. Krev bekreftet leveringsdato 14 dager før love-dato og avtal avviksvarsel – reduserer bufferlagerbehovet.`,v:savPer[s.id]*0.5,ev:["sup",s.id]}));
+if(overallOTD<80)tiltak.push({prio:"høy",t:"Nasjonal OTD-målsetting og eskaleringsprosess",d:`Overall OTD er ${overallOTD} % mot mål på 90 %. Innfør månedlig OTD-rapport til alle leverandører, automatisk eskalering ved 2 forsinkelser på rad og OTD-krav i nye kontrakter.`,v:savExpedite*0.4,ev:["expedite"]});
+tiltak.push({prio:"lav",t:"Automatiser innrapportering fra leverandørene",d:`I dag mottas data som Excel-filer. Be leverandørene om fast mal og ukentlig levering, så oppdateres dashboardet automatisk – raskere beslutninger og færre manuelle feil.`,v:0});
+tiltak.push({prio:"midt",t:`Reduser single-source-risiko for ${singleSource.filter(x=>x.spend>3e5).length} materialer`,d:`Flere materialer med betydelig spend har kun én leverandør. Kartlegg alternative kilder eller inngå rammeavtale med reserveleverandør – se Spend Intelligence → Single-source risiko.`,v:0});
+tiltak.sort((a,b)=>b.v-a.v);
+tiltak.forEach(x=>{x.kat=/Konsolid/.test(x.t)?"Konsolidering":/Renegoti|Forhandl/.test(x.t)?"Forhandling":/oppf\u00f8lgingsplan/.test(x.t)?"Leverand\u00f8roppf\u00f8lging":/single-source/.test(x.t)?"Risiko":/OTD/.test(x.t)?"Leveringsprosess":"Prosess";});
+const prioLbl={h\u00f8y:["prio-h\u00f8y","bad","H\u00d8Y PRIORITET"],midt:["prio-midt","warn","MIDDELS PRIORITET"],lav:["prio-lav","acc","LAV PRIORITET"]};
+const prioShort={h\u00f8y:"H\u00f8y",midt:"Middels",lav:"Lav"};
+let tiltakViewMode="kort";
+let tiltakPrio="alle";
+let tiltakSort="potensial";
+window.tiltakView=function(m){tiltakViewMode=m;
+  document.getElementById("tv-kort").classList.toggle("active",m==="kort");
+  document.getElementById("tv-tabell").classList.toggle("active",m==="tabell");
+  renderTiltak();};
+window.tiltakPrioChange=function(v){tiltakPrio=v;renderTiltak();};
+window.tiltakSortChange=function(v){tiltakSort=v;renderTiltak();};
+function cardFor(x){
+  const[cls,c]=prioLbl[x.prio];
+  const chip=x.kat==="Risiko"?`<a class="chip" onclick="goto('octo')">🌐 Se single-source-materialer</a>`:x.ev&&x.ev[0]==="sup"?`<a class="chip" onclick="openSup(${x.ev[1]})">🏢 ${suppliers.find(s=>s.id===x.ev[1]).name}</a>`:"";
+  return `<div class="tiltak ${cls}">
+    <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+      <span class="tag ${c}" style="opacity:.85">${prioShort[x.prio]} · ${x.kat}</span>
+      <span class="val">${x.v>1000?`<b class="good">${fmt(x.v)} kr / år</b>`:""}</span>
+    </div>
+    <h4>${x.t}</h4><p>${x.d}</p>
+    <div style="margin-top:6px">${chip}${x.v>1000?`<a class="evlink" style="${chip?"margin-left:8px":""}" onclick="showEvidence('${x.ev[0]}'${x.ev[1]!==undefined?","+x.ev[1]:""})">Se grunnlag →</a>`:""}</div>
+  </div>`;
+}
+function renderTiltak(){
+  const box=document.getElementById("tiltakList");
+  const tot=tiltak.reduce((a,x)=>a+x.v,0);
+  const cnt={høy:tiltak.filter(x=>x.prio==="høy").length,midt:tiltak.filter(x=>x.prio==="midt").length,lav:tiltak.filter(x=>x.prio==="lav").length};
+  document.getElementById("tiltakKpis").innerHTML=
+    kpi("Totalt identifisert potensial",fmtM(tot),"summen av tiltakene","good")+
+    kpi("Antall tiltak",tiltak.length,"automatisk foreslått")+
+    kpi("Høy prioritet",cnt.høy,"tiltak","bad")+
+    kpi("Dekningsgrad",Math.min(100,Math.round(tot/savTotal*100))+"%","av identifisert potensial i demoen");
+  let list=tiltak.filter(x=>tiltakPrio==="alle"||x.prio===tiltakPrio);
+  if(tiltakSort==="potensial")list=[...list].sort((a,b)=>b.v-a.v);
+  else list=[...list].sort((a,b)=>({høy:0,midt:1,lav:2}[a.prio]-{høy:0,midt:1,lav:2}[b.prio])||b.v-a.v);
+  if(!list.length){box.innerHTML=`<div class="note">Ingen tiltak på dette prioritetsnivået.</div>`;return;}
+  if(tiltakViewMode==="tabell"){
+    box.innerHTML=`<div style="overflow-x:auto"><table><tr><th>Prioritet</th><th>Tiltak</th><th>Kategori</th><th style="text-align:right">Potensial / år</th><th>Grunnlag</th></tr>`+
+      list.map(x=>`<tr><td><span class="pill ${x.prio==="høy"?"pD":x.prio==="midt"?"pC":"pB"}">${prioShort[x.prio]}</span></td><td><b>${x.t}</b></td><td>${x.kat}</td><td style="text-align:right" class="good">${x.v>1000?fmt(x.v)+" kr":"–"}</td><td>${x.v>1000?`<a class="evlink" onclick="showEvidence('${x.ev[0]}'${x.ev[1]!==undefined?","+x.ev[1]:""})">Se grunnlag →</a>`:"–"}</td></tr>`).join("")+`</table></div>`;
+    return;
+  }
+  if(tiltakPrio!=="alle"){box.innerHTML=list.map(cardFor).join("");return;}
+  if(tiltakSort==="prioritet"){
+    const grp={høy:[],midt:[],lav:[]};
+    list.forEach(x=>grp[x.prio].push(x));
+    let html="";
+    ["høy","midt","lav"].forEach(p=>{
+      if(!grp[p].length)return;
+      const[cls,c,l]=prioLbl[p];
+      const sum=grp[p].reduce((a,x)=>a+x.v,0);
+      html+=`<div class="prio-head" style="border-left-color:${p==="høy"?"var(--bad)":p==="midt"?"var(--warn)":"var(--accent)"}">
+        <span class="tag ${c}">${l}</span><span style="color:var(--muted);font-size:12px">${grp[p].length} tiltak</span>
+        <span style="margin-left:auto;font-weight:700;color:${sum>0?"var(--good)":"var(--muted)"}">${sum>1000?fmt(sum)+" kr / år":""}</span></div>`;
+      html+=grp[p].map(cardFor).join("");
+    });
+    box.innerHTML=html;
+    return;
+  }
+  box.innerHTML=list.map(cardFor).join("");
+}
+renderTiltak();
+
+/* ================= CROSS-NAVIGATION ================= */
+const TABNAMES={forside:"Executive Overview",spend:"Spend Intelligence",lev:"Leverandører",po:"PO Performance",octo:"Marked (Octopart)",spar:"Sparingspotensial",tiltak:"Tiltak",faq:"Spørsmål og svar"};
+const HINTS={
+ forside:"Klikk deg videre via kortene nedenfor – eller bruk søket oppe til høyre for å finne leverandører, materialer og PO-er direkte.",
+ spend:"Klikk på en måned i grafene for månedens detaljer – eller på en leverandør/et materiale for å grave dypere.",
+ lev:"Klikk på en rad for leverandørdetaljer. Potensialstallet har «dok»-lenke med full dokumentasjon.",
+ po:"Klikk på en PO-linje for full detaljvisning, på en måned for å filtrere, eller på leverandør/materiale i radene.",
+ spar:"Klikk «Se dokumentasjon» på et tall for å se nøyaktig hva potensialet bygger på.",
+ tiltak:"Hvert tiltak har «Se grunnlag» med dokumentasjon bak estimatet.",
+ octo:"Søk etter en del, eller åpne et av materialene med matchet MPN – gap mot din egen pris er forhandlingskortet.",
+ faq:"Klikk på et spørsmål for svaret."};
+window.setCrumbs=function(items){
+  const el=document.getElementById("crumbs");if(!el)return;
+  el.innerHTML=items.map((it,i)=>(i?`<span class="sep">›</span>`:"")+(it[1]?`<a onclick="${it[1]}">${it[0]}</a>`:`<span class="cur">${it[0]}</span>`)).join("");
+  el.classList.add("show");
+};
+window.openSup=function(id){hideModal();goto("lev");levDetail(id);};
+window.filterMonth=function(i){
+  poMonth=i;
+  document.querySelectorAll("#chartMonths .chips button").forEach(b=>b.classList.toggle("active",b.dataset.m===(i===null?"":String(i))));
+  renderPO();
+};
+window.showMonth=function(i){
+  const ls=lines.filter(l=>l.month===i);
+  const spend=ls.reduce((a,l)=>a+l.value,0);
+  const prev=i>0?lines.filter(l=>l.month===i-1).reduce((a,l)=>a+l.value,0):null;
+  const d=prev?Math.round((spend-prev)/prev*1000)/10:null;
+  const per={};ls.forEach(l=>{per[l.sup.id]=(per[l.sup.id]||0)+l.value;});
+  const top=Object.entries(per).map(([id,v])=>({id,v})).sort((a,b)=>b.v-a.v).slice(0,6);
+  const cats=CATS.map(c=>({c,v:ls.filter(l=>matCat(l.mat)===c).reduce((a,l)=>a+l.value,0)})).sort((a,b)=>b.v-a.v);
+  const catMax=cats.length?cats[0].v:1;
+  let html=`<div class="mh"><div><h2>📅 Spend · ${MONTHS[i]} 2026</h2>
+    <div style="font-size:12px;color:var(--muted)">Månedens innkjøpsaktivitet</div></div>
+    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+  <div class="kpis" style="margin:12px 0">
+    ${kpi("Spend i måneden",fmtM(spend),fmt(ls.length)+" PO-linjer")}
+    ${kpi("Vs. forrige måned",prev===null?"–":(d>0?"+":"")+d.toFixed(1).replace(".",",")+"%",prev?fmtM(prev)+" i "+MONTHS[i-1]:"første måned i serien",d===null?"":d>0?"bad":"good")}
+    ${kpi("Snitt per linje",fmt(spend/(ls.length||1))+" kr","")}
+    ${kpi("Aktive leverandører",Object.keys(per).length,"i denne måneden")}
+  </div>
+  <h3 class="sect">Topp leverandører i ${MONTHS[i]} – klikk for detaljer</h3>
+  <table><tr><th>Leverandør</th><th>Rating</th><th style="text-align:right">Spend</th><th style="text-align:right">Andel av måneden</th></tr>`+
+  top.map(t=>{const sv=suppliers.find(x=>x.id===+t.id);return `<tr class="click" onclick="openSup(${t.id})"><td><b>${sv.name}</b></td><td><span class="pill p${sv.rating}">${sv.rating}</span></td><td style="text-align:right">${fmt(t.v)}</td><td style="text-align:right">${spend?Math.round(t.v/spend*100):0}%</td></tr>`}).join("")+`</table>
+  <h3 class="sect" style="margin-top:14px">Spend per kategori</h3>`+
+  cats.map(c=>`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>${c.c}</span><span style="color:var(--accent2)">${fmtM(c.v)}</span></div><div class="bar"><i style="width:${c.v/catMax*100}%"></i></div></div>`).join("")+
+  `<p style="margin-top:14px"><a class="evlink" onclick="hideModal();goto('po');filterMonth(${i});document.getElementById('poSearch').scrollIntoView({behavior:'smooth'})">Se alle PO-linjer for ${MONTHS[i]} i PO Performance →</a></p>`;
+  document.getElementById("modalBox").innerHTML=html;
+  document.getElementById("modalBg").classList.add("show");
+  setCrumbs([["Logichain","goto('forside')"],["Spend Intelligence","goto('spend')"],["Måned: "+MONTHS[i]]]);
+};
+/* ==== Octopart-integrasjon (mock nå – ekte data via Cloudflare Worker senere) ====
+   For å aktivere ekte data: deploy cloudflare/octopart-worker.js (leveres på skrivebordet),
+   registrer deg på portal.nexar.com og sett:
+   const OCTO={endpoint:"https://din-worker.workers.dev/octopart"}; */
+const OCTO={endpoint:""};
+const OCTO_MATCH={
+ "MOT-75KW":{mpn:"M3BP 100 SMB",mfr:"ABB",desc:"3-fase asynkronmotor 75 kW IE3, 4-pol",
+  offers:[["RS Components","829-4419",14,1,"2 uker",42100],["Elfa Distrelec","304-18-22",6,1,"3 uker",43500],["Elektroskandia","M3BP100",2,1,"4 uker",44800]],
+  alts:[["WEG W22 IE3 75 kW","WEG",40500],["Siemens 1LE1501-1AB","Siemens",43900]],
+  octoUrl:"https://octopart.com/search?q=M3BP+100+SMB"},
+ "KBL-4G":{mpn:"UNITRONIC LiFY 4G25",mfr:"Lapp Group",desc:"Styrkekabel 4G25, 100 m tromle",
+  offers:[["RS Components","289-1177",210,1,"2 dager",4520],["Elfa Distrelec","110-24-08",85,1,"3 dager",4610],["DigiKey","LAP-4G25",40,1,"4 dager",4780]],
+  alts:[["ÖLFLEX 4G25","Lapp (alt.)",4400],["H05VV-F 4G25","Nexans",4150]],
+  octoUrl:"https://octopart.com/search?q=UNITRONIC+4G25"},
+ "FLT-200":{mpn:"HC8400FKN16H",mfr:"Pall Corporation",desc:"Hydraulikkfilter 200 micron",
+  offers:[["TME","HC8400",34,1,"5 dager",2780],["RS Components","123-4088",11,1,"2 uker",2890],["Elfa Distrelec","552-11-90",7,1,"2 uker",2950]],
+  alts:[["Bosch Rexroth 2.0060H","Bosch",2650],["MP Filtri MPU200","MP Filtri",2740]],
+  octoUrl:"https://octopart.com/search?q=HC8400FKN16H"},
+ "VENT-150":{mpn:"JIP-015N",mfr:"Danfoss",desc:"Ventil DN150 PN16, flenset",
+  offers:[["TME","JIP-015N",8,1,"1 uke",12150],["RS Components","470-2210",3,1,"3 uker",12500]],
+  alts:[["Siemens VVF53.150","Siemens",11900],["Belimo R2015","Belimo",12400]],
+  octoUrl:"https://octopart.com/search?q=Danfoss+JIP-015N"}};
+window.showOcto=function(mi){
+  const mt=MATS[mi],m=OCTO_MATCH[mt[0]];
+  const ls=lines.filter(l=>l.mat===mi);
+  const qtot=ls.reduce((a,l)=>a+l.qty,0)||1;
+  const avgUnit=ls.reduce((a,l)=>a+l.value,0)/qtot;
+  if(!m){
+    document.getElementById("modalBox").innerHTML=`<div class="mh"><div><h2>🌐 Octopart · ${mt[1]}</h2>
+      <div style="font-size:12px;color:var(--muted)">Markedsdata for komponenter</div></div>
+      <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+      <div class="assump">Octopart/Nexar dekker primært <b>elektroniske komponenter</b> – dette materialet (${mt[2]}) kan ikke matches automatisk mot part-databasen.
+      Du kan fortsatt søke manuelt:</div>
+      <p><a class="evlink" onclick="window.open('https://octopart.com/search?q='+encodeURIComponent('${mt[0]}'),'_blank')">Åpne søk på octopart.com →</a></p>
+      <p style="margin-top:10px"><a class="evlink" onclick="showMat(${mi})">← Tilbake til materialet</a></p>`;
+    document.getElementById("modalBg").classList.add("show");return;
+  }
+  const offers=m.offers.map(o=>({dist:o[0],sku:o[1],stock:o[2],moq:o[3],lead:o[4],price:o[5]})).sort((a,b)=>a.price-b.price);
+  const best=offers[0].price;
+  const delta=Math.round((best-avgUnit)/avgUnit*1000)/10;
+  const totStock=offers.reduce((a,o)=>a+o.stock,0);
+  window.__octo={avgUnit,best};
+  let html=`<div class="mh"><div><h2>🌐 Octopart markedsdata <span class="mock-badge">MOCK DATA</span></h2>
+    <div style="font-size:12px;color:var(--muted)">${mt[1]} · ${mt[0]}</div></div>
+    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+  <div class="assump"><b>Identifisert del:</b> <b>${m.mpn}</b> (${m.mfr}) – ${m.desc}.<br>
+  Benchmark mot markedsprisen er et <b>utgangspunkt for forhandlinger</b> – ikke en garanti. Erstatter ikke sourcing-analyse.</div>
+  <div class="kpis" style="margin:12px 0">
+    ${kpi("Beste markedspris",fmt(best)+" kr","fra distributør")}
+    ${kpi("Din snittpris",fmt(Math.round(avgUnit))+" kr","fra egne PO-linjer")}
+    ${kpi("Gap",(delta>0?"+":"")+delta.toFixed(1).replace(".",",")+"%",delta>0?"du betaler mer enn markedspris":"du ligger under markedspris",delta>0?"bad":"good")}
+    ${kpi("Lager hos distributører",fmt(totStock),"enheter tilgjengelig nå")}
+  </div>
+  ${delta>0?`<div class="octo-hero red">
+    <div class="lbl" style="color:var(--bad)">⚠️ Du betaler ${delta.toFixed(1).replace(".",",")}% mer enn markedet</div>
+    <div class="big bad">+${fmt(Math.round((avgUnit-best)*100))} kr pr. enhet</div>
+  </div>`:`<div class="octo-hero">
+    <div class="lbl">✓ Du ligger ${Math.abs(delta).toFixed(1).replace(".",",")}% under markedet</div>
+    <div class="big good">−${fmt(Math.round((best-avgUnit)*100))} kr pr. enhet</div>
+  </div>`}
+  <div class="octo-hero">
+    <div class="lbl">Årlig behov (antall enheter) – endre tallet og se sparingen</div>
+    <input id="octoQty" type="number" min="1" value="${qtot}" oninput="recalcOcto(${mi})">
+    <div class="big good" id="octoSave">…</div>
+    <div id="octoSave3" style="font-size:13px;color:var(--muted);margin-top:4px"></div>
+    <div id="octoNote" style="font-size:11.5px;color:var(--muted);margin-top:6px"></div>
+  </div>
+  <h3 class="sect">Tilbud fra distributører</h3>
+  <table><tr><th>Distributør</th><th>SKU</th><th style="text-align:right">Beholdning</th><th style="text-align:right">MOQ</th><th>Lead time</th><th style="text-align:right">Enhetspris</th></tr>`+
+  offers.map((o,i)=>`<tr><td><b>${o.dist}</b>${i===0?" <span class=\"best\">✓ best pris</span>":""}</td><td>${o.sku}</td><td style="text-align:right">${o.stock}</td><td style="text-align:right">${o.moq}</td><td>${o.lead}</td><td style="text-align:right"><b>${fmt(o.price)}</b></td></tr>`).join("")+`</table>
+  <h3 class="sect" style="margin-top:14px">Alternative kilder</h3>
+  <table><tr><th>Alternativ del</th><th>Produsent</th><th style="text-align:right">Indikert pris</th></tr>`+
+  m.alts.map(a=>`<tr><td><b>${a[0]}</b></td><td>${a[1]}</td><td style="text-align:right">${fmt(a[2])}</td></tr>`).join("")+`</table>
+  <div class="mlinks" style="margin-top:14px">
+    <a onclick="window.open('${m.octoUrl}','_blank')">Åpne i octopart.com ↗</a>
+    <a onclick="showMat(${mi})">← Tilbake til materialet</a>
+  </div>
+  <div class="note">Illustrasjonsdata (mock) – koble til en Nexar/Octopart-konto for sanntidsdata med reelle priser og beholdning.</div>`;
+  document.getElementById("modalBox").innerHTML=html;
+  document.getElementById("modalBg").classList.add("show");
+  setCrumbs([["Logichain","goto('forside')"],["Materiale: "+mt[1],`showMat(${mi})`],["Octopart"]]);
+  recalcOcto(mi);
+};
+window.recalcOcto=function(mi){
+  const o=window.__octo;if(!o)return;
+  const q=Math.max(1,parseInt(document.getElementById("octoQty").value)||0);
+  const diff=o.avgUnit-o.best;
+  const save=Math.round(Math.max(0,diff)*q);
+  const box=document.getElementById("octoSave");
+  if(diff>0){
+    box.textContent=fmt(save)+" NOK / år";
+    document.getElementById("octoSave3").textContent="= "+fmt(save*3)+" NOK over 3 år";
+    document.getElementById("octoNote").textContent="Identifisert potensial ved å flytte volumet til beste distributør (samme del, MOQ og lead time akseptert) – ikke en garanti.";
+  }else{
+    box.textContent="0 NOK";
+    document.getElementById("octoSave3").textContent="Din pris er allerede best i markedet – likevel verdt å holde distributørene konkurransedyktige.";
+    document.getElementById("octoNote").textContent="";
+  }
+};
+window.showMat=function(mi){
+  const mt=MATS[mi];
+  const ls=lines.filter(l=>l.mat===mi);
+  const spend=ls.reduce((a,l)=>a+l.value,0);
+  const qty=ls.reduce((a,l)=>a+l.qty,0);
+  const p=priceIdx[mi];
+  const first=p.rows.find(v=>v!==null),last=[...p.rows].reverse().find(v=>v!==null);
+  const chg=last&&first?Math.round((last-first)/first*1000)/10:0;
+  const per={};ls.forEach(l=>{per[l.sup.id]=(per[l.sup.id]||0)+l.value;});
+  const sups=matSups[mi].map(id=>({id,spend:per[id]||0})).sort((a,b)=>b.spend-a.spend);
+  const ss=matSups[mi].length===1;
+  let html=`<div class="mh"><div><h2>📦 ${mt[1]}</h2>
+    <div style="font-size:12px;color:var(--muted)">${mt[0]} · ${mt[2]}</div></div>
+    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>`;
+  if(ss)html+=`<div class="assump" style="border-color:rgba(224,93,93,.4);color:var(--bad)">⚠️ <b>Single-source:</b> dette materialet leveres kun av én leverandør (${suppliers[matSups[mi][0]].name}). Vurder å sikre alternative kilder.</div>`;
+  html+=`<div class="kpis" style="margin:12px 0">
+    ${kpi("Spend totalt",fmt(spend)+" kr",fmt(ls.length)+" PO-linjer")}
+    ${kpi("Totalt antall",fmt(qty),"enheter")}
+    ${kpi("Prisindeks Jan→Sep",first+" → "+last,`${chg>0?"+":""}${chg.toFixed(1).replace(".",",")} %`,chg>1?"bad":chg<-1?"good":"")}
+    ${kpi("Leverandører",matSups[mi].length,ss?"single-source":"aktive leverandører",ss?"warn":"")}
+  </div>`;
+  if(OCTO_MATCH[mt[0]])html+=`<div class="mlinks"><a onclick="showOcto(${mi})">🌐 Sjekk markedspris og alternative kilder (Octopart)</a></div>`;
+  else html+=`<div class="mlinks"><a onclick="window.open('https://octopart.com/search?q='+encodeURIComponent(mt[1]),'_blank')">🌐 Søk på Octopart (ekstern lenke)</a></div>`;
+  html+=`<h3 class="sect">Leverandører for dette materialet – klikk for detaljer</h3>
+  <table><tr><th>Leverandør</th><th>Rating</th><th>OTD</th><th style="text-align:right">Spend på materialet</th><th style="text-align:right">Andel</th></tr>`+
+  sups.map(s=>{const sv=suppliers.find(x=>x.id===s.id);
+    return `<tr class="click" onclick="openSup(${s.id})"><td><b>${sv.name}</b></td><td><span class="pill p${sv.rating}">${sv.rating}</span></td><td>${sv.otd}%</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right">${spend?Math.round(s.spend/spend*100):0}%</td></tr>`}).join("")+`</table>`;
+  const pts=p.rows.map((v,i)=>v?`${8+i*(150/8)},${34-(v-90)*0.6}`:"").filter(Boolean).join(" ");
+  html+=`<h3 class="sect" style="margin-top:14px">Prisutvikling (indeks, første måned = 100)</h3>
+  <svg width="100%" height="60" viewBox="0 0 160 38" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${chg>1?"#e05d5d":chg<-1?"#2ecc71":"#3d8bff"}" stroke-width="2"/></svg>
+  <h3 class="sect" style="margin-top:14px">PO-linjer (viser ${Math.min(ls.length,15)} av ${ls.length}) – klikk for detaljer</h3>
+  <table><tr><th>PO</th><th>Leverandør</th><th>Prosj.</th><th>Antall</th><th style="text-align:right">Verdi</th><th>Status</th></tr>`+
+  ls.slice(0,15).map(l=>`<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.sup.name}</td><td>${l.proj}</td><td>${l.qty}</td><td style="text-align:right">${fmt(l.value)}</td><td class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</td></tr>`).join("")+`</table>`;
+  document.getElementById("modalBox").innerHTML=html;
+  document.getElementById("modalBg").classList.add("show");
+  setCrumbs([["Logichain","goto('forside')"],["Spend Intelligence","goto('spend')"],["Materiale: "+mt[1]]]);
+};
+window.showLine=function(po,line){
+  const l=lines.find(x=>x.po===po&&x.line===line);if(!l)return;
+  const others=lines.filter(x=>x.po===po&&x.line!==line).slice(0,10);
+  let html=`<div class="mh"><div><h2>📦 ${l.po} · linje ${l.line}</h2>
+    <div style="font-size:12px;color:var(--muted)">Prosjekt ${l.proj}</div></div>
+    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+  <div class="mlinks">
+    <a onclick="openSup(${l.sup.id})">🏢 Leverandør: ${l.sup.name}</a>
+    <a onclick="showMat(${l.mat})">📦 Materiale: ${matName(l.mat)}</a>
+  </div>
+  <div class="kpis" style="margin:12px 0">
+    ${kpi("Linjeverdi",fmt(l.value)+" kr","")}
+    ${kpi("Avvik",(l.dev>0?"+":"")+l.dev+" dgr","levert vs. love-dato",l.dev>0?"bad":l.dev<0?"warn":"good")}
+    ${kpi("Status",l.status,"",l.status==="I tide"?"good":l.status==="For sent"?"bad":"warn")}
+    ${kpi("Antall",l.qty,"enheter")}
+  </div>
+  <table><tr><th>Bestillingsdato</th><th>Love-dato</th><th>Faktisk levert</th><th>Prosjekt</th></tr>
+  <tr><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.proj}</td></tr></table>`;
+  if(others.length)html+=`<h3 class="sect" style="margin-top:14px">Andre linjer på samme PO – klikk for detaljer</h3>
+  <table><tr><th>Linje</th><th>Materiale</th><th>Antall</th><th style="text-align:right">Verdi</th><th>Status</th></tr>`+
+  others.map(o=>`<tr class="click" onclick="showLine('${o.po}',${o.line})"><td>${o.line}</td><td><a class="cellink" onclick="event.stopPropagation();showMat(${o.mat})">${matName(o.mat)}</a></td><td>${o.qty}</td><td style="text-align:right">${fmt(o.value)}</td><td class="${o.status==="I tide"?"st-ok":o.status==="For sent"?"st-late":"st-early"}">${o.status}</td></tr>`).join("")+`</table>`;
+  document.getElementById("modalBox").innerHTML=html;
+  document.getElementById("modalBg").classList.add("show");
+  setCrumbs([["Logichain","goto('forside')"],["PO Performance","goto('po')"],["PO "+l.po]]);
+};
+window.doSearch=function(){
+  const q=(document.getElementById("globalSearch").value||"").trim().toLowerCase();
+  const dd=document.getElementById("searchDD");
+  if(!q){dd.classList.remove("show");return;}
+  let out="";
+  const sups=suppliers.filter(s=>s.name.toLowerCase().includes(q)).slice(0,4);
+  if(sups.length)out+=`<div class="grp">Leverandører</div>`+sups.map(s=>`<div class="item" onclick="openSup(${s.id})"><span>${s.name}</span><span class="tag">${s.group}</span></div>`).join("");
+  const mats=MATS.map((m,i)=>i).filter(i=>matName(i).toLowerCase().includes(q)||matCode(i).toLowerCase().includes(q)).slice(0,4);
+  if(mats.length)out+=`<div class="grp">Materialer</div>`+mats.map(i=>`<div class="item" onclick="showMat(${i})"><span>${matName(i)}</span><span class="tag">${matCode(i)}</span></div>`).join("");
+  const seen={};lines.filter(l=>l.po.toLowerCase().includes(q)).forEach(l=>{if(!seen[l.po])seen[l.po]=l.line;});
+  const pos=Object.keys(seen).slice(0,4);
+  if(pos.length)out+=`<div class="grp">Innkjøpsordre</div>`+pos.map(p=>`<div class="item" onclick="showLine('${p}',${seen[p]})"><span>${p}</span><span class="tag">PO</span></div>`).join("");
+  if(!out)out=`<div class="grp">Ingen treff på «${q}»</div>`;
+  dd.innerHTML=out;dd.classList.add("show");
+};
+document.addEventListener("mousedown",e=>{if(!e.target.closest(".searchbox"))document.getElementById("searchDD").classList.remove("show");});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){hideModal();document.getElementById("searchDD").classList.remove("show");}});
+goto(document.querySelector(".tabs button.active").dataset.tab);
+(function(){
+  if(!window.__KUNDE)return;
+  const kc=document.getElementById("kundeChip");
+  if(kc){kc.textContent="🏢 "+window.__KUNDE.firma;kc.style.display="inline-block";}
+  document.title="Logichain – "+window.__KUNDE.firma;
+  const lb=document.getElementById("logoutBtn");
+  if(lb&&window.__SESS)lb.style.display="inline-block";
+})();
+window.doLogout=async function(){if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");location.href="index.html";};
+
+/* ================= OCTOPART-FANE ================= */
+window.renderOctoTab=function(){
+  document.getElementById("octoCards").innerHTML=Object.keys(OCTO_MATCH).map(code=>{
+    const mi=MATS.findIndex(m=>m[0]===code);if(mi<0)return"";
+    const m=OCTO_MATCH[code];
+    const ls=lines.filter(l=>l.mat===mi);const qt=ls.reduce((a,l)=>a+l.qty,0)||1;
+    const avg=ls.reduce((a,l)=>a+l.value,0)/qt;
+    const best=Math.min(...m.offers.map(o=>o[5]));
+    const delta=Math.round((best-avg)/avg*1000)/10;
+    return `<div class="card" style="margin:0">
+      <div style="font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">${matName(mi)} · ${code}</div>
+      <h4 style="margin:6px 0 2px;font-size:15px">${m.mpn}</h4>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">${m.mfr}</div>
+      <div style="font-size:19px;font-weight:800" class="${delta>0?"bad":"good"}">${fmt(best)} kr <span style="font-size:11px;color:var(--muted);font-weight:400">beste markedspris</span></div>
+      <div style="font-size:12.5px;margin:4px 0 12px">Din snittpris: ${fmt(Math.round(avg))} kr · <b class="${delta>0?"bad":"good"}">gap ${delta>0?"+":""}${delta.toFixed(1).replace(".",",")}%</b></div>
+      <button class="btn btn-demo" style="padding:8px 16px;font-size:12.5px" onclick="showOcto(${mi})">Åpne Octopart-panel →</button>
+    </div>`;}).join("");
+  document.getElementById("octoSS").innerHTML=`<tr><th>Materiale</th><th>Eneste leverandør</th><th style="text-align:right">Spend</th><th>Risiko</th><th></th></tr>`+
+    singleSource.slice(0,10).map(x=>`<tr><td><b>${matName(x.mi)}</b></td><td>${x.sup.name}</td><td style="text-align:right">${fmt(x.spend)}</td><td><span class="pill ${x.spend>1e6?"pD":x.spend>3e5?"pC":"pB"}">${x.spend>1e6?"Høy":x.spend>3e5?"Middels":"Lav"}</span></td><td><a class="evlink" onclick="showOcto(${x.mi})">🌐 Sjekk marked →</a></td></tr>`).join("")+
+    (singleSource.length===0?`<tr><td colspan="5">Ingen single-source-materialer funnet.</td></tr>`:"");
+  octoSearch();
+};
+window.octoSearch=function(){
+  const q=(document.getElementById("octoSearch").value||"").trim().toLowerCase();
+  const hits=Object.keys(OCTO_MATCH).filter(code=>{const mi=MATS.findIndex(m=>m[0]===code);const m=OCTO_MATCH[code];
+    return !q||code.toLowerCase().includes(q)||m.mpn.toLowerCase().includes(q)||m.mfr.toLowerCase().includes(q)||matName(mi).toLowerCase().includes(q);});
+  document.getElementById("octoResults").innerHTML=hits.length?hits.map(code=>{const mi=MATS.findIndex(m=>m[0]===code);const m=OCTO_MATCH[code];
+    return `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:9px 4px;border-bottom:1px solid rgba(30,42,74,.5);font-size:13px"><span><b>${matName(mi)}</b> · ${m.mpn} <span style="font-size:10.5px;color:var(--muted)">${m.mfr}</span></span><a class="evlink" onclick="showOcto(${mi})">Åpne →</a></div>`;}).join("")
+    :`<div class="note">Ingen match i demoen – prøv «motor», «kabel», «filter» eller «ventil». For full dekning: koble til en Nexar-konto (se cloudflare/octopart-worker.js).</div>`;
+};
+
+renderOctoTab();
+
+/* ================= FAQ ================= */
+const FAQ=[
+["Hva er Spend Intelligence?","Spend Intelligence viser hvor pengene går: total spend, spend per leverandør/kategori/måned, topp 10-leverandører, konsentrasjon (topp 5), prisutvikling per materiale, volumutvikling, tail spend og single-source-risiko."],
+["Hva er «Marked (Octopart)»?","En integrasjon mot Octopart/Nexar som benchmark-er innkjøpsprisen din mot sanntids markedspriser, beholdning og lead times fra distributører – og foreslår alternative kilder ved single-source-risiko. I demoen er dataene mock, men arkitekturen (Cloudflare Worker mot Nexar API) er produksjonsklar."],
+
+["Hvor kommer tallene fra?","Leverandørene leverer rapporter i Excel. Logichain validerer og samler dataene automatisk i én modell. I denne demoen er alt generert som demodata."],
+["Hva betyr OTD?","OTD (On-Time Delivery) er andel leveringer som skjer på love-datoen. «I tide» = levert på avtalt dato."],
+["Hva betyr ratingene A, B, C og D?","En kombinasjon av leveringspresisjon, avvik og kvalitet. A er beste klasse; C og D bør følges opp med forbedringstiltak."],
+["Hvor trygge er sparestimatene?","Logichain viser identifisert potensial basert på dokumenterte forutsetninger – ikke garantert sparing. Klikk «Se dokumentasjon» på et tall for å se nøyaktig hvilke materialer, PO-er, leverandører og antakelser som ligger bak. Estimatet er et utgangspunkt for sourcing-arbeid og erstatter ikke detaljert sourcing-analyse."],
+["Hva er tail spend?","De små leverandørene som til sammen utgjør en liten andel av spenden (her: etter 80 %-kutten). De gir ofte uforholdsmessig mye administrasjon per krone – et typisk konsolideringsområde."],
+["Hva er single-source risiko?","Materialer som kun leveres av én leverandør. Logichain identifiserer dem og prioriterer etter spend, så du kan sikre alternative kilder før noe går galt."],
+["Kan jeg laste opp egne Excel-filer?","Ja – i produksjonsversjonen laster du opp leverandørenes Excel-rapporter, og dashboardet oppdateres automatisk med fast mal og validering."],
+["Kan jeg eksportere data?","Ja, alle tabeller kan eksporteres til Excel for videre analyse."],
+["Hvor ofte oppdateres tallene?","Så ofte nye leverandørrapporter lastes opp – i produksjonen typisk ukentlig."]];
+document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" onclick="this.classList.toggle('open')"><h4>❓ ${q}</h4><div class="ans">${a}</div></div>`).join("");
+
+/* deep-link support: logichain-dashboard-demo.html#spend opens that module */
+(function(){const h=location.hash.slice(1);
+  if(["forside","spend","lev","po","octo","spar","tiltak","faq"].indexOf(h)>=0)goto(h);})();
+</script>
+</body>
+</html>
