@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-<script>(function(){var V="v20261029f";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261029g";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+window.addEventListener("error",function(e){try{var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.4 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);}b.textContent="JS-FEIL: "+(e.message||"ukjent")+" (linje "+e.lineno+")";}catch(_){}});
+window.addEventListener("unhandledrejection",function(e){try{var r=e.reason&&e.reason.message?e.reason.message:String(e.reason);var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.4 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);}b.textContent="FEIL: "+r;}catch(_){}});
+</script>
 <script>
 (function(){
   document.documentElement.style.visibility="hidden";
