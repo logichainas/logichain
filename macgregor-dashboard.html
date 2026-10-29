@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-<script>(function(){var V="v20261029j";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261029m";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 window.__ERRS=[];
@@ -589,10 +589,10 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
         DIAG+="po="+(poE?("FEIL: "+poE):String(po.length))+" | ";
         if(!levE&&!matE&&!poE&&po.length){
           REAL=true;
-          suppliers=lev.data.map(r=>({id:r.id,name:r.navn,group:r.gruppe||"\u2013",country:r.land||"\u2013",rating:r.rating||"C",otdBase:50}));
-          MATS=mat.data.map(r=>[r.kode,r.beskrivelse,r.kategori||"\u2013",Number(r.standardpris)||0]);
-          const matIdIdx={};mat.data.forEach((r2,i2)=>matIdIdx[r2.id]=i2);
-          lines=po.data.map(r=>{
+          suppliers=lev.map(r=>({id:r.id,name:r.navn,group:r.gruppe||"\u2013",country:r.land||"\u2013",rating:r.rating||"C",otdBase:50}));
+          MATS=mat.map(r=>[r.kode,r.beskrivelse,r.kategori||"\u2013",Number(r.standardpris)||0]);
+          const matIdIdx={};mat.forEach((r2,i2)=>matIdIdx[r2.id]=i2);
+          lines=po.map(r=>{
             const sup=suppliers.find(x=>x.id===r.leverandor_id)||suppliers[0];
             const mi=(matIdIdx[r.material_id]!==undefined)?matIdIdx[r.material_id]:0;
             const od=r.bestillingsdato?new Date(r.bestillingsdato):null;
