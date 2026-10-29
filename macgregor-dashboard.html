@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-<script>(function(){var V="v20261029l";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261029j";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 window.__ERRS=[];
@@ -570,18 +570,24 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
         const fetchAll=async function(tbl,ord){
           var out=[],from=0,done=false;
           while(!done){
-            var r=await sb.from(tbl).select("*").eq("kunde_id",kid).order(ord).range(from,from+999);
-            if(r.error)throw r.error;
-            out=out.concat(r.data||[]);
-            if((r.data||[]).length<1000)done=true;else from+=1000;
+            var rr=null,err=null;
+            try{rr=await sb.from(tbl).select("*").eq("kunde_id",kid).order(ord).range(from,from+999);}catch(e){err=e.message||String(e);}
+            if(err)throw new Error(tbl+": "+err);
+            if(!rr)throw new Error(tbl+": tomt svar");
+            var rws=rr.data||[];
+            out=out.concat(rws);
+            if(rws.length<1000)done=true;else from+=1000;
           }
           return out;
         };
-        const lev=await fetchAll("leverandorer","id");
-        const mat=await fetchAll("materialer","id");
-        const po=await fetchAll("po_linjer","id");
-        DIAG+="lev="+(lev.error?lev.error.message:String(lev.data.length))+" | mat="+(mat.error?mat.error.message:String(mat.data.length))+" | po="+(po.error?po.error.message:String(po.data.length))+" | ";
-        if(!lev.error&&!mat.error&&!po.error&&(po.data||[]).length){
+        let lev=[],levE=null,mat=[],matE=null,po=[],poE=null;
+        try{lev=await fetchAll("leverandorer","id");}catch(e){levE=e.message||String(e);}
+        DIAG+="lev="+(levE?("FEIL: "+levE):String(lev.length))+" | ";
+        try{mat=await fetchAll("materialer","id");}catch(e){matE=e.message||String(e);}
+        DIAG+="mat="+(matE?("FEIL: "+matE):String(mat.length))+" | ";
+        try{po=await fetchAll("po_linjer","id");}catch(e){poE=e.message||String(e);}
+        DIAG+="po="+(poE?("FEIL: "+poE):String(po.length))+" | ";
+        if(!levE&&!matE&&!poE&&po.length){
           REAL=true;
           suppliers=lev.data.map(r=>({id:r.id,name:r.navn,group:r.gruppe||"\u2013",country:r.land||"\u2013",rating:r.rating||"C",otdBase:50}));
           MATS=mat.data.map(r=>[r.kode,r.beskrivelse,r.kategori||"\u2013",Number(r.standardpris)||0]);
