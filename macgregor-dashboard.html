@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-<script>(function(){var V="v20261029i";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261029j";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 window.__ERRS=[];
@@ -653,7 +653,7 @@ const fmt=n=>Math.round(n).toLocaleString("nb-NO");
 const fmtM=n=>n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" mill kr":fmt(n)+" kr";
 const fmtK=n=>n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" M":n>=1e3?Math.round(n/1e3)+" k":fmt(n);
 const dstr=d=>d.toLocaleDateString("no-NO",{day:"2-digit",month:"2-digit",year:"numeric"});
-const matName=i=>MATS[i][1], matCat=i=>MATS[i][2], matCode=i=>MATS[i][0];
+const matName=i=>MATS[i]?MATS[i][1]:"?", matCat=i=>MATS[i]?MATS[i][2]:"?", matCode=i=>MATS[i]?MATS[i][0]:"?";
 
 const totVal=lines.reduce((a,l)=>a+l.value,0);
 const totQty=lines.reduce((a,l)=>a+l.qty,0);
@@ -696,7 +696,7 @@ const tailShare=Math.round(tailSpend/totVal*100);
 const singleSource=MATS.map((mt,mi)=>({mi,sups:matSups[mi]}))
   .filter(x=>x.sups.length===1)
   .map(x=>{const sl=lines.filter(l=>l.mat===x.mi);
-    return{mi:x.mi,sup:suppliers[x.sups[0]],spend:sl.reduce((a,l)=>a+l.value,0),n:sl.length};})
+    return{mi:x.mi,sup:suppliers[x.sups[0]]||{name:"Ukjent leverand\u00f8r"},spend:sl.reduce((a,l)=>a+l.value,0),n:sl.length};})
   .sort((a,b)=>b.spend-a.spend);
 
 /* ---- savings model ---- */
