@@ -387,6 +387,7 @@ rect.clickable:hover{fill:#6db3ff}
   <div class="modal" id="modalBox"></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 /* ================= DEMO DATA ================= */
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
@@ -396,8 +397,10 @@ const KUNDER=[
 ];
 const __QS=new URLSearchParams(location.search);
 const __SESS=JSON.parse(localStorage.getItem("logichain_session")||"null");
-const __KUNDE=KUNDER.find(k=>k.id===__QS.get("kunde"))||(__SESS?KUNDER.find(k=>k.id===__SESS.id):null);
+const __KUNDE=KUNDER.find(k=>k.id===__QS.get("kunde"))||(__SESS?(KUNDER.find(k=>k.id===__SESS.id)||{firma:__SESS.firma,seed:__SESS.seed||2026}):null);
 const rnd=mulberry32(__KUNDE?__KUNDE.seed:2026);
+const SUPABASE={url:"",anonKey:""};let sb=null;
+if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUPABASE.url,SUPABASE.anonKey);}
 const pick=a=>a[Math.floor(rnd()*a.length)];
 const NAMES=["Nordic Steel AS","Hydraflow Systems AB","Bergen Mek. Verksted","Trondheim Maritim AS","Fjell Metall AS","Aalborg Industri A/S","Stavanger Vekst AS","Øresund Komponenter AB","Halden Presisjon AS","Luleå Verkstad AB","Grenland Teknikk AS","Aarhus Metal Parts A/S","Vestfold Hydraulikk AS","Sandnes Stålprodusent","Kongsberg Drift AS","Malmö Processteknik AB","Oslo Fjord Industri AS","Drammen Rørforsyning","Ålesund Maskin AS","Umeå Maskinering AB","Kristiansand Kjetil AS","Södertälje Smed AB","Molde Profil AS","Haugesund Bolt AS","Karlskrona Verkstad AB","Tønsberg Tårn AS","Fredrikstad Fittings","Sundsvall Snurrning AB","Moss Montasje AS","Göteborg Gjutning AB","Skien Sveiseverksted","Randers Rustfritt A/S","Bodø Befestning AS","Västerås Ventiler AB","Arendal Aluminium","Porsgrunn Pumper AS","Helsingborg Hylsor AB","Mo i Rana Mekanisk","Tromsø Teknikk AS","Jönköping Jern AB","Hamar Hubstang AS","Esbjerg Ekstra A/S","Notodden Nippring","Sarpsborg Systemer AS","Linköping Laser AB"];
 const GROUPS=["Structural components","Hydraulics","Electrical","Mechanical components","Consumables"];
@@ -1071,7 +1074,7 @@ goto(document.querySelector(".tabs button.active").dataset.tab);
   const lb=document.getElementById("logoutBtn");
   if(lb&&window.__SESS)lb.style.display="inline-block";
 })();
-window.doLogout=function(){localStorage.removeItem("logichain_session");location.href="index-en.html";};
+window.doLogout=async function(){if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");location.href="index-en.html";};
 
 /* ================= OCTOPART-FANE ================= */
 window.renderOctoTab=function(){

@@ -554,9 +554,10 @@ footer .logo{font-size:20px}
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-
-<script>
+const SUPABASE={url:"",anonKey:""};let sb=null;
+if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUPABASE.url,SUPABASE.anonKey);}
 /* ---------- reveal on scroll ---------- */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("vis");io.unobserve(e.target);}}),{threshold:.15});
 document.querySelectorAll(".reveal").forEach(el=>io.observe(el));
@@ -616,13 +617,22 @@ const KUNDER=[
 ];
 function openLogin(){document.getElementById("loginBg").classList.add("show");}
 function closeLogin(){document.getElementById("loginBg").classList.remove("show");}
-document.getElementById("loginForm").addEventListener("submit",e=>{
+document.getElementById("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  const em=document.getElementById("lmail").value.trim().toLowerCase(),pw=document.getElementById("lpass").value;
-  const k=KUNDER.find(x=>x.epost===em&&x.passord===pw);
+  const em=document.getElementById("lmail").value.trim(),pw=document.getElementById("lpass").value;
   const err=document.getElementById("lerr");
+  if(sb){
+    const{data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
+    if(error){err.textContent="Innlogging feilet: "+error.message;err.style.display="block";return;}
+    let firma=em,seed=2026;
+    try{const{data:p}=await sb.from("kunder").select("firma,seed").eq("user_id",data.user.id).maybeSingle();
+      if(p){firma=p.firma;seed=p.seed;}}catch(_){}
+    localStorage.setItem("logichain_session",JSON.stringify({id:data.user.id,firma,seed,src:"supabase"}));
+    location.href="logichain-dashboard-demo.html";return;
+  }
+  const k=KUNDER.find(x=>x.epost===em.trim().toLowerCase()&&x.passord===pw);
   if(!k){err.textContent="Feil e-post eller passord. Prøv en av demokontoene.";err.style.display="block";return;}
-  localStorage.setItem("logichain_session",JSON.stringify({id:k.id,firma:k.firma}));
+  localStorage.setItem("logichain_session",JSON.stringify({id:k.id,firma:k.firma,seed:k.seed}));
   location.href="logichain-dashboard-demo.html";
 });
 (function(){
@@ -632,7 +642,7 @@ document.getElementById("loginForm").addEventListener("submit",e=>{
     b.textContent="Ditt dashboard →";b.className="btn btn-demo";
     b.onclick=function(){location.href="logichain-dashboard-demo.html";return false;};
     const out=document.createElement("a");out.className="btn btn-ghost";out.textContent="Logg ut";out.href="#";
-    out.onclick=function(){localStorage.removeItem("logichain_session");location.reload();return false;};
+    out.onclick=async function(){if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");location.reload();return false;};
     b.parentNode.insertBefore(out,b.nextSibling);
   }
 })();
