@@ -2,6 +2,49 @@
 <html lang="no">
 <head>
 <script>(function(){var V="v20261029b";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  document.documentElement.style.visibility="hidden";
+  var sb=supabase.createClient("https://iksnoymoqvweudilfuzy.supabase.co","sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH");
+  function reveal(){document.documentElement.style.visibility="";}
+  function loginCard(msg){
+    document.body.innerHTML=
+     '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#070b16;font-family:Segoe UI,Arial,sans-serif">'+
+     '<div style="background:#101830;border:1px solid #24407a;border-radius:14px;max-width:430px;width:100%;padding:26px;color:#dbe4f5">'+
+     '<div style="font-weight:800;font-size:22px;color:#e2001a;margin-bottom:4px">MACGREGOR</div>'+
+     '<div style="font-size:12.5px;color:#8fa0c0;margin-bottom:16px">Performance Dashboard · av Logichain</div>'+
+     '<h2 style="font-size:18px;color:#fff;margin-bottom:14px">\ud83d\udd10 Logg inn</h2>'+
+     '<form id="mgForm">'+
+     '<div style="margin-bottom:12px"><input id="mgMail" type="email" placeholder="E-post" required style="width:100%;background:#0b1226;border:1px solid #1e2a4a;color:#dbe4f5;padding:12px 14px;border-radius:10px;font-size:14px"></div>'+
+     '<div style="margin-bottom:12px"><input id="mgPass" type="password" placeholder="Passord" required style="width:100%;background:#0b1226;border:1px solid #1e2a4a;color:#dbe4f5;padding:12px 14px;border-radius:10px;font-size:14px"></div>'+
+     '<div id="mgErr" style="color:#e05d5d;font-size:12.5px;margin-bottom:10px;display:none"></div>'+
+     '<button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;font-weight:700;font-size:14px;color:#fff;background:linear-gradient(135deg,#2e7cf6,#1a5fd0);cursor:pointer">Logg inn \u2192</button>'+
+     (msg?'<p style="color:#e05d5d;font-size:12.5px;margin-top:10px">'+msg+'</p>':'')+
+     '</form></div></div>';
+    document.body.addEventListener("submit",async function(e){
+      if(e.target.id!=="mgForm")return;e.preventDefault();
+      var em=document.getElementById("mgMail").value.trim(),pw=document.getElementById("mgPass").value;
+      var err=document.getElementById("mgErr");
+      var r=await sb.auth.signInWithPassword({email:em,password:pw});
+      if(r.error){err.textContent=r.error.message;err.style.display="block";return;}
+      await verify();
+    });
+    reveal();
+  }
+  async function verify(){
+    var r=await sb.auth.getSession();var s=r&&r.data&&r.data.session;
+    if(!s){loginCard("");return;}
+    var p=await sb.from("kunder").select("firma,seed").eq("user_id",s.user.id).maybeSingle();
+    var row=p&&p.data;
+    if(!row||(row.seed+"")!=="4211"){await sb.auth.signOut();loginCard("Ingen tilgang for denne brukeren.");return;}
+    try{localStorage.setItem("logichain_session",JSON.stringify({id:s.user.id,firma:row.firma,seed:4211,src:"supabase"}));}catch(e){}
+    reveal();
+  }
+  function boot(){verify();}
+  if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",boot);}else{boot();}
+})();
+</script>
 <script>window.addEventListener("error",function(e){try{var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.4 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);}b.textContent="JS-FEIL: "+(e.message||"ukjent")+" (linje "+e.lineno+")";}catch(_){}});</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1076,7 +1119,7 @@ goto(document.querySelector(".tabs button.active").dataset.tab);
   const lb=document.getElementById("logoutBtn");
   if(lb&&window.__SESS)lb.style.display="inline-block";
 })();
-window.doLogout=async function(){if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");location.href="index.html";};
+window.doLogout=async function(){if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");location.reload();};
 
 /* ================= OCTOPART-FANE ================= */
 window.renderOctoTab=function(){
