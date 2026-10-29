@@ -31,6 +31,12 @@ header{position:sticky;top:0;z-index:40;background:rgba(7,11,22,.92);backdrop-fi
 .btn-ghost{background:#13234a;border:1px solid #2e5aa8;color:#9cc3ff}
 .btn-ghost:hover{background:#1a2f5e;color:#fff;border-color:#3d8bff}
 .langbtn{padding:9px 14px;font-size:17px;line-height:1;white-space:nowrap}
+.modal-bg{position:fixed;inset:0;background:rgba(4,8,20,.78);display:none;z-index:60;align-items:flex-start;justify-content:center;overflow:auto;padding:70px 20px}
+.modal-bg.show{display:flex}
+.modal{background:#101830;border:1px solid #24407a;border-radius:14px;max-width:430px;width:100%;padding:26px}
+.modal h2{font-size:20px;color:#fff}
+.modal .mh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.mclose{background:#1a2444;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700}
 @media(max-width:900px){.nav .links{display:none}}
 .hero{position:relative;padding:96px 0 80px;text-align:center;overflow:hidden}
 .hero::before{content:"";position:absolute;inset:-40% -20% auto;height:130%;background:
@@ -176,6 +182,7 @@ footer .logo{font-size:20px}
     <div class="sp"></div>
     <a class="btn btn-demo" href="logichain-dashboard-demo-en.html">▶ Try the demo</a>
     <a class="btn btn-ghost langbtn" href="index.html" title="Bytt til norsk" aria-label="Bytt til norsk"><svg aria-hidden="true" style="display:block;border-radius:2px" width="20" height="15" viewBox="0 0 22 16"><rect width="22" height="16" fill="#BA0C2F"/><rect x="6" width="4" height="16" fill="#fff"/><rect y="6" width="22" height="4" fill="#fff"/><rect x="7" width="2" height="16" fill="#00205B"/><rect y="7" width="22" height="2" fill="#00205B"/></svg></a>
+    <a class="btn btn-ghost" id="loginBtn" href="#" onclick="openLogin();return false">Log in</a>
   </div>
 </header>
 
@@ -517,6 +524,22 @@ footer .logo{font-size:20px}
   Turn purchasing data into decisions. · © 2026 Logichain · Demo data used for illustration only.
 </footer>
 
+<div class="modal-bg" id="loginBg" onclick="if(event.target===this)closeLogin()">
+  <div class="modal">
+    <div class="mh"><div><h2>🔐 Log in</h2><div style="font-size:12.5px;color:var(--muted)">Access to your company dashboard</div></div>
+    <button class="mclose" onclick="closeLogin()">Close ✕</button></div>
+    <form id="loginForm">
+      <div class="fld"><input type="email" id="lmail" placeholder="Email" required></div>
+      <div class="fld"><input type="password" id="lpass" placeholder="Password" required></div>
+      <div id="lerr" style="color:var(--bad);font-size:12.5px;margin-bottom:10px;display:none"></div>
+      <button class="btn btn-demo" type="submit" style="width:100%">Log in →</button>
+      <p style="font-size:11.5px;color:var(--muted);margin-top:10px">Demo login. Test accounts: demo@norskindustri.no or demo@nordiskmarine.no · password: demo1234</p>
+    </form>
+  </div>
+</div>
+
+<script>
+
 <script>
 /* ---------- reveal on scroll ---------- */
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("vis");io.unobserve(e.target);}}),{threshold:.15});
@@ -571,6 +594,32 @@ document.getElementById("cform").addEventListener("submit",e=>{
   location.href="mailto:einar@logichain.no?subject="+encodeURIComponent("Logichain – enquiry from "+n+" / "+c)+
     "&body="+encodeURIComponent("Company: "+c+"\n\n"+m+"\n\n"+n+"\n"+em);
 });
+const KUNDER=[
+  {id:"norsk-industri",firma:"Norsk Industri AS",epost:"demo@norskindustri.no",passord:"demo1234",seed:4211},
+  {id:"nordisk-marine",firma:"Nordisk Marine Group",epost:"demo@nordiskmarine.no",passord:"demo1234",seed:9317}
+];
+function openLogin(){document.getElementById("loginBg").classList.add("show");}
+function closeLogin(){document.getElementById("loginBg").classList.remove("show");}
+document.getElementById("loginForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const em=document.getElementById("lmail").value.trim().toLowerCase(),pw=document.getElementById("lpass").value;
+  const k=KUNDER.find(x=>x.epost===em&&x.passord===pw);
+  const err=document.getElementById("lerr");
+  if(!k){err.textContent="Wrong email or password. Try one of the demo accounts.";err.style.display="block";return;}
+  localStorage.setItem("logichain_session",JSON.stringify({id:k.id,firma:k.firma}));
+  location.href="logichain-dashboard-demo-en.html";
+});
+(function(){
+  const s=JSON.parse(localStorage.getItem("logichain_session")||"null");
+  const b=document.getElementById("loginBtn");
+  if(s&&b){
+    b.textContent="Your dashboard →";b.className="btn btn-demo";
+    b.onclick=function(){location.href="logichain-dashboard-demo-en.html";return false;};
+    const out=document.createElement("a");out.className="btn btn-ghost";out.textContent="Log out";out.href="#";
+    out.onclick=function(){localStorage.removeItem("logichain_session");location.reload();return false;};
+    b.parentNode.insertBefore(out,b.nextSibling);
+  }
+})();
 </script>
 </body>
 </html>

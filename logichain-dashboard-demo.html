@@ -19,6 +19,7 @@ body{background:var(--bg);color:var(--txt);font-family:"Segoe UI",Arial,sans-ser
 .topsub{font-size:11px;color:var(--muted)}
 .topbar .spacer{flex:1}
 .online{background:rgba(46,204,113,.15);color:var(--good);border:1px solid rgba(46,204,113,.4);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600}
+.kunde-chip{display:none;background:rgba(240,180,41,.15);color:var(--warn);border:1px solid rgba(240,180,41,.4);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;white-space:nowrap}
 .home-btn{background:rgba(46,124,246,.12);border:1px solid rgba(46,124,246,.45);color:var(--accent2);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;text-decoration:none;transition:background .15s,color .15s}
 .home-btn:hover{background:rgba(46,124,246,.22);color:#fff}
 .demo-badge{background:rgba(240,180,41,.15);color:var(--warn);border:1px solid rgba(240,180,41,.4);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600}
@@ -130,6 +131,7 @@ rect.clickable:hover{fill:#6db3ff}
     <div class="logo">LOGIC<b>HAIN</b></div>
     <div class="topsub">Turn purchasing data into decisions.</div>
   </div>
+  <span class="kunde-chip" id="kundeChip"></span>
   <div class="spacer"></div>
   <div class="searchbox">
     <input type="text" id="globalSearch" placeholder="🔍 Søk leverandør, materiale, PO ..." oninput="doSearch()" onfocus="doSearch()">
@@ -137,6 +139,7 @@ rect.clickable:hover{fill:#6db3ff}
   </div>
   <a class="home-btn" href="logichain-dashboard-demo-en.html" title="Switch to English" aria-label="Switch to English"><svg aria-hidden="true" style="display:block;border-radius:2px" width="21" height="11" viewBox="0 0 60 30"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="2.5"/><rect x="27" width="6" height="30" fill="#fff"/><rect y="12" width="60" height="6" fill="#fff"/><rect x="28.5" width="3" height="30" fill="#C8102E"/><rect y="13.5" width="60" height="3" fill="#C8102E"/></svg></a>
   <a class="home-btn" href="index.html">← Tilbake til nettsiden</a>
+  <a class="home-btn" id="logoutBtn" href="#" onclick="doLogout();return false" style="display:none">Logg ut</a>
   <span class="demo-badge">DEMO DATA</span>
   <span class="online">● Online</span>
 </div>
@@ -387,7 +390,14 @@ rect.clickable:hover{fill:#6db3ff}
 <script>
 /* ================= DEMO DATA ================= */
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
-const rnd=mulberry32(2026);
+const KUNDER=[
+  {id:"norsk-industri",firma:"Norsk Industri AS",epost:"demo@norskindustri.no",passord:"demo1234",seed:4211},
+  {id:"nordisk-marine",firma:"Nordisk Marine Group",epost:"demo@nordiskmarine.no",passord:"demo1234",seed:9317}
+];
+const __QS=new URLSearchParams(location.search);
+const __SESS=JSON.parse(localStorage.getItem("logichain_session")||"null");
+const __KUNDE=KUNDER.find(k=>k.id===__QS.get("kunde"))||(__SESS?KUNDER.find(k=>k.id===__SESS.id):null);
+const rnd=mulberry32(__KUNDE?__KUNDE.seed:2026);
 const pick=a=>a[Math.floor(rnd()*a.length)];
 const NAMES=["Nordic Steel AS","Hydraflow Systems AB","Bergen Mek. Verksted","Trondheim Maritim AS","Fjell Metall AS","Aalborg Industri A/S","Stavanger Vekst AS","Øresund Komponenter AB","Halden Presisjon AS","Luleå Verkstad AB","Grenland Teknikk AS","Aarhus Metal Parts A/S","Vestfold Hydraulikk AS","Sandnes Stålprodusent","Kongsberg Drift AS","Malmö Processteknik AB","Oslo Fjord Industri AS","Drammen Rørforsyning","Ålesund Maskin AS","Umeå Maskinering AB","Kristiansand Kjetil AS","Södertälje Smed AB","Molde Profil AS","Haugesund Bolt AS","Karlskrona Verkstad AB","Tønsberg Tårn AS","Fredrikstad Fittings","Sundsvall Snurrning AB","Moss Montasje AS","Göteborg Gjutning AB","Skien Sveiseverksted","Randers Rustfritt A/S","Bodø Befestning AS","Västerås Ventiler AB","Arendal Aluminium","Porsgrunn Pumper AS","Helsingborg Hylsor AB","Mo i Rana Mekanisk","Tromsø Teknikk AS","Jönköping Jern AB","Hamar Hubstang AS","Esbjerg Ekstra A/S","Notodden Nippring","Sarpsborg Systemer AS","Linköping Laser AB"];
 const GROUPS=["Strukturelle komponenter","Hydraulikk","Elektro","Mekaniske komponenter","Forbruksmateriell"];
@@ -1053,6 +1063,15 @@ window.doSearch=function(){
 document.addEventListener("mousedown",e=>{if(!e.target.closest(".searchbox"))document.getElementById("searchDD").classList.remove("show");});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"){hideModal();document.getElementById("searchDD").classList.remove("show");}});
 goto(document.querySelector(".tabs button.active").dataset.tab);
+(function(){
+  if(!window.__KUNDE)return;
+  const kc=document.getElementById("kundeChip");
+  if(kc){kc.textContent="🏢 "+window.__KUNDE.firma;kc.style.display="inline-block";}
+  document.title="Logichain – "+window.__KUNDE.firma;
+  const lb=document.getElementById("logoutBtn");
+  if(lb&&window.__SESS)lb.style.display="inline-block";
+})();
+window.doLogout=function(){localStorage.removeItem("logichain_session");location.href="index.html";};
 
 /* ================= OCTOPART-FANE ================= */
 window.renderOctoTab=function(){
