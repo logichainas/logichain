@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-<script>(function(){var V="v20261029k";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261029l";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 window.__ERRS=[];
@@ -558,11 +558,13 @@ const __KUNDE={firma:"MacGregor Norway",seed:4211};
 const rnd=mulberry32(__KUNDE?__KUNDE.seed:2026);
 const SUPABASE={url:"https://iksnoymoqvweudilfuzy.supabase.co",anonKey:"sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH"};let sb=null;
 if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUPABASE.url,SUPABASE.anonKey);}
-  let suppliers,MATS,lines,MONTHS,matSups,matTrend,CATS,PROJECTS;let REAL=false;
+  let suppliers,MATS,lines,MONTHS,matSups,matTrend,CATS,PROJECTS;let REAL=false;let DIAG="";
   try{
     const sr=await sb.auth.getSession();const sess=sr&&sr.data&&sr.data.session;
+    DIAG+="session="+(sess?"ja":"NEI")+" | ";
     if(sess){
-      const prof=await sb.from("kunder").select("id,firma,seed").eq("user_id",sess.user.id).maybeSingle();
+      const prof=await sb.from("kunder").select("id,firma,seed,admin").eq("user_id",sess.user.id).maybeSingle();
+      DIAG+="profil="+(prof&&prof.data?("ja (seed "+prof.data.seed+", admin "+prof.data.admin+")"):"MANGLER")+" | ";
       if(prof&&prof.data){
         const kid=prof.data.id;
         const fetchAll=async function(tbl,ord){
@@ -578,6 +580,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
         const lev=await fetchAll("leverandorer","id");
         const mat=await fetchAll("materialer","id");
         const po=await fetchAll("po_linjer","id");
+        DIAG+="lev="+(lev.error?lev.error.message:String(lev.data.length))+" | mat="+(mat.error?mat.error.message:String(mat.data.length))+" | po="+(po.error?po.error.message:String(po.data.length))+" | ";
         if(!lev.error&&!mat.error&&!po.error&&(po.data||[]).length){
           REAL=true;
           suppliers=lev.data.map(r=>({id:r.id,name:r.navn,group:r.gruppe||"\u2013",country:r.land||"\u2013",rating:r.rating||"C",otdBase:50}));
@@ -604,8 +607,9 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
         }
       }
     }
-  }catch(e){console.warn("Supabase-data:",e);}
-  if(!REAL){
+  }catch(e){DIAG+="unntak: "+(e.message||e);}
+  try{window.__ERRS.push("DIAGNOSE: "+DIAG+" | REAL="+REAL);__showErr();}catch(_){}
+if(!REAL){
 const pick=a=>a[Math.floor(rnd()*a.length)];
 const NAMES=["Nordic Steel AS","Hydraflow Systems AB","Bergen Mek. Verksted","Trondheim Maritim AS","Fjell Metall AS","Aalborg Industri A/S","Stavanger Vekst AS","Øresund Komponenter AB","Halden Presisjon AS","Luleå Verkstad AB","Grenland Teknikk AS","Aarhus Metal Parts A/S","Vestfold Hydraulikk AS","Sandnes Stålprodusent","Kongsberg Drift AS","Malmö Processteknik AB","Oslo Fjord Industri AS","Drammen Rørforsyning","Ålesund Maskin AS","Umeå Maskinering AB","Kristiansand Kjetil AS","Södertälje Smed AB","Molde Profil AS","Haugesund Bolt AS","Karlskrona Verkstad AB","Tønsberg Tårn AS","Fredrikstad Fittings","Sundsvall Snurrning AB","Moss Montasje AS","Göteborg Gjutning AB","Skien Sveiseverksted","Randers Rustfritt A/S","Bodø Befestning AS","Västerås Ventiler AB","Arendal Aluminium","Porsgrunn Pumper AS","Helsingborg Hylsor AB","Mo i Rana Mekanisk","Tromsø Teknikk AS","Jönköping Jern AB","Hamar Hubstang AS","Esbjerg Ekstra A/S","Notodden Nippring","Sarpsborg Systemer AS","Linköping Laser AB"];
 const GROUPS=["Strukturelle komponenter","Hydraulikk","Elektro","Mekaniske komponenter","Forbruksmateriell"];
