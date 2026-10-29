@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="no">
 <head>
-<script>(function(){var V="v20261029d";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261029e";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
@@ -187,7 +187,7 @@ rect.clickable:hover{fill:#6db3ff}
   
   <a class="home-btn" href="index.html">← Tilbake til nettsiden</a>
   <a class="home-btn" id="logoutBtn" href="#" onclick="doLogout();return false" style="display:none">Logg ut</a>
-  <a class="home-btn" id="upBtn" href="#" onclick="openUpload();return false" style="display:none">📤 Last opp data</a>
+  <a class="home-btn" id="upBtn" href="#" onclick="openSend();return false" style="display:none">📤 Send data til Logichain</a>
   <span class="demo-badge" id="dataBadge">GENERERT DEMODATA</span>
   <span class="online">● Online</span>
 </div>
@@ -440,25 +440,21 @@ rect.clickable:hover{fill:#6db3ff}
   <div style="max-width:560px;margin:0 auto;background:#101830;border:1px solid #24407a;border-radius:14px;padding:26px;color:#dbe4f5;font-family:Segoe UI,Arial,sans-serif">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
       <div><div style="font-weight:800;font-size:19px;color:#e2001a">MACGREGOR</div>
-      <div style="font-size:12.5px;color:#8fa0c0">📤 Last opp leverandørdata · mål: <b id="upTarget" style="color:#dbe4f5">…</b></div></div>
+      <div style="font-size:12.5px;color:#8fa0c0">📤 Send data til Logichain · mottaker: <b style="color:#dbe4f5">einar@logichain.no</b></div></div>
       <button onclick="document.getElementById('upModal').style.display='none'" style="background:#1a2444;border:1px solid #1e2a4a;color:#dbe4f5;border-radius:8px;padding:6px 14px;cursor:pointer;font-weight:700">Lukk ✕</button>
     </div>
+    <p style="font-size:12.5px;color:#8fa0c0;margin-bottom:14px">Last opp CSV-rapporten (innrapportering-malen). Logichain validerer filen, og <b style="color:#dbe4f5">Einar kvalitetssikrer og oppdaterer dashboardet</b> – du blir varslet når det er gjort.</p>
     <div style="margin-bottom:14px"><input type="file" id="upFile" accept=".csv,.txt" style="width:100%;background:#0b1226;border:1px solid #1e2a4a;color:#dbe4f5;padding:10px;border-radius:10px"></div>
-    <label style="display:flex;gap:8px;align-items:center;margin-bottom:14px;font-size:12.5px"><input type="checkbox" id="upReplace" style="width:auto"> Erstatt eksisterende data</label>
     <div id="upReport" style="font-size:12.5px;margin-bottom:14px"></div>
-    <button id="upImport" style="width:100%;padding:12px;border:none;border-radius:10px;font-weight:700;font-size:14px;color:#fff;background:linear-gradient(135deg,#2e7cf6,#1a5fd0);cursor:pointer" disabled>Importér →</button>
-    <p style="font-size:11px;color:#8fa0c0;margin-top:10px">CSV fra innrapportering-malen. Data importeres til Supabase (RLS-beskyttet) og varsles til einar@logichain.no.</p>
+    <button id="upSend" style="width:100%;padding:12px;border:none;border-radius:10px;font-weight:700;font-size:14px;color:#fff;background:linear-gradient(135deg,#2e7cf6,#1a5fd0);cursor:pointer" disabled>Send til Logichain ✓</button>
+    <p style="font-size:11px;color:#8fa0c0;margin-top:10px">Filen lagres i et sikret mottaksområde. Ingen data oppdateres automatisk.</p>
   </div>
 </div>
 <script>
-var UPURL="https://iksnoymoqvweudilfuzy.supabase.co",UPKEY="sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH";
-window.openUpload=async function(){
+window.openSend=async function(){
   document.getElementById("upModal").style.display="block";
   var s=await __SBC.auth.getSession();var sess=s&&s.data&&s.data.session;
-  if(!sess){document.getElementById("upTarget").textContent="ikke innlogget";return;}
-  var p=await __SBC.from("kunder").select("id,firma").eq("user_id",sess.user.id).maybeSingle();
-  window.__UPKID=p&&p.data?p.data.id:null;
-  document.getElementById("upTarget").textContent=p&&p.data?p.data.firma:"–";
+  if(!sess){document.getElementById("upReport").innerHTML="<p style='color:#e05d5d'>Ikke innlogget.</p>";return;}
 };
 function upSplit(s,sep){var out=[],cur="",q=false;for(var i=0;i<s.length;i++){var ch=s[i];
   if(ch==='"'){if(q&&s[i+1]==='"'){cur+='"';i++;}else q=!q;}
@@ -473,21 +469,21 @@ function upDate(s){if(!s)return null;s=s.trim();var m=s.match(/^(\d{1,2})\.(\d{1
   if(m)return m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");
   m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return m[1]+"-"+m[2].padStart(2,"0")+"-"+m[3].padStart(2,"0");return "BAD";}
 function upNum(s){return s?Number(String(s).replace(/\s/g,"").replace(",",".")):NaN;}
-var UPPENDING=null;
+var UPFILE=null;
 document.addEventListener("change",async function(e){
   if(e.target.id!=="upFile")return;
   var f=e.target.files[0];if(!f)return;
+  UPFILE=f;
   var rep=document.getElementById("upReport");rep.innerHTML="";
   var rows=upParse(await f.text());
   if(!rows.length){rep.innerHTML="<p style='color:#e05d5d'>Filen har ingen datarader.</p>";return;}
   var get=function(r,p){var k=Object.keys(r).find(function(k){return k.startsWith(p);});return k?r[k]:"";};
-  var errs=[],seen={},spend=0,valid=[];
+  var errs=[],seen={},spend=0;
   rows.forEach(function(r,idx){
-    var row=idx+2;
     var po=get(r,"po-nummer"),sup=get(r,"leverandørnavn"),mat=get(r,"materialnummer");
     var bd=upDate(get(r,"bestillingsdato")),ld=upDate(get(r,"love-dato")),dd=upDate(get(r,"faktisk leveringsdato"));
-    var val=upNum(get(r,"linjeverdi")),qty=upNum(get(r,"antall"))||1,up=upNum(get(r,"enhetspris"));
-    var E=function(m){errs.push({row:row,m:m});};
+    var val=upNum(get(r,"linjeverdi"));
+    var E=function(m){errs.push("Rad "+(idx+2)+": "+m);};
     if(!po)E("Mangler PO-nummer");
     if(!sup)E("Mangler leverandørnavn");
     if(!mat)E("Mangler materialnummer");
@@ -498,63 +494,32 @@ document.addEventListener("change",async function(e){
     var key=(po+"#"+(get(r,"linjenr")||"1")).toUpperCase();
     if(seen[key])E("Duplikat PO+linje");else seen[key]=1;
     if(!isNaN(val))spend+=val;
-    valid.push({po:po,line:parseInt(get(r,"linjenr"))||1,supName:sup,matCode:mat,desc:get(r,"materialebeskrivelse"),
-      cat:get(r,"kategori"),proj:get(r,"prosjektnr"),qty:qty,up:isNaN(up)?0:up,val:isNaN(val)?0:val,
-      order:bd instanceof Date?bd:null,prom:ld instanceof Date?ld:null,del:dd instanceof Date?dd:null});
   });
-  UPPENDING={valid:valid,spend:spend};
-  document.getElementById("upImport").disabled=errs.length>0;
+  document.getElementById("upSend").disabled=errs.length>0;
   rep.innerHTML="<b>Validering:</b> "+rows.length+" rader · "+errs.length+" feil · spend "+Math.round(spend).toLocaleString("no-NO")+" NOK"+
-    (errs.length?"<br>"+errs.slice(0,10).map(function(x){return "Rad "+x.row+": "+x.m;}).join("<br>"):"<br><span style='color:#2ecc71'>✓ Klar til import.</span>");
+    (errs.length?"<br><span style='color:#e05d5d'>"+errs.slice(0,10).join("<br>")+"</span>":"<br><span style='color:#2ecc71'>✓ Filen er klar til å sendes til Logichain.</span>");
 });
 document.addEventListener("click",async function(e){
-  if(e.target.id!=="upImport")return;
-  var btn=e.target;btn.disabled=true;btn.textContent="Importerer …";
+  if(e.target.id!=="upSend")return;
+  var btn=e.target;btn.disabled=true;btn.textContent="Sender …";
   var rep=document.getElementById("upReport");
   try{
-    if(document.getElementById("upReplace").checked){
-      await __SBC.from("po_linjer").delete().eq("kunde_id",window.__UPKID);
-      await __SBC.from("leverandorer").delete().eq("kunde_id",window.__UPKID);
-      await __SBC.from("materialer").delete().eq("kunde_id",window.__UPKID);
-    }
-    var exL=await __SBC.from("leverandorer").select("id,navn").eq("kunde_id",window.__UPKID);
-    var supMap={};(exL.data||[]).forEach(function(r){supMap[r.navn.toLowerCase()]=r.id;});
-    var missSup=[],seenS={};
-    UPPENDING.valid.forEach(function(r){var k=r.supName.toLowerCase();if(!seenS[k]){seenS[k]=1;if(!supMap[k])missSup.push(k);}});
-    if(missSup.length){
-      var ins=await __SBC.from("leverandorer").insert(missSup.map(function(n){return {kunde_id:window.__UPKID,navn:n.charAt(0).toUpperCase()+n.slice(1)};})).select("id,navn");
-      if(ins.error)throw ins.error;
-      (ins.data||[]).forEach(function(r){supMap[r.navn.toLowerCase()]=r.id;});
-    }
-    var exM=await __SBC.from("materialer").select("id,kode").eq("kunde_id",window.__UPKID);
-    var matMap={};(exM.data||[]).forEach(function(r){matMap[r.kode.toLowerCase()]=r.id;});
-    var missMat=[],seenM={};
-    UPPENDING.valid.forEach(function(r){var k=r.matCode.toLowerCase();if(!seenM[k]){seenM[k]=1;if(!matMap[k])missMat.push({kunde_id:window.__UPKID,kode:r.matCode,beskrivelse:r.desc||r.matCode,kategori:r.cat||"–",standardpris:r.up||0});}});
-    if(missMat.length){
-      var ins2=await __SBC.from("materialer").insert(missMat).select("id,kode");
-      if(ins2.error)throw ins2.error;
-      (ins2.data||[]).forEach(function(r){matMap[r.kode.toLowerCase()]=r.id;});
-    }
-    var payload=UPPENDING.valid.map(function(r){return {kunde_id:window.__UPKID,po:r.po,linjenr:r.line,
-      leverandor_id:supMap[r.supName.toLowerCase()],material_id:matMap[r.matCode.toLowerCase()],
-      prosjekt:r.proj||null,antall:r.qty,enhetspris:r.up,verdi:r.val,
-      bestillingsdato:r.order,love_dato:r.prom,leveringsdato:r.del};});
-    var imported=0;
-    for(var i=0;i<payload.length;i+=100){
-      var ins3=await __SBC.from("po_linjer").insert(payload.slice(i,i+100));
-      if(ins3.error)throw ins3.error;
-      imported+=Math.min(100,payload.length-i);
-    }
-    var msg="Ny dataimport fra MacGregor Norway: "+imported+" PO-linjer, "+missSup.length+" nye leverandører, "+missMat.length+" nye materialer. Spend: "+Math.round(UPPENDING.spend).toLocaleString("no-NO")+" NOK. Importert "+new Date().toLocaleString("no-NO")+".";
-    rep.innerHTML="<p style='color:#2ecc71;font-weight:700'>✅ Import ferdig: "+imported+" PO-linjer.</p><p style='color:#6db3ff'>Videresender rapporten til einar@logichain.no …</p>";
-    var dash=document.querySelector(".updated");if(dash)dash.textContent="Sist oppdatert: "+new Date().toLocaleDateString("no-NO")+" · Datakilde: Supabase (ekte data)";
-    var db=document.getElementById("dataBadge");if(db)db.textContent="✓ EKTE DATA";
-    setTimeout(function(){location.href="mailto:einar@logichain.no?subject="+encodeURIComponent("Logichain · Ny dataimport fra MacGregor Norway")+"&body="+encodeURIComponent(msg);},800);
-    btn.textContent="Import ferdig ✓";
-    setTimeout(function(){location.reload();},2500);
+    var s=await __SBC.auth.getSession();var sess=s&&s.data&&s.data.session;
+    if(!sess)throw new Error("Ikke innlogget");
+    var p=await __SBC.from("kunder").select("id").eq("user_id",sess.user.id).maybeSingle();
+    if(!p.data)throw new Error("Ingen kundeprofil");
+    var KID=p.data.id;
+    var path="innleveringer/"+KID+"/"+Date.now()+"_"+UPFILE.name;
+    var up=await __SBC.storage.from("innleveringer").upload(path,UPFILE);
+    if(up.error)throw up.error;
+    var ins=await __SBC.from("innleveringer").insert({kunde_id:KID,fil:path,status:"ny"});
+    if(ins.error)throw ins.error;
+    rep.innerHTML="<p style='color:#2ecc71;font-weight:700'>✅ Sendt! Einar er varslet og kvalitetssikrer dataene – dashboardet oppdateres når han har importert dem.</p>";
+    btn.textContent="Sendt ✓";
+    setTimeout(function(){location.href="mailto:einar@logichain.no?subject="+encodeURIComponent("Logichain · Ny datainnlevering fra MacGregor Norway")+"&body="+encodeURIComponent("Hei Einar\n\nVi har nettopp sendt inn vår CSV-rapport via portalen (fil: "+UPFILE.name+").\nVennligst kvalitetssikre og oppdater dashboardet.\n\nMed vennlig hilsen\nMacGregor Norway");},800);
   }catch(err){
-    rep.innerHTML="<p style='color:#e05d5d'>Import feilet: "+(err.message||err)+"</p>";
-    btn.disabled=false;btn.textContent="Importér →";
+    rep.innerHTML="<p style='color:#e05d5d'>Sending feilet: "+(err.message||err)+"</p>";
+    btn.disabled=false;btn.textContent="Send til Logichain ✓";
   }
 });
 </script>
