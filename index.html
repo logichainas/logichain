@@ -621,19 +621,27 @@ document.getElementById("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const em=document.getElementById("lmail").value.trim(),pw=document.getElementById("lpass").value;
   const err=document.getElementById("lerr");
+  let supErr=null;
   if(sb){
     const{data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
-    if(error){err.textContent="Innlogging feilet: "+error.message;err.style.display="block";return;}
-    let firma=em,seed=2026;
-    try{const{data:p}=await sb.from("kunder").select("firma,seed").eq("user_id",data.user.id).maybeSingle();
-      if(p){firma=p.firma;seed=p.seed;}}catch(_){}
-    localStorage.setItem("logichain_session",JSON.stringify({id:data.user.id,firma,seed,src:"supabase"}));
-    location.href="logichain-dashboard-demo.html";return;
+    if(!error){
+      let firma=em,seed=2026;
+      try{const{data:p}=await sb.from("kunder").select("firma,seed").eq("user_id",data.user.id).maybeSingle();
+        if(p){firma=p.firma;seed=p.seed;}}catch(_){}
+      localStorage.setItem("logichain_session",JSON.stringify({id:data.user.id,firma,seed,src:"supabase"}));
+      location.href="logichain-dashboard-demo.html";return;
+    }
+    supErr=error.message;
   }
   const k=KUNDER.find(x=>x.epost===em.trim().toLowerCase()&&x.passord===pw);
-  if(!k){err.textContent="Feil e-post eller passord. Prøv en av demokontoene.";err.style.display="block";return;}
-  localStorage.setItem("logichain_session",JSON.stringify({id:k.id,firma:k.firma,seed:k.seed}));
-  location.href="logichain-dashboard-demo.html";
+  if(k){
+    localStorage.setItem("logichain_session",JSON.stringify({id:k.id,firma:k.firma,seed:k.seed}));
+    location.href="logichain-dashboard-demo.html";return;
+  }
+  if(supErr&&supErr.toLowerCase().includes("confirm")){err.textContent="E-posten er ikke bekreftet ennå – bekreft brukeren i Supabase (Authentication → Users) eller slå av «Confirm email».";}
+  else if(supErr){err.textContent="Innlogging feilet: "+supErr;}
+  else{err.textContent="Feil e-post eller passord.";}
+  err.style.display="block";
 });
 (function(){
   const s=JSON.parse(localStorage.getItem("logichain_session")||"null");
