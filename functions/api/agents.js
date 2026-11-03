@@ -5,6 +5,8 @@
  *   GET  /api/agents?session=<id>       → work log (events) + output files for one session
  *   GET  /api/agents?download=<fileId>  → download an output file (proxied)
  *   POST /api/agents  {agent_id, task, title?} → start a new session for that agent ("brief")
+ *   POST /api/agents  {session_id, action:"confirm", ids:[], result:"allow"|"deny"} → answer tool approvals
+ *   POST /api/agents  {session_id, action:"message", text} → send a follow-up message to the agent
  *
  * The Claude API key lives only here, as a Cloudflare secret
  * (ANTHROPIC_API_KEY or "logichain-jarvis"). Never in the browser.
@@ -101,6 +103,8 @@ function slimEvent(e) {
   if (t === "agent.tool_use" || t === "agent.mcp_tool_use" || t === "agent.custom_tool_use")
     return {
       kind: "tool",
+      id: e.id || null,
+      ask: e.evaluated_permission === "ask",
       time,
       name: e.name || e.tool_name || pick(e.tool, "name") || "tool",
       server: e.mcp_server_name || e.server_name || null,
@@ -155,7 +159,16 @@ export async function onRequestGet({ request, env }) {
         claude(`/sessions/${sessionId}/events?limit=200&order=desc`, key),
         sessionFiles(sessionId, key),
       ]);
-      const log = (events.data || []).map(slimEvent).filter(Boolean).reverse();
+      const raw = events.data || [];
+      const log = raw.map(slimEvent).filter(Boolean).reverse();
+      // Is the session paused waiting for a tool approval? (latest status event, newest first)
+      const lastStatus = raw.find((e) => String(e.type || "").startsWith("session.status_"));
+      const stop = lastStatus && lastStatus.type === "session.status_idle" ? lastStatus.stop_reason || null : null;
+      const pendingIds = stop && stop.type === "requires_action" ? stop.event_ids || [] : [];
+      const pending = pendingIds.map((id) => {
+        const ev = raw.find((e) => e.id === id) || {};
+        return { id, name: ev.name || ev.tool_name || "tool", server: ev.mcp_server_name || null, text: inputSummary(ev.input) };
+      });
       return json({
         configured: true,
         session: {
@@ -167,6 +180,8 @@ export async function onRequestGet({ request, env }) {
         },
         log,
         files,
+        stop_reason: stop ? stop.type || null : null,
+        pending,
         truncated: !!events.next_page,
       });
     }
@@ -216,6 +231,40 @@ export async function onRequestPost({ request, env }) {
 
   let body;
   try { body = await request.json(); } catch (_) { return json({ error: "Bad JSON" }, 400); }
+
+  // ---- act on an existing session: approve/deny tools, or send a follow-up message ----
+  if (body.session_id) {
+    const sid = String(body.session_id);
+    if (!/^[A-Za-z0-9_-]{3,100}$/.test(sid)) return json({ error: "Bad session id" }, 400);
+    let events;
+    if (body.action === "confirm") {
+      const ids = (Array.isArray(body.ids) ? body.ids : []).map(String).filter((x) => /^[A-Za-z0-9_-]{3,100}$/.test(x)).slice(0, 20);
+      if (!ids.length) return json({ error: "Nothing to approve" }, 400);
+      const result = body.result === "deny" ? "deny" : "allow";
+      events = ids.map((id) => ({
+        type: "user.tool_confirmation", tool_use_id: id, result,
+        ...(result === "deny" && body.deny_message ? { deny_message: String(body.deny_message).slice(0, 2000) } : {}),
+      }));
+    } else if (body.action === "message") {
+      const text = String(body.text || "").trim();
+      if (text.length < 2) return json({ error: "Write a message" }, 400);
+      events = [{ type: "user.message", content: [{ type: "text", text: text.slice(0, 20000) }] }];
+    } else return json({ error: "Unknown action" }, 400);
+    const r = await fetch(`${API}/sessions/${sid}/events`, {
+      method: "POST",
+      headers: {
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-beta": "managed-agents-2026-04-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ events }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) return json({ error: `Agent did not accept it: ${r.status} ${j?.error?.message || ""}`.trim() }, 502);
+    return json({ ok: true });
+  }
+
   const agentId = String(body.agent_id || "");
   const task = String(body.task || "").trim();
   if (!/^agent_[A-Za-z0-9_-]{3,100}$/.test(agentId)) return json({ error: "Choose an agent" }, 400);

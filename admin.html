@@ -255,7 +255,18 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .vs .ses.on{border-color:var(--cyan);background:rgba(0,229,255,.08);box-shadow:inset 0 0 18px rgba(0,229,255,.08)}
 .vs .ses b{display:block;font-size:15px;color:#fff;font-weight:600;line-height:1.25}
 .vs .ses small{font:11px var(--mono);color:var(--muted)}
-.vl{padding:16px 22px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.vr{display:flex;flex-direction:column;min-height:0}
+.vl{padding:16px 22px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;flex:1;min-height:0}
+#vAct{border-top:1px solid var(--line);padding:12px 22px;display:flex;flex-direction:column;gap:10px}
+#vAct:empty{display:none}
+.pend{border:1px solid rgba(255,190,80,.55);background:rgba(255,190,80,.08);padding:10px 12px;display:flex;flex-direction:column;gap:8px;animation:pendPulse 2s ease-in-out infinite}
+@keyframes pendPulse{50%{box-shadow:0 0 18px rgba(255,190,80,.25)}}
+.pend h4{margin:0;font:600 12px var(--mono);letter-spacing:.12em;color:var(--amber)}
+.pend pre{margin:0;font:12px var(--mono);color:#e8dcc2;white-space:pre-wrap;word-break:break-word;max-height:110px;overflow:auto}
+.pend .row,.vrep{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pend label{font:11px var(--mono);color:var(--dim);display:flex;gap:6px;align-items:center;cursor:pointer}
+.vrep input{flex:1;min-width:180px;background:rgba(0,229,255,.05);border:1px solid var(--line);color:#e6faff;padding:9px 12px;font:13px inherit;outline:none}
+.vrep input:focus{border-color:var(--cyan)}
 .msg{max-width:88%;padding:10px 14px;line-height:1.45;font-size:15px;white-space:pre-wrap;word-break:break-word;animation:fadeIn .35s both}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}}
 .msg.agent{align-self:flex-start;border:1px solid var(--line);background:rgba(0,229,255,.06);border-left:3px solid var(--cyan)}
@@ -454,7 +465,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
       <button class="hbtn" id="vClose">Close ✕</button>
     </div>
     <div class="vs"><div id="vSessions"></div><div id="vFiles"></div></div>
-    <div class="vl" id="vLog"><div class="empty">Select a session.</div></div>
+    <div class="vr"><div class="vl" id="vLog"><div class="empty">Select a session.</div></div><div id="vAct"></div></div>
   </div>
 </div>
 
@@ -635,12 +646,12 @@ $("roster").addEventListener("click",e=>{const a=e.target.closest(".agent");if(a
 $("activity").addEventListener("click",e=>{const a=e.target.closest(".act");if(a)openAgent(a.dataset.agent,a.dataset.session);});
 
 /* ================= VIEWER (agent work) ================= */
-let VIEW={agent:null,session:null,timer:null};
+let VIEW={agent:null,session:null,timer:null,auto:false},LASTPEND=[];
 function openAgent(agentId,sessionId){
   if(!AG)return;
   const a=(AG.agents||[]).find(x=>x.id===agentId)||{id:agentId,name:((AG.sessions||[]).find(s=>s.agent_id===agentId)||{}).agent_name||"Agent"};
   const{st,mine}=agentState(a);
-  VIEW.agent=a;$("viewer").classList.remove("hidden");
+  VIEW.agent=a;VIEW.auto=false;$("viewer").classList.remove("hidden");
   $("vOrb").style.setProperty("--c",COL[st]);$("vOrb").className="orb"+(st==="running"?" live":"");
   $("vName").textContent=a.name;
   $("vMeta").textContent=[a.model,a.version!=null?"v"+a.version:null,STX[st][1],a.description].filter(Boolean).join(" · ");
@@ -658,11 +669,55 @@ async function openSession(id,quiet){
   const j=DEMO?demoLog(id):await api("/api/agents?session="+encodeURIComponent(id)).catch(e=>({error:e.message}));
   if(VIEW.session!==id)return;
   if(j.error){box.innerHTML=`<div class="erl">Could not load the work log: ${esc(j.error)}</div>`;return;}
-  renderFiles(j.files||[]);
+  renderFiles(j.files||[]);LASTPEND=j.pending||[];
   const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;
   box.innerHTML=((j.truncated?`<div class="stl">— EARLIER EVENTS HIDDEN —</div>`:"")+(j.log||[]).map(renderEvent).join(""))||`<div class="empty">No events in this session.</div>`;
   if(!quiet||atBottom)box.scrollTop=box.scrollHeight;
-  if(j.session&&j.session.status==="running")VIEW.timer=setInterval(()=>openSession(id,true),8000);
+  renderAct(j);
+  const waiting=j.session&&(j.session.status==="running"||(j.pending&&j.pending.length&&VIEW.auto));
+  if(waiting)VIEW.timer=setInterval(()=>openSession(id,true),8000);
+  if(j.pending&&j.pending.length&&VIEW.auto&&!DEMO)confirmTools(j.pending.map(p=>p.id),"allow",true);
+}
+function renderAct(j){
+  const box=$("vAct"),p=j.pending||[],nm=(VIEW.agent&&VIEW.agent.name)||"The agent";
+  const keepInput=box.querySelector("#vMsg");const draft=keepInput?keepInput.value:"";
+  let h="";
+  if(p.length){
+    h+=`<div class="pend"><h4>⚠ ${esc(nm.toUpperCase())} IS WAITING FOR YOUR APPROVAL</h4>
+      <pre>${p.map(x=>"⚙ "+esc((x.server?x.server+" · ":"")+x.name)+(x.text?"\n"+esc(x.text):"")).join("\n\n")}</pre>
+      <div class="row"><button class="talk" id="vAllow">✓ Approve</button><button class="hbtn rej" id="vDeny">Deny</button>
+      <label><input type="checkbox" id="vAuto" ${VIEW.auto?"checked":""}> keep approving automatically while this is open</label></div></div>`;
+  }
+  if(j.session&&!DEMO)h+=`<div class="vrep"><input id="vMsg" placeholder="${j.session.status==="running"?"Send ":"Reply to "}${esc(nm)} — e.g. &quot;continue&quot; or new instructions" maxlength="4000"><button class="hbtn" id="vSend">Send ➤</button></div>`;
+  box.innerHTML=h;
+  const inp=box.querySelector("#vMsg");if(inp&&draft)inp.value=draft;
+}
+async function sessionPost(payload){
+  const r=await fetch("/api/agents",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(SESSION&&SESSION.access_token)},body:JSON.stringify({session_id:VIEW.session,...payload})});
+  const j=await r.json().catch(()=>({error:"HTTP "+r.status}));if(!r.ok||j.error)throw new Error(j.error||("HTTP "+r.status));return j;
+}
+let CONFIRMING=false;
+async function confirmTools(ids,result,quiet){
+  if(CONFIRMING)return;CONFIRMING=true;
+  try{await sessionPost({action:"confirm",ids,result});if(!quiet)say(result==="allow"?"Approved. Back to work.":"Denied.",false);}
+  catch(e){say("Could not send approval: "+e.message,false);}
+  finally{CONFIRMING=false;}
+  setTimeout(()=>VIEW.session&&openSession(VIEW.session,true),1500);
+}
+$("vAct").addEventListener("click",async e=>{
+  if(DEMO)return say("Demo mode – nothing to approve.",false);
+  if(e.target.id==="vAllow")confirmTools(LASTPEND.map(p=>p.id),"allow");
+  if(e.target.id==="vDeny")confirmTools(LASTPEND.map(p=>p.id),"deny");
+  if(e.target.id==="vAuto"){VIEW.auto=e.target.checked;if(VIEW.auto&&LASTPEND.length)confirmTools(LASTPEND.map(p=>p.id),"allow");}
+  if(e.target.id==="vSend")sendFollowUp();
+});
+$("vAct").addEventListener("keydown",e=>{if(e.target.id==="vMsg"&&e.key==="Enter"){e.preventDefault();sendFollowUp();}});
+async function sendFollowUp(){
+  const inp=$("vMsg");if(!inp)return;const text=inp.value.trim();if(!text)return;
+  inp.disabled=true;
+  try{await sessionPost({action:"message",text});inp.value="";say("Sent. It's back on it.",false);}
+  catch(e){say("Could not send: "+e.message,false);}
+  inp.disabled=false;setTimeout(()=>VIEW.session&&openSession(VIEW.session,true),1500);
 }
 function renderFiles(files){
   const fmtSize=b=>b==null?"":b>1e6?(b/1e6).toFixed(1)+" MB":Math.max(1,Math.round(b/1e3))+" KB";
@@ -687,7 +742,7 @@ function renderEvent(e){
     case"system":return `<div class="msg system">${esc(e.text)}</div>`;
     case"thinking":return e.text?`<div class="msg thinking">${esc(e.text)}</div>`:"";
     case"thread":return `<div class="msg system">↔ ${esc(e.text)}</div>`;
-    case"tool":return `<div class="toolc">⚙ <b>${esc(e.server?e.server+" · ":"")}${esc(e.name)}</b>${e.text?"\n"+esc(e.text):""}</div>`;
+    case"tool":return `<div class="toolc">${e.id&&LASTPEND.some(p=>p.id===e.id)?"⏸ ":""}⚙ <b>${esc(e.server?e.server+" · ":"")}${esc(e.name)}</b>${e.text?"\n"+esc(e.text):""}</div>`;
     case"result":return e.text?`<div class="res ${e.error?"err":""}" title="Click to expand">${esc(e.text)}</div>`:"";
     case"status":return `<div class="stl">— ${esc(String(e.text).toUpperCase())} · ${esc(fmtTime(e.time))} —</div>`;
     case"error":return `<div class="erl">⚠ ${esc(e.text)}</div>`;
@@ -695,7 +750,7 @@ function renderEvent(e){
 }
 $("vSessions").addEventListener("click",e=>{const s=e.target.closest(".ses");if(s)openSession(s.dataset.s);});
 $("vLog").addEventListener("click",e=>{const r=e.target.closest(".res");if(r)r.classList.toggle("open");});
-function closeViewer(){$("viewer").classList.add("hidden");clearInterval(VIEW.timer);VIEW={agent:null,session:null,timer:null};}
+function closeViewer(){$("viewer").classList.add("hidden");clearInterval(VIEW.timer);VIEW={agent:null,session:null,timer:null,auto:false};LASTPEND=[];$("vAct").innerHTML="";}
 $("vClose").addEventListener("click",closeViewer);
 $("vRef").addEventListener("click",()=>VIEW.session&&openSession(VIEW.session));
 $("viewer").addEventListener("click",e=>{if(e.target.id==="viewer")closeViewer();});
