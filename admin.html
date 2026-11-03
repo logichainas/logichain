@@ -1132,7 +1132,7 @@ async function openReview(id){
   const val=lines.reduce((a,l)=>a+(+l.line_value_nok||0),0);
   $("rvBody").innerHTML=`
     ${run.error?`<div class="erl">⚠ ${esc(run.error)}</div>`:""}
-    ${run.apply_result&&run.status==="applied"?`<div class="msg system" style="align-self:stretch">Uploaded to <b>${esc(run.apply_result.kunde||"")}</b>: ${esc(run.apply_result.po_lines_added??0)} PO lines added, ${esc(run.apply_result.po_lines_skipped_existing??0)} already existed, ${esc(run.apply_result.suppliers_added??0)} new suppliers, ${esc(run.apply_result.materials_added??0)} new materials${run.apply_result.insights_published?", insights published":""}.</div>`:""}
+    ${run.apply_result&&run.status==="applied"?`<div class="msg system" style="align-self:stretch">Uploaded to <b>${esc(run.apply_result.kunde||"")}</b>: ${esc(run.apply_result.po_lines_added??0)} PO lines added, ${run.apply_result.po_lines_updated!=null?esc(run.apply_result.po_lines_updated)+" updated ("+esc(run.apply_result.po_lines_newly_delivered??0)+" newly delivered), "+esc(run.apply_result.po_lines_unchanged??0)+" unchanged":esc(run.apply_result.po_lines_skipped_existing??0)+" already existed"}, ${esc(run.apply_result.suppliers_added??0)} new suppliers, ${esc(run.apply_result.materials_added??0)} new materials${run.apply_result.insights_published?", insights published":""}.</div>`:""}
     <div class="rsec"><h4>PLANNER SUMMARY</h4><p>${esc(p.summary||run.proposal_summary||"No proposal yet.")}</p></div>
     <div class="kpis">
       <div class="kp"><b>${lines.length.toLocaleString("en-GB")}</b><span>PO LINES</span></div>
@@ -1179,7 +1179,7 @@ async function decide(action){
   $("rvApprove").disabled=$("rvReject").disabled=false;$("rvApprove").textContent="✓ Approve & upload";
   if(j.error)return say("Upload failed: "+j.error,false);
   closeReview();loadRuns();
-  if(j.status==="applied"){const r=j.result||{};say(`Done, boss. ${r.po_lines_added??0} PO lines are live on ${r.kunde||"the"} dashboard${r.insights_published?", insights published":""}. Let's go!`);}
+  if(j.status==="applied"){const r=j.result||{};say(`Done, boss. ${r.po_lines_added??0} new PO lines${r.po_lines_updated?` and ${r.po_lines_updated} updated`:""} are live on ${r.kunde||"the"} dashboard${r.insights_published?", insights published":""}. Let's go!`);}
   else say("Proposal rejected. Nothing was uploaded.");
 }
 $("rvApprove").addEventListener("click",()=>decide("approve"));
