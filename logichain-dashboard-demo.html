@@ -125,12 +125,16 @@ rect.clickable:hover{fill:#6db3ff}
 .octo-hero .big{font-size:30px;font-weight:800}
 .octo-hero input{background:#0b1226;border:1px solid var(--line);color:var(--txt);padding:8px 12px;border-radius:8px;font-size:14px;margin:8px 0;width:150px}
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/dash-theme.css?v=1">
 </head>
 <body>
 
 <div class="topbar">
   <div>
-    <div class="logo">LOGIC<b>HAIN</b></div>
+    <div class="logo"><span class="lc-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#050816" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M8.2 8.2l2.6 6.6M15.8 8.2l-2.6 6.6M8.4 7h7.2"/></svg></span>Logichain</div>
     <div class="topsub">Turn purchasing data into decisions.</div>
   </div>
   <span class="kunde-chip" id="kundeChip"></span>
@@ -165,7 +169,6 @@ rect.clickable:hover{fill:#6db3ff}
 <section id="tab-forside">
   <div class="card hero">
     <div class="updated">Sist oppdatert: 02.10.2026 kl. 10:33 · Datakilde: leverandør-Excel (demo)</div>
-    <div class="logo" style="font-size:30px">LOGIC<b>HAIN</b></div>
     <h1>Executive Overview</h1>
     <p>Logichain samler innkjøpsdata fra dine leverandører i én procurement intelligence-plattform:
     totalt innkjøp og spend-struktur, leverandør-ytelse, leveringspresisjon, identifisert
@@ -566,7 +569,7 @@ document.getElementById("kpi-po").innerHTML=
   kpi("Prosjekter",PROJECTS.length,"aktive prosjektnumre");
 
 (function(){
-  const W=760,H=290,pad=34,bw=W/monthsData.length;
+  const W=760,H=290,pad=34,bw=(W-pad)/monthsData.length;
   let bars="",dots="",grid="",prev=null;
   for(let g=0;g<=4;g++){const y=pad+(H-pad-30)*g/4;grid+=`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="#1e2a4a"/><text x="2" y="${y+4}" fill="#8fa0c0" font-size="10">${100-g*25}%</text>`;}
   monthsData.forEach((d,i)=>{
@@ -630,7 +633,7 @@ window.levDetail=function(id){
 
 /* ================= SPEND INTELLIGENCE ================= */
 function vbars(data,fmtY,fmtL,clickFn){
-  const W=760,H=270,pad=46,n=data.length,bw=W/n;
+  const W=760,H=270,pad=46,n=data.length,bw=(W-pad)/n;
   let out="";const max=Math.max(...data.map(d=>d.v))||1;
   for(let g=0;g<=3;g++){const y=pad+(H-pad-30)*g/3;out+=`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="#1e2a4a"/>`;}
   data.forEach((d,i)=>{
@@ -1132,5 +1135,7 @@ document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" 
 (function(){const h=location.hash.slice(1);
   if(["forside","spend","lev","po","octo","spar","tiltak","faq"].indexOf(h)>=0)goto(h);})();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script src="assets/dash-fx.js?v=1" defer></script>
 </body>
 </html>

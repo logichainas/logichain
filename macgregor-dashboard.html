@@ -19,17 +19,16 @@ window.__ERRS.push("PROMISE-FEIL: "+(r&&r.message?r.message:String(r))+s);__show
   function reveal(){document.documentElement.style.visibility="";}
   function loginCard(msg){
     document.body.innerHTML=
-     '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#070b16;font-family:Segoe UI,Arial,sans-serif">'+
-     '<div style="background:#101830;border:1px solid #24407a;border-radius:14px;max-width:430px;width:100%;padding:26px;color:#dbe4f5">'+
-     '<div style="font-weight:800;font-size:22px;color:#e2001a;margin-bottom:4px">MACGREGOR</div>'+
-     '<div style="font-size:12.5px;color:#8fa0c0;margin-bottom:16px">Performance Dashboard · av Logichain</div>'+
-     '<h2 style="font-size:18px;color:#fff;margin-bottom:14px">\ud83d\udd10 Logg inn</h2>'+
+     '<div class="mg-login"><div class="mg-card">'+
+     '<div class="mg-top"><b>MACGREGOR</b><span>×</span><i class="lc-mark lc-mark-sm"><svg viewBox="0 0 24 24" fill="none" stroke="#050816" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M8.2 8.2l2.6 6.6M15.8 8.2l-2.6 6.6M8.4 7h7.2"/></svg></i><em>Logichain</em></div>'+
+     '<h2>Performance Dashboard</h2><p class="mg-sub">Logg inn for å se innkjøps- og leverandørinnsikten deres.</p>'+
      '<form id="mgForm">'+
-     '<div style="margin-bottom:12px"><input id="mgMail" type="email" placeholder="E-post" required style="width:100%;background:#0b1226;border:1px solid #1e2a4a;color:#dbe4f5;padding:12px 14px;border-radius:10px;font-size:14px"></div>'+
-     '<div style="margin-bottom:12px"><input id="mgPass" type="password" placeholder="Passord" required style="width:100%;background:#0b1226;border:1px solid #1e2a4a;color:#dbe4f5;padding:12px 14px;border-radius:10px;font-size:14px"></div>'+
-     '<div id="mgErr" style="color:#e05d5d;font-size:12.5px;margin-bottom:10px;display:none"></div>'+
-     '<button type="submit" style="width:100%;padding:12px;border:none;border-radius:10px;font-weight:700;font-size:14px;color:#fff;background:linear-gradient(135deg,#2e7cf6,#1a5fd0);cursor:pointer">Logg inn \u2192</button>'+
-     (msg?'<p style="color:#e05d5d;font-size:12.5px;margin-top:10px">'+msg+'</p>':'')+
+     '<label>E-post<input id="mgMail" type="email" autocomplete="email" required></label>'+
+     '<label>Passord<input id="mgPass" type="password" autocomplete="current-password" required></label>'+
+     '<div id="mgErr" class="mg-err" style="display:none"></div>'+
+     '<button type="submit">Logg inn →</button>'+
+     (msg?'<p class="mg-err">'+msg+'</p>':'')+
+     '<a class="mg-back" href="index.html">← Tilbake til logichain.no</a>'+
      '</form></div></div>';
     document.body.addEventListener("submit",async function(e){
       if(e.target.id!=="mgForm")return;e.preventDefault();
@@ -178,12 +177,16 @@ rect.clickable:hover{fill:#6db3ff}
 .octo-hero .big{font-size:30px;font-weight:800}
 .octo-hero input{background:#0b1226;border:1px solid var(--line);color:var(--txt);padding:8px 12px;border-radius:8px;font-size:14px;margin:8px 0;width:150px}
 </style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/dash-theme.css?v=1">
 </head>
 <body>
 
 <div class="topbar">
   <div>
-    <div class="logo" style="color:#e2001a">MACGREGOR <span style="font-size:11px;color:#8fa0c0;font-weight:600;letter-spacing:1px">× LOGICHAIN</span></div>
+    <div class="logo"><span style="color:#ff2d46;letter-spacing:.06em">MACGREGOR</span> <span class="lc-x">×</span> <span class="lc-mark lc-mark-sm"><svg viewBox="0 0 24 24" fill="none" stroke="#050816" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M8.2 8.2l2.6 6.6M15.8 8.2l-2.6 6.6M8.4 7h7.2"/></svg></span><span style="font-size:15px">Logichain</span></div>
     <div class="topsub">Designed to perform with the sea.</div>
   </div>
   <span class="kunde-chip" id="kundeChip" style="display:inline-block">🏢 MacGregor Norway</span>
@@ -219,7 +222,7 @@ rect.clickable:hover{fill:#6db3ff}
 <section id="tab-forside">
   <div class="card hero">
     <div class="updated">Sist oppdatert: 02.10.2026 kl. 10:33 · Datakilde: MacGregor Norway – leverandørrapporter (demo)</div>
-    <div class="logo" style="font-size:34px;color:#e2001a">MACGREGOR <span style="font-size:13px;color:#8fa0c0;font-weight:600">Performance Dashboard</span></div>
+    <div class="mg-brand"><b>MACGREGOR</b> <span>Performance Dashboard</span></div>
     <h1>Executive Overview</h1>
     <p>Logichain samler innkjøpsdata fra dine leverandører i én procurement intelligence-plattform:
     totalt innkjøp og spend-struktur, leverandør-ytelse, leveringspresisjon, identifisert
@@ -790,7 +793,7 @@ document.getElementById("kpi-po").innerHTML=
   kpi("Prosjekter",PROJECTS.length,"aktive prosjektnumre");
 
 (function(){
-  const W=760,H=290,pad=34,bw=W/monthsData.length;
+  const W=760,H=290,pad=34,bw=(W-pad)/monthsData.length;
   let bars="",dots="",grid="",prev=null;
   for(let g=0;g<=4;g++){const y=pad+(H-pad-30)*g/4;grid+=`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="#1e2a4a"/><text x="2" y="${y+4}" fill="#8fa0c0" font-size="10">${100-g*25}%</text>`;}
   monthsData.forEach((d,i)=>{
@@ -854,7 +857,7 @@ window.levDetail=function(id){
 
 /* ================= SPEND INTELLIGENCE ================= */
 function vbars(data,fmtY,fmtL,clickFn){
-  const W=760,H=270,pad=46,n=data.length,bw=W/n;
+  const W=760,H=270,pad=46,n=data.length,bw=(W-pad)/n;
   let out="";const max=Math.max(...data.map(d=>d.v))||1;
   for(let g=0;g<=3;g++){const y=pad+(H-pad-30)*g/3;out+=`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="#1e2a4a"/>`;}
   data.forEach((d,i)=>{
@@ -1393,5 +1396,7 @@ boot();
   }catch(err){console.info("Logichain insights:",err&&err.message);}
 })();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+<script src="assets/dash-fx.js?v=1" defer></script>
 </body>
 </html>
