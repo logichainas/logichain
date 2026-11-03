@@ -1,630 +1,763 @@
 <!DOCTYPE html>
-<html lang="no">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>Logichain · Kommandosentral</title>
+<title>Logichain · Command Center</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#02070f;--bg2:#061424;--panel:rgba(8,32,52,.55);--panel2:rgba(0,229,255,.05);
-  --line:rgba(0,229,255,.22);--line2:rgba(0,229,255,.5);
-  --cyan:#00e5ff;--cyan2:#7df3ff;--glow:0 0 12px rgba(0,229,255,.55),0 0 28px rgba(0,229,255,.25);
+  --bg:#010509;--glass:rgba(6,26,44,.58);--glass2:rgba(0,229,255,.06);
+  --line:rgba(0,229,255,.22);--line2:rgba(0,229,255,.55);
+  --cyan:#00e5ff;--cyan2:#8ff6ff;--glow:0 0 12px rgba(0,229,255,.6),0 0 30px rgba(0,229,255,.25);
   --amber:#ffb547;--red:#ff4d6d;--green:#3dffb0;--violet:#b48cff;
-  --text:#d6f6ff;--muted:#6f97b2;--dim:#3f6782;
+  --text:#dff8ff;--muted:#7aa3bd;--dim:#3d6680;
   --hud:"Orbitron",system-ui,sans-serif;--ui:"Rajdhani",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+  --mx:0;--my:0;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:16px;overflow-x:hidden;
-  background-image:
-    radial-gradient(ellipse 80% 60% at 50% 35%,rgba(0,120,170,.22),transparent 70%),
-    radial-gradient(ellipse 50% 40% at 85% 100%,rgba(0,229,255,.08),transparent 70%),
-    linear-gradient(rgba(0,229,255,.035) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,229,255,.035) 1px,transparent 1px);
-  background-size:auto,auto,44px 44px,44px 44px;background-attachment:fixed}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
-  background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
-.scan{position:fixed;left:0;right:0;height:140px;top:-140px;pointer-events:none;z-index:49;
-  background:linear-gradient(180deg,transparent,rgba(0,229,255,.06),transparent);animation:scan 7s linear infinite}
-@keyframes scan{to{top:100%}}
+body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:16px;overflow:hidden;
+  background-image:radial-gradient(ellipse 70% 55% at 50% 45%,rgba(0,110,160,.28),transparent 70%)}
+#scene{position:fixed;inset:0;z-index:0;display:block;width:100vw;height:100vh}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px)}
+.vignette{position:fixed;inset:0;pointer-events:none;z-index:1;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.75))}
 a{color:var(--cyan)}
-button{font-family:var(--ui)}
+button,input,select{font-family:var(--ui)}
 .hidden{display:none!important}
 
 /* ---------- boot ---------- */
-#boot{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:26px;transition:opacity .7s}
+#boot{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:26px;transition:opacity .8s}
 #boot.off{opacity:0;pointer-events:none}
-#boot .mark{width:120px;height:120px}
 #boot pre{font-family:var(--mono);font-size:13px;color:var(--cyan2);min-height:150px;width:min(520px,90vw);white-space:pre-wrap;text-shadow:0 0 8px rgba(0,229,255,.5)}
-.spin{transform-origin:50% 50%;animation:spin 6s linear infinite}
-.spin.r{animation-direction:reverse;animation-duration:9s}
-.spin.s{animation-duration:22s}
+.spin{transform-origin:50% 50%;animation:spin 6s linear infinite}.spin.r{animation-direction:reverse;animation-duration:9s}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ---------- gate ---------- */
-#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
-.gatebox{width:min(400px,100%);border:1px solid var(--line2);background:var(--panel);padding:30px 26px;position:relative;backdrop-filter:blur(6px)}
+#gate{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;padding:16px;perspective:1200px}
+.gatebox{width:min(400px,100%);border:1px solid var(--line2);background:var(--glass);padding:30px 26px;backdrop-filter:blur(10px);transform:rotateX(8deg);box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 0 40px rgba(0,229,255,.06)}
 .gatebox h1{font-family:var(--hud);font-size:18px;letter-spacing:.2em;color:var(--cyan);text-shadow:var(--glow);margin-bottom:6px}
 .gatebox p{color:var(--muted);margin-bottom:20px}
-.gatebox input{width:100%;background:rgba(0,0,0,.35);border:1px solid var(--line);color:var(--text);font:600 16px var(--ui);padding:12px 14px;margin-bottom:12px;outline:none}
-.gatebox input:focus{border-color:var(--cyan);box-shadow:var(--glow)}
+.field{width:100%;background:rgba(0,0,0,.4);border:1px solid var(--line);color:var(--text);font:600 16px var(--ui);padding:11px 13px;outline:none;transition:.2s}
+.field:focus{border-color:var(--cyan);box-shadow:var(--glow)}
+.gatebox .field{margin-bottom:12px}
 .err{color:var(--red);font-size:14px;min-height:20px;margin-bottom:8px}
 
-/* ---------- corner brackets ---------- */
+/* ---------- glass panels ---------- */
 .br{position:relative}
-.br::before,.br::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--cyan);pointer-events:none;filter:drop-shadow(0 0 4px var(--cyan))}
+.br::before,.br::after{content:"";position:absolute;width:16px;height:16px;border:2px solid var(--cyan);pointer-events:none;filter:drop-shadow(0 0 5px var(--cyan))}
 .br::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
 .br::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+.panel{background:linear-gradient(160deg,rgba(8,40,64,.72),rgba(3,16,28,.6));border:1px solid var(--line);backdrop-filter:blur(12px);
+  box-shadow:0 25px 70px rgba(0,0,0,.55),inset 0 0 50px rgba(0,229,255,.05),inset 0 1px 0 rgba(143,246,255,.15);padding:16px;display:flex;flex-direction:column;min-height:0}
+.ph{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.ph h2{font-family:var(--hud);font-size:12px;font-weight:700;letter-spacing:.28em;color:var(--cyan);text-shadow:0 0 8px rgba(0,229,255,.5)}
+.ph span{font:12px var(--mono);color:var(--muted)}
+.scroll{overflow-y:auto;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.35) transparent}
+.empty{color:var(--muted);font-size:14px;padding:8px 2px;line-height:1.5}
+.empty code{font-family:var(--mono);color:var(--cyan2);font-size:12px}
 
-/* ---------- header ---------- */
-header{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(0,40,64,.55),rgba(0,20,34,.2));position:sticky;top:0;z-index:20;backdrop-filter:blur(8px)}
+/* ---------- HUD layout ---------- */
+#app{position:fixed;inset:0;z-index:10;display:grid;grid-template-rows:auto minmax(0,1fr) auto;pointer-events:none}
+header,.side,.dock,#cmd{pointer-events:auto}
+header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:linear-gradient(180deg,rgba(0,22,38,.85),transparent)}
 .brand{font-family:var(--hud);font-weight:900;letter-spacing:.24em;font-size:15px;color:var(--cyan);text-shadow:var(--glow);white-space:nowrap}
 .brand small{display:block;font-weight:500;font-size:9px;letter-spacing:.42em;color:var(--muted);text-shadow:none;margin-top:3px}
-.greet{flex:1;min-width:0}
-.greet b{font-family:var(--hud);font-size:14px;letter-spacing:.12em;color:var(--text)}
-.greet div{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.greet{flex:1;min-width:0;text-align:center}
+.greet b{font-family:var(--hud);font-size:15px;letter-spacing:.16em}
+.greet div{color:var(--muted);font-size:14px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .clock{font-family:var(--hud);text-align:right;line-height:1.1}
 .clock .t{font-size:22px;color:var(--cyan);text-shadow:var(--glow);letter-spacing:.08em}
 .clock .d{font-size:10px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
-.hbtn{background:transparent;border:1px solid var(--line);color:var(--cyan2);font:600 13px var(--ui);letter-spacing:.14em;text-transform:uppercase;padding:8px 12px;cursor:pointer;transition:.2s}
-.hbtn:hover,.hbtn.on{border-color:var(--cyan);box-shadow:var(--glow);color:#fff;background:rgba(0,229,255,.08)}
+.hbtn{background:rgba(0,229,255,.03);border:1px solid var(--line);color:var(--cyan2);font:600 13px var(--ui);letter-spacing:.14em;text-transform:uppercase;padding:8px 12px;cursor:pointer;transition:.2s}
+.hbtn:hover,.hbtn.on{border-color:var(--cyan);box-shadow:var(--glow);color:#fff;background:rgba(0,229,255,.1)}
 .hbtns{display:flex;gap:8px}
-.chip{display:inline-flex;align-items:center;gap:7px;font:600 11px var(--hud);letter-spacing:.16em;color:var(--green);border:1px solid rgba(61,255,176,.35);padding:5px 10px;margin-left:10px;vertical-align:middle}
-.chip.warn{color:var(--amber);border-color:rgba(255,181,71,.4)}
-.dot{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:pulse 1.8s ease-in-out infinite}
-@keyframes pulse{50%{opacity:.35}}
 .demo{font:700 11px var(--hud);letter-spacing:.2em;color:var(--bg);background:var(--amber);padding:4px 8px}
 
-/* ---------- layout ---------- */
-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);gap:18px;padding:18px 22px 110px;max-width:1700px;margin:0 auto}
-.col{display:flex;flex-direction:column;gap:18px;min-width:0}
-.panel{border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(6px);padding:16px 16px 14px;min-width:0;animation:rise .6s both}
-.col .panel:nth-child(2){animation-delay:.1s}.col .panel:nth-child(3){animation-delay:.2s}.col .panel:nth-child(4){animation-delay:.3s}
-@keyframes rise{from{opacity:0;transform:translateY(10px)}}
-.ph{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--line)}
-.ph h2{font-family:var(--hud);font-size:12px;font-weight:700;letter-spacing:.26em;color:var(--cyan);text-shadow:0 0 8px rgba(0,229,255,.5)}
-.ph span{font:12px var(--mono);color:var(--muted)}
-.empty{color:var(--muted);font-size:14px;padding:6px 0}
+.stage{display:grid;grid-template-columns:minmax(300px,380px) 1fr minmax(320px,400px);gap:24px;padding:4px 24px 12px;min-height:0;height:100%;perspective:1400px}
+.side{min-height:0;display:flex;flex-direction:column;gap:18px;transform-style:preserve-3d;transition:transform .25s ease-out}
+.side.l{transform-origin:left center;transform:rotateY(calc(14deg + var(--mx)*3deg)) rotateX(calc(var(--my)*-2deg))}
+.side.r{transform-origin:right center;transform:rotateY(calc(-14deg + var(--mx)*3deg)) rotateX(calc(var(--my)*-2deg))}
+.side .panel{animation:rise .8s both}
+.side .panel:nth-child(2){animation-delay:.12s}
+@keyframes rise{from{opacity:0;transform:translateZ(-120px) translateY(20px)}}
 
-/* ---------- reactor ---------- */
-.reactor{position:relative;width:min(100%,460px);aspect-ratio:1;margin:0 auto}
-.reactor svg{width:100%;height:100%;overflow:visible}
-.rc{position:absolute;inset:24%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
-.rc .lbl{font:600 11px var(--hud);letter-spacing:.34em;color:var(--muted)}
-.rc .big{font:900 clamp(30px,5vw,46px) var(--hud);color:#fff;text-shadow:var(--glow);margin:6px 0 2px}
-.rc .sub{font:13px var(--mono);color:var(--cyan2)}
-.gauges{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}
-.g{text-align:center}
-.g svg{width:100%;max-width:110px;aspect-ratio:1;display:block;margin:0 auto}
-.g .gv{font:700 18px var(--hud);fill:#fff}
-.g .gl{font:600 11px var(--hud);letter-spacing:.2em;color:var(--muted);margin-top:4px;text-transform:uppercase}
+/* missions */
+.mform{display:flex;gap:6px;margin-bottom:10px}
+.mform .field{padding:9px 11px;font-size:15px;min-width:0}
+.prio{width:40px;flex:none;border:1px solid var(--line);background:rgba(0,0,0,.4);color:var(--muted);cursor:pointer;font:700 15px var(--hud)}
+.prio.high{color:var(--amber);border-color:var(--amber);box-shadow:0 0 10px rgba(255,181,71,.35)}
+.tabs{display:flex;gap:14px;margin-bottom:8px}
+.tab{background:none;border:0;color:var(--muted);font:600 12px var(--hud);letter-spacing:.18em;padding:4px 2px;cursor:pointer;border-bottom:2px solid transparent}
+.tab.on{color:var(--cyan);border-color:var(--cyan)}
+.todo{display:flex;align-items:flex-start;gap:10px;padding:9px 6px;border-bottom:1px dashed rgba(0,229,255,.13);transition:.25s}
+.todo:hover{background:rgba(0,229,255,.05);transform:translateZ(14px)}
+.chk{width:18px;height:18px;flex:none;border:1.5px solid var(--cyan);margin:3px 2px 0;cursor:pointer;display:grid;place-items:center;transform:rotate(45deg);transition:.2s;background:transparent}
+.chk:hover{box-shadow:var(--glow)}
+.chk.on{background:var(--cyan);box-shadow:var(--glow)}
+.chk.on::after{content:"";width:6px;height:6px;background:var(--bg)}
+.todo .tx{font-size:16px;line-height:1.3;color:#fff;word-break:break-word}
+.todo.done .tx{color:var(--dim);text-decoration:line-through}
+.todo .meta{font:11px var(--mono);color:var(--muted);margin-top:3px}
+.todo .hi{color:var(--amber);font-weight:700}
+.x{background:none;border:0;color:var(--dim);cursor:pointer;font-size:18px;line-height:1;padding:0 4px;opacity:0;transition:.2s}
+.todo:hover .x{opacity:1}.x:hover{color:var(--red)}
+.due{width:132px;flex:none;font:12px var(--mono);padding:8px;color-scheme:dark}
 
-/* ---------- lists ---------- */
-.kunde{border:1px solid var(--line);background:var(--panel2);padding:12px;margin-bottom:10px;cursor:default;transition:.2s}
-.kunde:hover{border-color:var(--line2);box-shadow:inset 0 0 22px rgba(0,229,255,.08)}
-.kunde .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.kunde .nm{font-weight:700;font-size:18px;color:#fff}
-.kunde .sp{font:600 14px var(--mono);color:var(--cyan)}
-.kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0 8px}
-.kgrid div{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
-.kgrid b{display:block;font:600 15px var(--mono);color:var(--text);text-transform:none;letter-spacing:0}
-.bar{height:4px;background:rgba(0,229,255,.1);position:relative;overflow:hidden}
-.bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--cyan),var(--cyan2));box-shadow:0 0 10px var(--cyan)}
-.kfoot{display:flex;justify-content:space-between;align-items:center;margin-top:9px;font-size:13px;color:var(--muted)}
-.lnk{font:600 12px var(--ui);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);text-decoration:none;border:1px solid var(--line);padding:4px 9px}
-.lnk:hover{border-color:var(--cyan);box-shadow:var(--glow)}
-.row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed rgba(0,229,255,.13);font-size:14px}
-.row:last-child{border-bottom:0}
-.row .m{flex:1;min-width:0}
-.row .m b{display:block;color:#fff;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .m small{color:var(--muted);font:12px var(--mono)}
-.pill{font:700 10px var(--hud);letter-spacing:.14em;padding:4px 7px;border:1px solid currentColor;white-space:nowrap;text-transform:uppercase}
-.p-run{color:var(--green)}.p-idle{color:var(--cyan2)}.p-res{color:var(--amber)}.p-term{color:var(--dim)}.p-ny{color:var(--amber)}.p-ok{color:var(--green)}
-.mini{background:transparent;border:1px solid var(--line);color:var(--cyan2);font:600 11px var(--ui);letter-spacing:.12em;text-transform:uppercase;padding:4px 8px;cursor:pointer}
-.mini:hover{border-color:var(--cyan);color:#fff}
+/* roster */
+.agent{display:flex;gap:12px;align-items:center;padding:11px 10px;border:1px solid var(--line);background:var(--glass2);margin-bottom:9px;cursor:pointer;transition:.25s}
+.agent:hover,.agent.hl{border-color:var(--line2);transform:translateZ(22px);box-shadow:0 12px 30px rgba(0,0,0,.45),inset 0 0 24px rgba(0,229,255,.1)}
+.orb{width:34px;height:34px;flex:none;border-radius:50%;position:relative;background:radial-gradient(circle at 35% 30%,#fff,var(--c) 35%,rgba(0,0,0,.2) 75%);box-shadow:0 0 14px var(--c),0 0 30px var(--c)}
+.orb.live{animation:throb 1.6s ease-in-out infinite}
+.orb::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid var(--c);opacity:.5}
+.orb.live::after{animation:ping 1.6s ease-out infinite}
+@keyframes throb{50%{transform:scale(1.12)}}
+@keyframes ping{from{transform:scale(.8);opacity:.8}to{transform:scale(1.6);opacity:0}}
+.agent .ai{flex:1;min-width:0}
+.agent .an{font-weight:700;font-size:17px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agent .am{font:11px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st{font:700 10px var(--hud);letter-spacing:.16em;white-space:nowrap}
+.c-run{color:var(--green)}.c-idle{color:var(--cyan2)}.c-res{color:var(--amber)}.c-off{color:var(--dim)}.c-err{color:var(--red)}
+.act{display:flex;gap:10px;align-items:center;padding:8px 4px;border-bottom:1px dashed rgba(0,229,255,.12);cursor:pointer;transition:.2s}
+.act:hover{background:rgba(0,229,255,.06)}
+.act .m{flex:1;min-width:0}
+.act b{display:block;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.act small{font:11px var(--mono);color:var(--muted)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;flex:none}
+.dot.p{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
 
-/* agents */
-.agents{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
-.agent{border:1px solid var(--line);padding:12px 10px;background:var(--panel2);position:relative;overflow:hidden}
-.agent::after{content:"";position:absolute;inset:auto -30% -60% -30%;height:80%;background:radial-gradient(closest-side,rgba(0,229,255,.18),transparent);opacity:0;transition:.3s}
-.agent.live::after{opacity:1;animation:pulse 2.4s ease-in-out infinite}
-.agent .an{font-weight:700;color:#fff;font-size:15px;line-height:1.15;margin:8px 0 4px;word-break:break-word}
-.agent .am{font:11px var(--mono);color:var(--muted)}
-.agent .as{display:flex;align-items:center;gap:6px;font:700 10px var(--hud);letter-spacing:.16em}
-.cfg{font-size:14px;color:var(--muted);line-height:1.5}
-.cfg ol{margin:8px 0 0 18px}.cfg code{font-family:var(--mono);color:var(--cyan2);font-size:13px}
+/* labels over 3D orbs */
+#labels{position:fixed;inset:0;pointer-events:none;z-index:5}
+.lbl{position:absolute;transform:translate(-50%,-160%);font:700 11px var(--hud);letter-spacing:.16em;color:var(--cyan2);text-shadow:0 0 8px rgba(0,229,255,.8);white-space:nowrap;pointer-events:none;transition:opacity .2s}
+.lbl small{display:block;text-align:center;font:600 9px var(--hud);letter-spacing:.2em;margin-top:2px}
+.lbl.hl{color:#fff;font-size:13px}
+.coreLbl{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:4;text-align:center;pointer-events:none}
+.coreLbl .k{font:600 10px var(--hud);letter-spacing:.4em;color:var(--muted)}
+.coreLbl .v{font:900 40px var(--hud);color:#fff;text-shadow:var(--glow);line-height:1.1}
+.coreLbl .s{font:12px var(--mono);color:var(--cyan2)}
 
-/* chart */
-.chart svg{width:100%;height:190px;display:block}
-.chart .ax{font:10px var(--mono);fill:var(--muted)}
-.chart .bv{font:10px var(--mono);fill:var(--cyan2)}
-
-/* system */
-.sys{display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:14px;align-items:center}
-.sys span:nth-child(odd){color:var(--muted);letter-spacing:.06em}
-.sys span:nth-child(even){font:600 13px var(--mono);display:flex;align-items:center;gap:6px;justify-content:flex-end}
-.ok{color:var(--green)}.bad{color:var(--red)}.wrn{color:var(--amber)}
+/* dock: quick links */
+.dock{padding:0 24px 4px;perspective:900px}
+.dockin{display:flex;gap:12px;overflow-x:auto;padding:16px 4px 10px;scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.35) transparent;align-items:flex-end}
+.dlabel{font:700 10px var(--hud);letter-spacing:.3em;color:var(--cyan);writing-mode:vertical-rl;transform:rotate(180deg);opacity:.8;flex:none;align-self:center}
+.tile{flex:none;width:132px;height:84px;position:relative;border:1px solid var(--line);background:linear-gradient(150deg,rgba(10,48,76,.85),rgba(2,14,24,.8));
+  text-decoration:none;color:var(--text);padding:10px 11px;display:flex;flex-direction:column;justify-content:space-between;transform:rotateX(22deg);transform-origin:bottom;transition:transform .25s,box-shadow .25s,border-color .25s;box-shadow:0 14px 28px rgba(0,0,0,.5)}
+.tile:hover{transform:rotateX(0) translateY(-8px);border-color:var(--cyan);box-shadow:0 20px 40px rgba(0,0,0,.6),var(--glow)}
+.tile .mono{width:28px;height:28px;display:grid;place-items:center;font:900 12px var(--hud);color:var(--bg);background:var(--cyan);box-shadow:var(--glow);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.tile .tt{font-weight:700;font-size:14px;line-height:1.1;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .tg{font:9px var(--hud);letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
+.tile .x{position:absolute;top:4px;right:4px}
+.tile:hover .x{opacity:1}
+.tile.add{align-items:center;justify-content:center;border-style:dashed;cursor:pointer;color:var(--cyan);font:700 26px var(--hud);width:84px}
+.lform{display:flex;gap:6px;flex:none;align-items:center}
+.lform .field{width:150px;padding:8px 10px;font-size:14px}
 
 /* command bar */
-#cmd{position:fixed;left:0;right:0;bottom:0;z-index:30;border-top:1px solid var(--line2);background:linear-gradient(0deg,rgba(0,18,30,.97),rgba(0,22,38,.9));backdrop-filter:blur(8px);padding:10px 22px 12px}
-#log{font:13px var(--mono);color:var(--cyan2);min-height:20px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:1700px;margin-left:auto;margin-right:auto}
-#cmd form{display:flex;align-items:center;gap:10px;max-width:1700px;margin:0 auto}
-#cmd label{font:700 14px var(--hud);color:var(--cyan);text-shadow:var(--glow)}
-#cmd input{flex:1;background:transparent;border:0;border-bottom:1px solid var(--line);color:#fff;font:15px var(--mono);padding:8px 2px;outline:none;min-width:0}
-#cmd input:focus{border-color:var(--cyan)}
+#cmd{border-top:1px solid var(--line2);background:linear-gradient(0deg,rgba(0,14,24,.97),rgba(0,22,38,.88));backdrop-filter:blur(10px);padding:8px 24px 10px}
+#log{font:13px var(--mono);color:var(--cyan2);min-height:18px;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cmd form{display:flex;align-items:center;gap:10px}
+#cmd label{font:700 14px var(--hud);color:var(--cyan);text-shadow:var(--glow);white-space:nowrap}
+#cIn{flex:1;background:transparent;border:0;border-bottom:1px solid var(--line);color:#fff;font:15px var(--mono);padding:7px 2px;outline:none;min-width:0}
+#cIn:focus{border-color:var(--cyan)}
 .wave{display:flex;gap:3px;align-items:center;height:22px}
-.wave i{width:3px;background:var(--cyan);box-shadow:0 0 6px var(--cyan);height:4px;transition:height .1s}
+.wave i{width:3px;background:var(--cyan);box-shadow:0 0 6px var(--cyan);height:4px}
 .wave.on i{animation:wave .9s ease-in-out infinite}
 .wave i:nth-child(2){animation-delay:.1s}.wave i:nth-child(3){animation-delay:.2s}.wave i:nth-child(4){animation-delay:.3s}.wave i:nth-child(5){animation-delay:.4s}
 @keyframes wave{50%{height:20px}}
 
-@media (max-width:1180px){main{grid-template-columns:1fr 1fr}.center{grid-column:1/-1;order:-1}}
-@media (max-width:760px){
-  main{grid-template-columns:1fr;padding:14px 16px 120px}
-  header{flex-wrap:wrap;padding:12px 16px;position:static}.greet{order:3;flex-basis:100%}.chip{display:none}
-  .gauges{grid-template-columns:repeat(2,1fr)}.clock .t{font-size:18px}
-  #cmd{padding:8px 16px 10px}
+/* ---------- holo viewer (agent work) ---------- */
+#viewer{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.55);backdrop-filter:blur(3px)}
+#viewer .holo{width:min(1180px,100%);height:min(780px,100%);display:grid;grid-template-columns:300px 1fr;grid-template-rows:auto minmax(0,1fr);
+  animation:holoIn .55s cubic-bezier(.2,.9,.25,1) both;transform-origin:center bottom;padding:0;overflow:hidden}
+@keyframes holoIn{from{opacity:0;transform:rotateX(65deg) translateY(80px) scale(.85);filter:blur(6px)}}
+.vh{grid-column:1/-1;display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.vh .orb{width:42px;height:42px}
+.vh h3{font:700 18px var(--hud);letter-spacing:.12em;color:#fff}
+.vh p{font:12px var(--mono);color:var(--muted);margin-top:3px;max-width:640px}
+.vh .sp{flex:1}
+.vs{border-right:1px solid var(--line);padding:12px;overflow-y:auto}
+.vs .ses{padding:10px;border:1px solid transparent;cursor:pointer;margin-bottom:6px;transition:.2s}
+.vs .ses:hover{border-color:var(--line)}
+.vs .ses.on{border-color:var(--cyan);background:rgba(0,229,255,.08);box-shadow:inset 0 0 18px rgba(0,229,255,.08)}
+.vs .ses b{display:block;font-size:15px;color:#fff;font-weight:600;line-height:1.25}
+.vs .ses small{font:11px var(--mono);color:var(--muted)}
+.vl{padding:16px 22px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:88%;padding:10px 14px;line-height:1.45;font-size:15px;white-space:pre-wrap;word-break:break-word;animation:fadeIn .35s both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}}
+.msg.agent{align-self:flex-start;border:1px solid var(--line);background:rgba(0,229,255,.06);border-left:3px solid var(--cyan)}
+.msg.user{align-self:flex-end;border:1px solid rgba(255,181,71,.35);background:rgba(255,181,71,.07);border-right:3px solid var(--amber)}
+.msg.system{align-self:center;color:var(--muted);font-size:13px;border:1px dashed var(--line)}
+.msg.thinking{align-self:flex-start;color:var(--muted);font-style:italic;font-size:13px;border-left:2px solid var(--dim)}
+.msg .who{display:flex;justify-content:space-between;gap:14px;font:700 10px var(--hud);letter-spacing:.2em;margin-bottom:5px;opacity:.85;white-space:nowrap}
+.msg .tm{font:10px var(--mono);letter-spacing:0;opacity:.6}
+.toolc{align-self:flex-start;font:12px var(--mono);color:var(--violet);border:1px solid rgba(180,140,255,.35);background:rgba(180,140,255,.07);padding:7px 10px;max-width:88%;white-space:pre-wrap;word-break:break-word}
+.toolc b{color:#d9c8ff}
+.res{align-self:flex-start;font:12px var(--mono);color:var(--muted);padding:2px 10px 2px 12px;border-left:1px solid var(--dim);max-width:88%;white-space:pre-wrap;word-break:break-word;max-height:4.6em;overflow:hidden;cursor:pointer}
+.res.open{max-height:none}.res.err{color:var(--red);border-color:var(--red)}
+.stl{align-self:center;font:600 10px var(--hud);letter-spacing:.24em;color:var(--dim)}
+.erl{align-self:stretch;color:var(--red);border:1px solid rgba(255,77,109,.4);padding:8px 12px;font-size:14px}
+
+@media (max-width:1100px){
+  body{overflow:auto}
+  #app{position:relative;min-height:100vh;display:block;pointer-events:auto}
+  .stage{grid-template-columns:minmax(0,1fr);perspective:none;height:auto}
+  .stage .mid{height:52vh}
+  .side.l,.side.r{transform:none}
+  .side .panel{max-height:62vh}
+  #cmd{position:sticky;bottom:0}
+  .coreLbl{position:absolute;top:calc(110px + 26vh)}
+  #viewer .holo{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr)}
+  .vs{border-right:0;border-bottom:1px solid var(--line);max-height:160px}
 }
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.scan{display:none}}
+@media (max-width:640px){
+  header{flex-wrap:wrap;padding:12px 16px}.greet{order:3;flex-basis:100%;text-align:left}
+  .stage,.dock{padding-left:16px;padding-right:16px}#cmd{padding:8px 16px}
+  #viewer{padding:10px}.coreLbl .v{font-size:30px}.clock .t{font-size:18px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<div class="scan"></div>
+<canvas id="scene"></canvas>
+<div class="vignette"></div>
+<div id="labels"></div>
 
-<!-- ============ BOOT ============ -->
+<!-- BOOT -->
 <div id="boot">
-  <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
-    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(0,229,255,.25)" stroke-width="1"/>
+  <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(0,229,255,.25)"/>
     <g class="spin"><circle cx="60" cy="60" r="46" fill="none" stroke="#00e5ff" stroke-width="3" stroke-dasharray="60 30 10 30" style="filter:drop-shadow(0 0 6px #00e5ff)"/></g>
-    <g class="spin r"><circle cx="60" cy="60" r="34" fill="none" stroke="#7df3ff" stroke-width="2" stroke-dasharray="4 8"/></g>
+    <g class="spin r"><circle cx="60" cy="60" r="34" fill="none" stroke="#8ff6ff" stroke-width="2" stroke-dasharray="4 8"/></g>
     <circle cx="60" cy="60" r="16" fill="rgba(0,229,255,.25)" stroke="#00e5ff" stroke-width="2" style="filter:drop-shadow(0 0 10px #00e5ff)"/>
   </svg>
   <pre id="bootlog"></pre>
 </div>
 
-<!-- ============ LOGIN ============ -->
+<!-- LOGIN -->
 <div id="gate" class="hidden">
   <form class="gatebox br" id="gForm">
     <h1>LOGICHAIN // ADMIN</h1>
-    <p>Identifiser deg for å åpne kommandosentralen.</p>
-    <input type="email" id="gMail" placeholder="E-post" autocomplete="username" required>
-    <input type="password" id="gPass" placeholder="Passord" autocomplete="current-password" required>
+    <p>Identify yourself to open the command center.</p>
+    <input class="field" type="email" id="gMail" placeholder="Email" autocomplete="username" required>
+    <input class="field" type="password" id="gPass" placeholder="Password" autocomplete="current-password" required>
     <div class="err" id="gErr"></div>
-    <button class="hbtn" style="width:100%;padding:12px" type="submit">Autentiser</button>
-    <p style="margin:16px 0 0;font-size:13px"><a href="index.html">← Tilbake til logichain.no</a></p>
+    <button class="hbtn" style="width:100%;padding:12px" type="submit">Authenticate</button>
+    <p style="margin:16px 0 0;font-size:13px"><a href="index-en.html">← Back to logichain.no</a></p>
   </form>
 </div>
 
-<!-- ============ APP ============ -->
+<!-- APP -->
 <div id="app" class="hidden">
   <header>
-    <div class="brand">LOGICHAIN<small>KOMMANDOSENTRAL</small></div>
-    <div class="greet">
-      <b id="hello">GOD KVELD, EINAR</b><span class="chip" id="sysChip"><i class="dot"></i><span>ALLE SYSTEMER OPERATIVE</span></span>
-      <div id="brief">Kobler til datakilder …</div>
-    </div>
-    <span class="demo hidden" id="demoTag">DEMODATA</span>
+    <div class="brand">LOGICHAIN<small>COMMAND CENTER</small></div>
+    <div class="greet"><b id="hello">GOOD EVENING, EINAR</b><div id="brief">Bringing systems online …</div></div>
+    <span class="demo hidden" id="demoTag">DEMO</span>
     <div class="clock"><div class="t" id="clk">--:--:--</div><div class="d" id="dte"></div></div>
     <div class="hbtns">
-      <button class="hbtn" id="voiceBtn" title="Les opp statusrapport">🔊 Stemme</button>
-      <button class="hbtn" id="refBtn" title="Oppdater nå">⟳</button>
-      <button class="hbtn" id="outBtn">Logg ut</button>
+      <button class="hbtn" id="voiceBtn" title="Voice briefing">🔊 Voice</button>
+      <button class="hbtn" id="refBtn" title="Refresh">⟳</button>
+      <button class="hbtn" id="outBtn">Sign out</button>
     </div>
   </header>
 
-  <main>
-    <!-- LEFT -->
-    <section class="col">
-      <div class="panel br">
-        <div class="ph"><h2>KUNDER</h2><span id="kCount"></span></div>
-        <div id="kunder"><div class="empty">Laster …</div></div>
-      </div>
-      <div class="panel br">
-        <div class="ph"><h2>INNLEVERINGER</h2><span id="iCount"></span></div>
-        <div id="inn"><div class="empty">Laster …</div></div>
-      </div>
-    </section>
-
-    <!-- CENTER -->
-    <section class="col center">
-      <div class="panel br" style="padding-top:20px">
-        <div class="reactor">
-          <svg viewBox="0 0 400 400" aria-hidden="true">
-            <defs>
-              <radialGradient id="core" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#e9fdff" stop-opacity=".95"/>
-                <stop offset="35%" stop-color="#00e5ff" stop-opacity=".55"/>
-                <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
-              </radialGradient>
-              <filter id="gl"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-            </defs>
-            <circle cx="200" cy="200" r="196" fill="none" stroke="rgba(0,229,255,.12)"/>
-            <g class="spin s"><circle cx="200" cy="200" r="186" fill="none" stroke="rgba(0,229,255,.45)" stroke-width="1" stroke-dasharray="2 6"/></g>
-            <g id="ticks"></g>
-            <!-- OTD-ring -->
-            <circle cx="200" cy="200" r="160" fill="none" stroke="rgba(0,229,255,.1)" stroke-width="10"/>
-            <circle id="otdRing" cx="200" cy="200" r="160" fill="none" stroke="#00e5ff" stroke-width="10" stroke-linecap="butt"
-              stroke-dasharray="0 1006" transform="rotate(-90 200 200)" filter="url(#gl)" style="transition:stroke-dasharray 1.6s cubic-bezier(.2,.8,.2,1)"/>
-            <g class="spin r"><circle cx="200" cy="200" r="140" fill="none" stroke="#7df3ff" stroke-width="2" stroke-dasharray="90 20 30 20" opacity=".7"/></g>
-            <g class="spin"><circle cx="200" cy="200" r="124" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-dasharray="6 10" opacity=".8"/></g>
-            <g class="spin s" style="animation-duration:14s">
-              <path d="M200 92 A108 108 0 0 1 308 200" fill="none" stroke="#00e5ff" stroke-width="3" filter="url(#gl)"/>
-              <path d="M200 308 A108 108 0 0 1 92 200" fill="none" stroke="#00e5ff" stroke-width="3" filter="url(#gl)"/>
-            </g>
-            <circle cx="200" cy="200" r="96" fill="url(#core)" opacity=".35"/>
-            <circle cx="200" cy="200" r="92" fill="rgba(2,10,18,.75)" stroke="rgba(0,229,255,.5)" stroke-width="1"/>
-            <text x="200" y="30" text-anchor="middle" style="font:600 10px Orbitron;letter-spacing:.3em;fill:#6f97b2">LEVERINGSPRESISJON ±5 D</text>
-          </svg>
-          <div class="rc">
-            <div class="lbl">TOTAL SPEND</div>
-            <div class="big" id="spendBig">—</div>
-            <div class="sub" id="spendSub">—</div>
-            <div class="sub" style="margin-top:8px;color:#fff;font-weight:600" id="otdTxt"></div>
-          </div>
-        </div>
-        <div class="gauges" id="gauges"></div>
-      </div>
-      <div class="panel br chart">
-        <div class="ph"><h2>SPEND PER MÅNED</h2><span id="chSub"></span></div>
-        <div id="chart"></div>
+  <div class="stage">
+    <section class="side l">
+      <div class="panel br" style="flex:1">
+        <div class="ph"><h2>MISSIONS</h2><span id="mCount"></span></div>
+        <form class="mform" id="mForm" autocomplete="off">
+          <button type="button" class="prio" id="mPrio" title="Toggle high priority">!</button>
+          <input class="field" id="mText" placeholder="New mission …" maxlength="300">
+          <input class="field due" id="mDue" type="date" title="Due date">
+          <button class="hidden" type="submit">Add</button>
+        </form>
+        <div class="tabs"><button class="tab on" data-f="open">OPEN</button><button class="tab" data-f="done">DONE</button></div>
+        <div class="scroll" id="todos" style="flex:1"><div class="empty">Loading …</div></div>
       </div>
     </section>
 
-    <!-- RIGHT -->
-    <section class="col">
-      <div class="panel br">
-        <div class="ph"><h2>AI-AGENTER</h2><span id="aCount"></span></div>
-        <div id="agents"><div class="empty">Laster …</div></div>
+    <section class="mid"></section>
+
+    <section class="side r">
+      <div class="panel br" style="flex:1.1;min-height:0">
+        <div class="ph"><h2>AGENT ROSTER</h2><span id="aCount"></span></div>
+        <div class="scroll" id="roster"><div class="empty">Scanning agent network …</div></div>
       </div>
-      <div class="panel br">
-        <div class="ph"><h2>SISTE ØKTER</h2><span id="sCount"></span></div>
-        <div id="sessions"><div class="empty">—</div></div>
-      </div>
-      <div class="panel br">
-        <div class="ph"><h2>SENE LEVERANDØRER</h2><span>&gt;5 dager</span></div>
-        <div id="late"><div class="empty">—</div></div>
-      </div>
-      <div class="panel br">
-        <div class="ph"><h2>SYSTEMSTATUS</h2><span id="sysTime"></span></div>
-        <div class="sys" id="sys"></div>
+      <div class="panel br" style="flex:1;min-height:0">
+        <div class="ph"><h2>LIVE ACTIVITY</h2><span id="sCount"></span></div>
+        <div class="scroll" id="activity"><div class="empty">—</div></div>
       </div>
     </section>
-  </main>
+  </div>
 
-  <div id="cmd">
-    <div id="log">&gt; Klar. Skriv «hjelp» for kommandoer.</div>
-    <form id="cForm" autocomplete="off">
-      <label for="cIn">J.A.R.V.I.S. &gt;</label>
-      <input id="cIn" placeholder="status · kunder · agenter · macgregor · importer · oppdater · hjelp">
-      <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i></div>
-    </form>
+  <div>
+    <div class="dock"><div class="dockin" id="links"></div></div>
+    <div id="cmd">
+      <div id="log">&gt; Ready. Type “help” for commands.</div>
+      <form id="cForm" autocomplete="off">
+        <label for="cIn">J.A.R.V.I.S. &gt;</label>
+        <input id="cIn" placeholder="status · agents · add &lt;mission&gt; · open &lt;agent&gt; · help">
+        <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i></div>
+      </form>
+    </div>
   </div>
 </div>
 
+<div class="coreLbl hidden" id="coreLbl"><div class="k">AGENTS ONLINE</div><div class="v" id="coreV">—</div><div class="s" id="coreS"></div></div>
+
+<!-- AGENT WORK VIEWER -->
+<div id="viewer" class="hidden">
+  <div class="holo panel br">
+    <div class="vh">
+      <div class="orb" id="vOrb" style="--c:#00e5ff"></div>
+      <div><h3 id="vName">Agent</h3><p id="vMeta"></p></div>
+      <div class="sp"></div>
+      <button class="hbtn" id="vRef">⟳ Refresh</button>
+      <button class="hbtn" id="vClose">Close ✕</button>
+    </div>
+    <div class="vs" id="vSessions"></div>
+    <div class="vl" id="vLog"><div class="empty">Select a session.</div></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
 "use strict";
 const SUPABASE={url:"https://iksnoymoqvweudilfuzy.supabase.co",anonKey:"sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH"};
 const DEMO=new URLSearchParams(location.search).has("demo");
+const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const nf=new Intl.NumberFormat("nb-NO");
-const fmt=n=>nf.format(Math.round(n||0));
-const mill=n=>n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" M":n>=1e3?Math.round(n/1e3)+" k":fmt(n);
-const pct=(a,b)=>b?Math.round(a/b*100):0;
-function ago(t){if(!t)return"aldri";const s=(Date.now()-new Date(t))/1000;
-  if(s<60)return"nå nettopp";if(s<3600)return Math.floor(s/60)+" min siden";if(s<86400)return Math.floor(s/3600)+" t siden";
-  const d=Math.floor(s/86400);return d===1?"i går":d+" dager siden";}
-let sb=null,SESSION=null,NAME="Einar",DATA=null,AG=null,VOICE=false,TIMERS=[];
+function ago(t){if(!t)return"never";const s=(Date.now()-new Date(t))/1000;
+  if(s<60)return"just now";if(s<3600)return Math.floor(s/60)+" min ago";if(s<86400)return Math.floor(s/3600)+" h ago";
+  const d=Math.floor(s/86400);return d===1?"yesterday":d+" days ago";}
+const fmtTime=t=>t?new Date(t).toLocaleString("en-GB",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"}):"";
+let sb=null,SESSION=null,NAME="Einar",AG=undefined,TODOS=[],LINKS=[],FILTER="open",VOICE=false,HIGH=false;
 try{if(window.supabase)sb=window.supabase.createClient(SUPABASE.url,SUPABASE.anonKey);}catch(e){}
 
-/* ---------------- boot ---------------- */
-const BOOT=["> LOGICHAIN KOMMANDOSENTRAL v1.0","> initialiserer HUD …","> kobler til Supabase · eu-central","> autentiserer admin-protokoll","> laster agent-nettverk (Claude)","> kalibrerer reaktor …","> ALLE SYSTEMER KLARE"];
-function boot(){return new Promise(res=>{
-  const el=$("bootlog");let i=0;
-  if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=BOOT.join("\n");return setTimeout(res,300);}
-  (function next(){if(i>=BOOT.length)return setTimeout(res,350);el.textContent+=(i?"\n":"")+BOOT[i++];setTimeout(next,170+Math.random()*120);})();
-});}
-function endBoot(){$("boot").classList.add("off");setTimeout(()=>$("boot").remove(),800);}
+/* ================= status helpers ================= */
+const COL={running:"#3dffb0",idle:"#00e5ff",rescheduling:"#ffb547",terminated:"#3d6680",none:"#3d6680"};
+const STX={running:["c-run","WORKING"],idle:["c-idle","STANDING BY"],rescheduling:["c-res","RETRYING"],terminated:["c-off","ENDED"],none:["c-off","DORMANT"]};
+function agentState(a){
+  const mine=(AG&&AG.sessions||[]).filter(s=>s.agent_id===a.id);
+  if(mine.some(s=>s.status==="running"))return{st:"running",mine};
+  if(mine.some(s=>s.status==="rescheduling"))return{st:"rescheduling",mine};
+  return{st:mine[0]?(mine[0].status==="terminated"?"terminated":"idle"):"none",mine};
+}
+const liveAgents=()=>(AG&&AG.agents||[]).filter(a=>!a.archived);
 
-/* ---------------- clock ---------------- */
-function tick(){const d=new Date();
-  $("clk").textContent=d.toLocaleTimeString("nb-NO",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
-  $("dte").textContent=d.toLocaleDateString("nb-NO",{weekday:"long",day:"numeric",month:"long"});}
-function greeting(){const h=new Date().getHours();return h<5?"God natt":h<10?"God morgen":h<18?"God dag":"God kveld";}
+/* ================= boot ================= */
+const BOOT=["> LOGICHAIN COMMAND CENTER v2.0","> initialising holographic interface …","> linking Supabase uplink","> verifying admin clearance","> scanning Claude agent network","> spinning up reactor core","> ALL SYSTEMS ONLINE"];
+function boot(){return new Promise(res=>{const el=$("bootlog");let i=0;
+  if(RM){el.textContent=BOOT.join("\n");return setTimeout(res,300);}
+  (function next(){if(i>=BOOT.length)return setTimeout(res,300);el.textContent+=(i?"\n":"")+BOOT[i++];setTimeout(next,150+Math.random()*110);})();});}
+function endBoot(){$("boot").classList.add("off");setTimeout(()=>$("boot").remove(),900);}
+function tick(){const d=new Date();$("clk").textContent=d.toLocaleTimeString("en-GB");
+  $("dte").textContent=d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});}
+function greeting(){const h=new Date().getHours();return h<5?"Good night":h<12?"Good morning":h<18?"Good afternoon":"Good evening";}
 
-/* ---------------- reactor ticks ---------------- */
-(function(){let s="";for(let i=0;i<72;i++){const a=i*5*Math.PI/180,r1=172,r2=i%6===0?182:177;
-  s+=`<line x1="${200+r1*Math.sin(a)}" y1="${200-r1*Math.cos(a)}" x2="${200+r2*Math.sin(a)}" y2="${200-r2*Math.cos(a)}" stroke="rgba(0,229,255,${i%6===0?.8:.3})" stroke-width="${i%6===0?2:1}"/>`;}
-  document.getElementById("ticks").innerHTML=s;})();
+/* ================= 3D SCENE ================= */
+const S={nodes:[],hover:null,build:null};
+function initScene(){
+  if(!window.THREE)return;
+  const T=THREE,cv=$("scene");
+  let R;try{R=new T.WebGLRenderer({canvas:cv,antialias:true,alpha:true});}catch(e){return;}
+  R.setPixelRatio(Math.min(devicePixelRatio,2));
+  const scene=new T.Scene();scene.fog=new T.FogExp2(0x010509,0.026);
+  const cam=new T.PerspectiveCamera(50,1,.1,400);cam.position.set(0,2.4,12.5);
+  const glowTex=(()=>{const c=document.createElement("canvas");c.width=c.height=128;const g=c.getContext("2d");
+    const r=g.createRadialGradient(64,64,0,64,64,64);r.addColorStop(0,"rgba(255,255,255,1)");r.addColorStop(.25,"rgba(160,250,255,.8)");r.addColorStop(.6,"rgba(0,229,255,.18)");r.addColorStop(1,"rgba(0,229,255,0)");
+    g.fillStyle=r;g.fillRect(0,0,128,128);return new T.CanvasTexture(c);})();
+  const glow=(color,size,op)=>{const m=new T.SpriteMaterial({map:glowTex,color,transparent:true,opacity:op==null?1:op,blending:T.AdditiveBlending,depthWrite:false});const s=new T.Sprite(m);s.scale.set(size,size,1);return s;};
+  const add=(o,p)=>{(p||scene).add(o);return o;};
 
-function gauge(label,val,max,txt,color){
-  const r=42,c=2*Math.PI*r,f=Math.max(0,Math.min(1,max?val/max:0));
-  return `<div class="g"><svg viewBox="0 0 110 110"><circle cx="55" cy="55" r="${r}" fill="none" stroke="rgba(0,229,255,.12)" stroke-width="7"/>
-  <circle cx="55" cy="55" r="${r}" fill="none" stroke="${color||"#00e5ff"}" stroke-width="7" stroke-dasharray="${c*f} ${c}" transform="rotate(-90 55 55)" style="filter:drop-shadow(0 0 5px ${color||"#00e5ff"});transition:stroke-dasharray 1.2s"/>
-  <circle cx="55" cy="55" r="31" fill="none" stroke="rgba(0,229,255,.25)" stroke-dasharray="2 4"/>
-  <text x="55" y="61" text-anchor="middle" class="gv">${esc(txt)}</text></svg><div class="gl">${esc(label)}</div></div>`;
+  // reactor core
+  const core=add(new T.Group());
+  const heart=add(new T.Mesh(new T.SphereGeometry(.9,32,32),new T.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.35,blending:T.AdditiveBlending})),core);
+  const ico=add(new T.Mesh(new T.IcosahedronGeometry(1.45,1),new T.MeshBasicMaterial({color:0x8ff6ff,wireframe:true,transparent:true,opacity:.55})),core);
+  const ico2=add(new T.Mesh(new T.IcosahedronGeometry(2.1,2),new T.MeshBasicMaterial({color:0x00e5ff,wireframe:true,transparent:true,opacity:.1})),core);
+  add(glow(0x00e5ff,6.5,.85),core);add(glow(0xffffff,1.8,.9),core);
+  const rings=[[2.7,.014,[Math.PI/2,0,0]],[3.1,.009,[Math.PI/2.4,.5,0]],[3.5,.007,[Math.PI/1.8,-.4,.3]]].map(([r,t,rot],i)=>{
+    const m=add(new T.Mesh(new T.TorusGeometry(r,t,8,160),new T.MeshBasicMaterial({color:i?0x00e5ff:0x8ff6ff,transparent:true,opacity:i?.35:.7,blending:T.AdditiveBlending})),core);
+    m.rotation.set(rot[0],rot[1],rot[2]);return m;});
+  const arcs=add(new T.Group(),core);arcs.rotation.x=Math.PI/2;
+  for(let i=0;i<6;i++){const a=add(new T.Mesh(new T.TorusGeometry(2.35,.035,6,40,Math.PI/5),new T.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.85,blending:T.AdditiveBlending})),arcs);a.rotation.z=i*Math.PI/3;}
+
+  // holographic floor
+  const grid=add(new T.GridHelper(90,90,0x00e5ff,0x00e5ff));grid.material.transparent=true;grid.material.opacity=.07;grid.position.y=-3.6;
+  for(let i=1;i<=3;i++){const r=add(new T.Mesh(new T.RingGeometry(i*2.6,i*2.6+.035,128),new T.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.24/i,side:T.DoubleSide})));r.rotation.x=-Math.PI/2;r.position.y=-3.58;}
+  const beamUp=add(new T.Mesh(new T.CylinderGeometry(.05,.6,3.6,24,1,true),new T.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.12,blending:T.AdditiveBlending,side:T.DoubleSide})));beamUp.position.y=-1.8;
+
+  // starfield + dust
+  const pts=(n,f,mat)=>{const p=new Float32Array(n*3);for(let i=0;i<n;i++)f(p,i);const g=new T.BufferGeometry();g.setAttribute("position",new T.BufferAttribute(p,3));return add(new T.Points(g,mat));};
+  const stars=pts(1800,(p,i)=>{const r=25+Math.random()*90,t=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);p[i*3]=r*Math.sin(ph)*Math.cos(t);p[i*3+1]=r*Math.cos(ph)*.6;p[i*3+2]=r*Math.sin(ph)*Math.sin(t);},
+    new T.PointsMaterial({color:0x8ff6ff,size:.16,transparent:true,opacity:.7,depthWrite:false}));
+  const dust=pts(420,(p,i)=>{const r=2.6+Math.random()*6.5,t=Math.random()*Math.PI*2;p[i*3]=r*Math.cos(t);p[i*3+1]=(Math.random()-.5)*2.4;p[i*3+2]=r*Math.sin(t);},
+    new T.PointsMaterial({color:0x00e5ff,size:.05,transparent:true,opacity:.6,blending:T.AdditiveBlending,depthWrite:false}));
+
+  const nodes=add(new T.Group());
+  const ray=new T.Raycaster(),mouse=new T.Vector2(-9,-9);let mx=0,my=0,narrow=false;
+  function resize(){const w=innerWidth,h=innerHeight;R.setSize(w,h,false);cam.aspect=w/h;narrow=w<1100;cam.updateProjectionMatrix();}
+  addEventListener("resize",resize);resize();
+  addEventListener("mousemove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1;mouse.set(mx,-my);
+    document.body.style.setProperty("--mx",mx.toFixed(3));document.body.style.setProperty("--my",my.toFixed(3));});
+  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate"))return;if(S.hover)openAgent(S.hover.agent.id);});
+
+  S.build=function(agents){
+    while(nodes.children.length)nodes.remove(nodes.children[0]);
+    $("labels").innerHTML="";S.nodes=[];
+    agents.forEach((a,i)=>{
+      const n=agents.length,st=agentState(a).st,color=new T.Color(COL[st]),dim=st==="none"||st==="terminated";
+      const g=add(new T.Group(),nodes);
+      const orb=add(new T.Mesh(new T.SphereGeometry(.3,24,24),new T.MeshBasicMaterial({color})),g);
+      add(glow(color,1.9,dim?.35:.95),g);
+      const ring=add(new T.Mesh(new T.TorusGeometry(.5,.014,6,48),new T.MeshBasicMaterial({color,transparent:true,opacity:.7})),g);
+      const orbitR=4.7+(i%2)*1.3,tilt=((i%3)-1)*.3,phase=i/n*Math.PI*2,speed=.05+((i*37)%7)/220;
+      const path=add(new T.Mesh(new T.TorusGeometry(orbitR,.005,4,200),new T.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.1})),nodes);path.rotation.x=Math.PI/2+tilt;
+      const beam=add(new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(),new T.Vector3()]),new T.LineBasicMaterial({color,transparent:true,opacity:st==="running"?.6:0,blending:T.AdditiveBlending})),nodes);
+      const pulses=[];if(st==="running")for(let k=0;k<4;k++)pulses.push({s:add(glow(color,.5,.95),nodes),o:k/4});
+      const lbl=document.createElement("div");lbl.className="lbl";
+      lbl.innerHTML=esc(a.name.toUpperCase())+`<small class="${STX[st][0]}">${STX[st][1]}</small>`;$("labels").appendChild(lbl);
+      const node={agent:a,st,g,orb,ring,beam,pulses,orbitR,tilt,phase,speed,lbl};orb.userData.node=node;S.nodes.push(node);
+    });
+  };
+
+  const clock=new T.Clock(),v=new T.Vector3(),X=new T.Vector3(1,0,0);
+  (function loop(){
+    requestAnimationFrame(loop);
+    const t=clock.getElapsedTime(),k=RM?.15:1;
+    core.rotation.y=t*.12*k;ico.rotation.x=t*.2*k;ico2.rotation.y=-t*.08*k;arcs.rotation.z=t*.6*k;
+    rings.forEach((r,i)=>{r.rotation.z+=(.002+i*.0015)*k;});
+    heart.scale.setScalar(1+Math.sin(t*2.2)*.06);
+    stars.rotation.y=t*.006;dust.rotation.y=-t*.04*k;
+    const tz=narrow?15.5:12.5;
+    cam.position.x+=(mx*1.6-cam.position.x)*.03;cam.position.y+=(2.4-my*1.0-cam.position.y)*.03;cam.position.z+=(tz-cam.position.z)*.05;cam.lookAt(0,0,0);
+    S.nodes.forEach(n=>{
+      const ang=n.phase+t*n.speed*k;
+      v.set(Math.cos(ang)*n.orbitR,0,Math.sin(ang)*n.orbitR).applyAxisAngle(X,n.tilt);
+      n.g.position.copy(v);n.ring.lookAt(cam.position);
+      const live=n.st==="running",hov=S.hover===n;
+      n.g.scale.setScalar((hov?1.45:1)*(live?1+Math.sin(t*5)*.12:1));
+      const bp=n.beam.geometry.attributes.position;bp.setXYZ(0,v.x,v.y,v.z);bp.setXYZ(1,0,0,0);bp.needsUpdate=true;
+      n.pulses.forEach(p=>{const f=(t*.45+p.o)%1;p.s.position.set(v.x*(1-f),v.y*(1-f),v.z*(1-f));p.s.material.opacity=.95*(1-f*.6);});
+      const sp=v.clone().project(cam);
+      n.lbl.style.left=((sp.x*.5+.5)*innerWidth)+"px";n.lbl.style.top=((-sp.y*.5+.5)*innerHeight)+"px";
+      n.lbl.style.opacity=sp.z<1?(hov?1:.85):0;n.lbl.classList.toggle("hl",hov);
+    });
+    ray.setFromCamera(mouse,cam);
+    const hit=ray.intersectObjects(S.nodes.map(n=>n.orb))[0],h=hit?hit.object.userData.node:null;
+    if(h!==S.hover){S.hover=h;document.body.style.cursor=h?"pointer":"";
+      document.querySelectorAll(".agent").forEach(el=>el.classList.toggle("hl",!!h&&el.dataset.id===h.agent.id));}
+    R.render(scene,cam);
+  })();
 }
 
-/* ---------------- render: overview ---------------- */
-function renderOverview(d){
-  DATA=d;const t=d.totalt||{};
-  const otd=pct(t.i_tide,t.levert);
-  $("spendBig").textContent=mill(t.spend)+" kr";
-  $("spendSub").textContent=fmt(t.po_linjer)+" PO-linjer";
-  $("otdTxt").textContent="OTD "+otd+" % · "+fmt(t.apne)+" åpne";
-  $("otdRing").setAttribute("stroke-dasharray",(1005.3*otd/100)+" 1006");
-  $("otdRing").setAttribute("stroke",otd>=80?"#3dffb0":otd>=60?"#00e5ff":"#ffb547");
-  const agRun=AG&&AG.sessions?AG.sessions.filter(s=>s.status==="running").length:0;
-  $("gauges").innerHTML=
-    gauge("Kunder",t.kunder,Math.max(5,t.kunder),fmt(t.kunder))+
-    gauge("OTD",otd,100,otd+"%",otd>=80?"#3dffb0":otd>=60?"#00e5ff":"#ffb547")+
-    gauge("Innlogget 7d",t.innlogget_7d,Math.max(1,t.brukere),t.innlogget_7d+"/"+t.brukere,"#7df3ff")+
-    gauge("Nye filer",t.nye_innleveringer,Math.max(3,t.nye_innleveringer),fmt(t.nye_innleveringer),t.nye_innleveringer?"#ffb547":"#00e5ff");
-
-  // kunder
-  const ks=(d.kunder||[]).filter(k=>k.portal!=="admin.html");
-  $("kCount").textContent=ks.length+" aktive";
-  $("kunder").innerHTML=ks.length?ks.map(k=>{const o=pct(k.i_tide,k.levert);
-    return `<div class="kunde"><div class="top"><span class="nm">${esc(k.firma)}</span><span class="sp">${mill(k.spend)} kr</span></div>
-    <div class="kgrid"><div>PO-linjer<b>${fmt(k.po_linjer)}</b></div><div>OTD ±5d<b class="${o>=80?"ok":o>=60?"":"wrn"}">${k.levert?o+" %":"–"}</b></div><div>Åpne<b>${fmt(k.apne)}</b></div></div>
-    <div class="bar"><i style="width:${k.levert?o:0}%"></i></div>
-    <div class="kfoot"><span>Sist innlogget: ${esc(ago(k.sist_innlogget))}</span>
-    ${k.portal?`<a class="lnk" href="${esc(k.portal)}">Åpne portal →</a>`:""}</div></div>`;}).join(""):`<div class="empty">Ingen kunder ennå.</div>`;
-
-  // innleveringer
-  const inn=d.innleveringer||[];const ny=inn.filter(i=>i.status==="ny").length;
-  $("iCount").textContent=ny?ny+" venter":"alt behandlet";
-  $("inn").innerHTML=inn.length?inn.slice(0,8).map(i=>{const fil=(i.fil||"").split("/").pop().replace(/^\d+_/,"");
-    return `<div class="row"><div class="m"><b>${esc(fil)}</b><small>${esc(i.firma)} · ${i.rader!=null?fmt(i.rader)+" rader · ":""}${i.spend!=null?mill(i.spend)+" kr · ":""}${esc(ago(i.mottatt))}</small></div>
-    <span class="pill ${i.status==="ny"?"p-ny":"p-ok"}">${esc(i.status)}</span>
-    <button class="mini" data-dl="${esc(i.fil)}">Last ned</button>
-    ${i.status==="ny"?`<button class="mini" data-done="${esc(i.id)}">Ferdig</button>`:""}</div>`;}).join(""):`<div class="empty">Ingen innleveringer.</div>`;
-
-  // sene leverandører
-  const late=d.forsinket_lev||[];
-  $("late").innerHTML=late.length?late.map(l=>`<div class="row"><div class="m"><b>${esc(l.navn)}</b><small>${esc(l.firma)}</small></div>
-    <span class="pill p-res">${fmt(l.sene)} sene</span><span style="font:600 13px var(--mono);color:var(--amber);min-width:60px;text-align:right">+${esc(l.snitt_dager)} d</span></div>`).join(""):`<div class="empty">Ingen leverandører over grensen. 👌</div>`;
-
-  renderChart(d.spend_mnd||[]);
-  renderBrief();
-}
-
-function renderChart(rows){
-  rows=rows.slice(-12);
-  if(!rows.length){$("chart").innerHTML=`<div class="empty">Ingen data.</div>`;return;}
-  const W=600,H=190,P=26,max=Math.max(...rows.map(r=>+r.spend))||1,bw=(W-P*2)/rows.length;
-  const MN=["jan","feb","mar","apr","mai","jun","jul","aug","sep","okt","nov","des"];
-  let s=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
-  for(let i=1;i<=3;i++){const y=H-P-(H-P*2)*i/3;s+=`<line x1="${P}" x2="${W-P}" y1="${y}" y2="${y}" stroke="rgba(0,229,255,.08)"/>`;}
-  rows.forEach((r,i)=>{const h=(H-P*2)*(+r.spend)/max,x=P+i*bw+bw*.18,w=bw*.64,y=H-P-h;
-    s+=`<rect x="${x}" y="${H-P}" width="${w}" height="0" fill="url(#bg)" style="filter:drop-shadow(0 0 4px rgba(0,229,255,.6))"><animate attributeName="y" from="${H-P}" to="${y}" dur=".9s" begin="${i*.05}s" fill="freeze"/><animate attributeName="height" from="0" to="${h}" dur=".9s" begin="${i*.05}s" fill="freeze"/><title>${esc(r.mnd)}: ${fmt(r.spend)} kr · ${fmt(r.linjer)} linjer</title></rect>`;
-    s+=`<text x="${x+w/2}" y="${H-8}" text-anchor="middle" class="ax">${MN[+r.mnd.slice(5)-1]||r.mnd}</text>`;
-    if(rows.length<=12)s+=`<text x="${x+w/2}" y="${y-5}" text-anchor="middle" class="bv">${mill(+r.spend)}</text>`;});
-  s+=`<defs><linearGradient id="bg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#7df3ff"/><stop offset="1" stop-color="#00e5ff" stop-opacity=".25"/></linearGradient></defs></svg>`;
-  $("chart").innerHTML=s;
-  const tot=rows.reduce((a,r)=>a+(+r.spend),0);
-  $("chSub").textContent="snitt "+mill(tot/rows.length)+" kr/mnd";
-}
-
-/* ---------------- render: agents ---------------- */
-const ST={running:["p-run","KJØRER"],idle:["p-idle","KLAR"],rescheduling:["p-res","PRØVER IGJEN"],terminated:["p-term","AVSLUTTET"]};
-function renderAgents(a){
-  AG=a;
-  if(!a||a.error&&!a.agents){
-    $("aCount").textContent="";
-    $("agents").innerHTML=`<div class="cfg"><b class="bad">Kunne ikke hente agentene.</b><br><small style="font-family:var(--mono)">${esc(a&&a.error||"ukjent feil")}</small></div>`;
-    $("sessions").innerHTML=`<div class="empty">—</div>`;return;}
-  if(a.configured===false){
-    $("aCount").textContent="ikke koblet";
-    $("agents").innerHTML=`<div class="cfg">Agent-nettverket er ikke koblet til ennå. Slik gjør du det:<ol>
-      <li>Claude Console → <b>API keys</b> → lag en nøkkel</li>
-      <li>Cloudflare → Workers &amp; Pages → <b>logichain</b> → Settings → <b>Variables and Secrets</b></li>
-      <li>Legg til <b>Secret</b> <code>ANTHROPIC_API_KEY</code> med nøkkelen</li>
-      <li>Deploy på nytt – så dukker agentene opp her</li></ol></div>`;
-    $("sessions").innerHTML=`<div class="empty">—</div>`;return;}
-  const ag=(a.agents||[]).filter(x=>!x.archived),ss=a.sessions||[];
-  const byAgent={};ss.forEach(s=>{(byAgent[s.agent_id]=byAgent[s.agent_id]||[]).push(s);});
-  const run=ss.filter(s=>s.status==="running").length;
-  $("aCount").textContent=ag.length+" agenter · "+run+" aktive";
-  $("agents").innerHTML=ag.length?`<div class="agents">`+ag.map(x=>{const mine=byAgent[x.id]||[];
-    const live=mine.some(s=>s.status==="running"),last=mine[0];
-    const st=live?ST.running:last?(ST[last.status]||["p-idle",last.status.toUpperCase()]):["p-term","INGEN ØKTER"];
-    return `<div class="agent ${live?"live":""}"><div class="as ${st[0]}"><i class="dot"></i>${st[1]}</div>
-      <div class="an">${esc(x.name)}</div><div class="am">${esc(x.model||"")}${x.version!=null?" · v"+esc(x.version):""}</div>
-      <div class="am" style="margin-top:6px">${mine.length} økter · ${last?esc(ago(last.updated_at||last.created_at)):"–"}</div></div>`;}).join("")+`</div>`
-    :`<div class="empty">Ingen agenter funnet i Claude Console.</div>`;
-  $("sCount").textContent=ss.length?ss.length+" siste":"";
-  $("sessions").innerHTML=ss.length?ss.slice(0,7).map(s=>{const st=ST[s.status]||["p-idle",s.status];
-    return `<div class="row"><div class="m"><b>${esc(s.title||s.agent_name||s.id)}</b><small>${esc(s.agent_name||"")} · ${esc(ago(s.updated_at||s.created_at))}</small></div><span class="pill ${st[0]}">${st[1]}</span></div>`;}).join("")
-    :`<div class="empty">Ingen økter ennå.</div>`;
-  if(DATA)renderOverview(DATA);
-}
-
-/* ---------------- system status ---------------- */
-const SYS={};
-function renderSys(){
-  const line=(k,v)=>`<span>${k}</span><span>${v}</span>`;
-  const st=(o)=>o==null?`<i class="dot wrn"></i><b class="wrn">…</b>`:o.ok?`<i class="dot ok"></i><b class="ok">${o.ms!=null?o.ms+" ms":"OK"}</b>`:`<i class="dot bad"></i><b class="bad">${esc(o.msg||"FEIL")}</b>`;
-  $("sys").innerHTML=line("Database (Supabase)",st(SYS.db))+line("Agent-API (Claude)",st(SYS.ag))+line("Nettside",st(SYS.web))+
-    line("Innlogget som",`<b>${esc(SESSION&&SESSION.user&&SESSION.user.email||"demo")}</b>`);
-  $("sysTime").textContent=new Date().toLocaleTimeString("nb-NO",{hour:"2-digit",minute:"2-digit"});
-  const bad=[SYS.db,SYS.ag,SYS.web].some(o=>o&&!o.ok);
-  $("sysChip").className="chip"+(bad?" warn":"");$("sysChip").lastElementChild.textContent=bad?"AVVIK OPPDAGET":"ALLE SYSTEMER OPERATIVE";
-}
-
-function renderBrief(){
-  if(!DATA)return;const t=DATA.totalt||{};
-  const run=AG&&AG.sessions?AG.sessions.filter(s=>s.status==="running").length:null;
-  const parts=[fmt(t.kunder)+(t.kunder==1?" kunde":" kunder"),fmt(t.po_linjer)+" PO-linjer overvåkes"];
-  if(t.nye_innleveringer)parts.push(t.nye_innleveringer+" ny"+(t.nye_innleveringer>1?"e":"")+" innlevering"+(t.nye_innleveringer>1?"er":"")+" venter");
-  if(run!=null)parts.push(run+" agent"+(run==1?"":"er")+" aktiv"+(run==1?"":"e"));
-  $("brief").textContent=parts.join(" · ");
-}
-
-/* ---------------- data ---------------- */
-async function timed(fn){const t=performance.now();const r=await fn();return[r,Math.round(performance.now()-t)];}
-async function loadOverview(){
-  if(DEMO){SYS.db={ok:true,ms:42};renderOverview(demoData());return;}
-  try{const[r,ms]=await timed(()=>sb.rpc("admin_overview"));
-    if(r.error)throw r.error;SYS.db={ok:true,ms};renderOverview(r.data);}
-  catch(e){SYS.db={ok:false,msg:"FEIL"};say("Feil fra databasen: "+(e.message||e),false);
-    if(/admin_overview|function/i.test(e.message||""))$("kunder").innerHTML=`<div class="empty">Kjør <b>supabase/admin-dashboard.sql</b> i Supabase for å aktivere admin-tallene.</div>`;}
-  renderSys();
+/* ================= AGENTS ================= */
+async function api(path){
+  const r=await fetch(path,{headers:{Authorization:"Bearer "+(SESSION&&SESSION.access_token)},cache:"no-store"});
+  let j;try{j=await r.json();}catch(_){j={error:"Agent API not responding (HTTP "+r.status+")"};}
+  if(r.status===404&&!j.error)j={error:"Function /api/agents not deployed"};
+  return j;
 }
 async function loadAgents(){
-  if(DEMO){SYS.ag={ok:true,ms:180};renderAgents(demoAgents());renderSys();return;}
-  try{const tok=SESSION&&SESSION.access_token;
-    const[r,ms]=await timed(()=>fetch("/api/agents",{headers:{Authorization:"Bearer "+tok},cache:"no-store"}));
-    let j=null;try{j=await r.json();}catch(_){j={error:"Agent-API svarer ikke (HTTP "+r.status+")"};}
-    if(r.status===404)j={error:"Funksjonen /api/agents er ikke publisert ennå"};
-    SYS.ag=j.configured===false?{ok:false,msg:"IKKE KOBLET"}:(r.ok&&!j.error?{ok:true,ms}:{ok:false,msg:"FEIL"});
-    renderAgents(j);}
-  catch(e){SYS.ag={ok:false,msg:"FEIL"};renderAgents({error:e.message||String(e)});}
-  renderSys();
+  const j=DEMO?demoAgents():await api("/api/agents").catch(e=>({error:e.message}));
+  AG=(j&&j.agents)?j:null;renderAgents(j);
 }
-async function loadWeb(){
-  try{const[r,ms]=await timed(()=>fetch("index.html",{method:"HEAD",cache:"no-store"}));SYS.web=r.ok?{ok:true,ms}:{ok:false,msg:"HTTP "+r.status};}
-  catch(e){SYS.web={ok:false,msg:"NEDE"};}renderSys();
+function renderAgents(j){
+  const ro=$("roster"),ac=$("activity");
+  if(!j||j.configured===false||(j.error&&!j.agents)){
+    $("aCount").textContent=j&&j.configured===false?"offline":"error";
+    ro.innerHTML=j&&j.configured===false
+      ?`<div class="empty">Agent network not linked. Add the secret <code>ANTHROPIC_API_KEY</code> in Cloudflare → logichain → Settings → Variables and secrets, then redeploy.</div>`
+      :`<div class="empty"><b class="c-err">Could not reach the agent network.</b><br><code>${esc(j&&j.error||"unknown error")}</code></div>`;
+    ac.innerHTML="";S.build&&S.build([]);updateCore();renderBrief();return;}
+  const ags=liveAgents(),ss=j.sessions||[];
+  const working=ags.filter(a=>agentState(a).st==="running").length;
+  $("aCount").textContent=ags.length+" online · "+working+" working";
+  ro.innerHTML=ags.length?ags.map(a=>{const{st,mine}=agentState(a),last=mine[0];
+    return `<div class="agent" data-id="${esc(a.id)}"><div class="orb ${st==="running"?"live":""}" style="--c:${COL[st]}"></div>
+      <div class="ai"><div class="an">${esc(a.name)}</div><div class="am">${esc(a.model||"")}${a.version!=null?" · v"+esc(a.version):""} · ${mine.length} session${mine.length==1?"":"s"}</div>
+      <div class="am">${last?esc(last.title||"Untitled session")+" · "+esc(ago(last.updated_at||last.created_at)):"no activity yet"}</div></div>
+      <span class="st ${STX[st][0]}">${STX[st][1]}</span></div>`;}).join(""):`<div class="empty">No agents found in Claude Console.</div>`;
+  $("sCount").textContent=ss.length?"latest "+Math.min(ss.length,12):"";
+  ac.innerHTML=ss.length?ss.slice(0,12).map(s=>{const st=STX[s.status]||STX.idle;
+    return `<div class="act" data-agent="${esc(s.agent_id)}" data-session="${esc(s.id)}"><i class="dot ${s.status==="running"?"p":""} ${st[0]}"></i>
+      <div class="m"><b>${esc(s.title||"Untitled session")}</b><small>${esc(s.agent_name||"")} · ${esc(ago(s.updated_at||s.created_at))}</small></div>
+      <span class="st ${st[0]}">${st[1]}</span></div>`;}).join(""):`<div class="empty">No sessions yet.</div>`;
+  S.build&&S.build(ags);updateCore();renderBrief();
 }
-function refresh(){loadOverview();loadAgents();loadWeb();}
+function updateCore(){
+  const ags=AG?liveAgents():[],w=ags.filter(a=>agentState(a).st==="running").length;
+  $("coreV").textContent=AG?ags.length:"—";
+  $("coreS").textContent=AG?(w?w+" working now":"all standing by"):"network offline";
+}
+$("roster").addEventListener("click",e=>{const a=e.target.closest(".agent");if(a)openAgent(a.dataset.id);});
+$("activity").addEventListener("click",e=>{const a=e.target.closest(".act");if(a)openAgent(a.dataset.agent,a.dataset.session);});
 
-/* innlevering-knapper */
-document.addEventListener("click",async e=>{
-  const dl=e.target.closest("[data-dl]"),dn=e.target.closest("[data-done]");
-  if(dl){if(DEMO)return say("Demomodus – ingen ekte filer.");
-    const r=await sb.storage.from("innleveringer").createSignedUrl(dl.dataset.dl,120);
-    if(r.error)return say("Kunne ikke hente filen: "+r.error.message,false);
-    location.href=r.data.signedUrl;}
-  if(dn){if(DEMO){dn.closest(".row").querySelector(".pill").className="pill p-ok";dn.closest(".row").querySelector(".pill").textContent="importert";dn.remove();return;}
-    const r=await sb.from("innleveringer").update({status:"importert"}).eq("id",dn.dataset.done);
-    if(r.error)return say("Kunne ikke oppdatere: "+r.error.message,false);
-    say("Innleveringen er markert som importert.");loadOverview();}
+/* ================= VIEWER (agent work) ================= */
+let VIEW={agent:null,session:null,timer:null};
+function openAgent(agentId,sessionId){
+  if(!AG)return;
+  const a=(AG.agents||[]).find(x=>x.id===agentId)||{id:agentId,name:((AG.sessions||[]).find(s=>s.agent_id===agentId)||{}).agent_name||"Agent"};
+  const{st,mine}=agentState(a);
+  VIEW.agent=a;$("viewer").classList.remove("hidden");
+  $("vOrb").style.setProperty("--c",COL[st]);$("vOrb").className="orb"+(st==="running"?" live":"");
+  $("vName").textContent=a.name;
+  $("vMeta").textContent=[a.model,a.version!=null?"v"+a.version:null,STX[st][1],a.description].filter(Boolean).join(" · ");
+  $("vSessions").innerHTML=mine.length?mine.map(s=>{const t=STX[s.status]||STX.idle;
+    return `<div class="ses" data-s="${esc(s.id)}"><b>${esc(s.title||"Untitled session")}</b><small class="${t[0]}">● ${t[1]}</small> <small>· ${esc(ago(s.updated_at||s.created_at))}</small></div>`;}).join("")
+    :`<div class="empty">This agent has no sessions yet.</div>`;
+  const first=sessionId||(mine[0]&&mine[0].id);
+  if(first)openSession(first);else $("vLog").innerHTML=`<div class="empty">Nothing to show yet.</div>`;
+  say("Opening "+a.name+".",false);
+}
+async function openSession(id,quiet){
+  VIEW.session=id;clearInterval(VIEW.timer);
+  document.querySelectorAll("#vSessions .ses").forEach(el=>el.classList.toggle("on",el.dataset.s===id));
+  const box=$("vLog");if(!quiet)box.innerHTML=`<div class="empty">Decrypting work log …</div>`;
+  const j=DEMO?demoLog(id):await api("/api/agents?session="+encodeURIComponent(id)).catch(e=>({error:e.message}));
+  if(VIEW.session!==id)return;
+  if(j.error){box.innerHTML=`<div class="erl">Could not load the work log: ${esc(j.error)}</div>`;return;}
+  const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;
+  box.innerHTML=((j.truncated?`<div class="stl">— EARLIER EVENTS HIDDEN —</div>`:"")+(j.log||[]).map(renderEvent).join(""))||`<div class="empty">No events in this session.</div>`;
+  if(!quiet||atBottom)box.scrollTop=box.scrollHeight;
+  if(j.session&&j.session.status==="running")VIEW.timer=setInterval(()=>openSession(id,true),8000);
+}
+function renderEvent(e){
+  const tm=`<span class="tm">${esc(fmtTime(e.time))}</span>`;
+  switch(e.kind){
+    case"user":return `<div class="msg user"><span class="who" style="color:var(--amber)">INSTRUCTION${tm}</span>${esc(e.text)}</div>`;
+    case"agent":return `<div class="msg agent"><span class="who" style="color:var(--cyan)">${esc(((VIEW.agent&&VIEW.agent.name)||"AGENT").toUpperCase())}${tm}</span>${esc(e.text)}</div>`;
+    case"system":return `<div class="msg system">${esc(e.text)}</div>`;
+    case"thinking":return e.text?`<div class="msg thinking">${esc(e.text)}</div>`:"";
+    case"thread":return `<div class="msg system">↔ ${esc(e.text)}</div>`;
+    case"tool":return `<div class="toolc">⚙ <b>${esc(e.server?e.server+" · ":"")}${esc(e.name)}</b>${e.text?"\n"+esc(e.text):""}</div>`;
+    case"result":return e.text?`<div class="res ${e.error?"err":""}" title="Click to expand">${esc(e.text)}</div>`:"";
+    case"status":return `<div class="stl">— ${esc(String(e.text).toUpperCase())} · ${esc(fmtTime(e.time))} —</div>`;
+    case"error":return `<div class="erl">⚠ ${esc(e.text)}</div>`;
+  }return"";
+}
+$("vSessions").addEventListener("click",e=>{const s=e.target.closest(".ses");if(s)openSession(s.dataset.s);});
+$("vLog").addEventListener("click",e=>{const r=e.target.closest(".res");if(r)r.classList.toggle("open");});
+function closeViewer(){$("viewer").classList.add("hidden");clearInterval(VIEW.timer);VIEW={agent:null,session:null,timer:null};}
+$("vClose").addEventListener("click",closeViewer);
+$("vRef").addEventListener("click",()=>VIEW.session&&openSession(VIEW.session));
+$("viewer").addEventListener("click",e=>{if(e.target.id==="viewer")closeViewer();});
+addEventListener("keydown",e=>{if(e.key==="Escape")closeViewer();});
+
+/* ================= MISSIONS (to-do) ================= */
+let MEM_ID=100;
+async function loadTodos(){
+  if(DEMO){if(!TODOS.length)TODOS=demoTodos();return renderTodos();}
+  const r=await sb.from("admin_todos").select("*").order("created_at",{ascending:false});
+  if(r.error){$("todos").innerHTML=`<div class="empty">Mission storage not ready. Run <code>supabase/admin-workspace.sql</code> in Supabase.<br><small>${esc(r.error.message)}</small></div>`;return;}
+  TODOS=r.data||[];renderTodos();
+}
+function renderTodos(){
+  const open=TODOS.filter(t=>!t.done),done=TODOS.filter(t=>t.done);
+  $("mCount").textContent=open.length+" open";
+  const pr={high:0,normal:1,low:2};
+  const list=FILTER==="open"?open.slice().sort((a,b)=>(pr[a.priority]-pr[b.priority])||((a.due||"9")<(b.due||"9")?-1:1))
+    :done.slice().sort((a,b)=>(b.done_at||"")>(a.done_at||"")?1:-1);
+  const today=new Date().toISOString().slice(0,10);
+  $("todos").innerHTML=list.length?list.map(t=>`<div class="todo ${t.done?"done":""}" data-id="${t.id}">
+    <button class="chk ${t.done?"on":""}" data-act="toggle" aria-label="Mark complete"></button>
+    <div style="flex:1;min-width:0"><div class="tx">${t.priority==="high"?'<span class="hi">! </span>':""}${esc(t.text)}</div>
+    <div class="meta">${t.due?`<span style="color:${!t.done&&t.due<today?"var(--red)":t.due===today?"var(--amber)":"inherit"}">due ${esc(new Date(t.due+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}))}</span> · `:""}${t.done?"completed "+esc(ago(t.done_at)):"added "+esc(ago(t.created_at))}</div></div>
+    <button class="x" data-act="del" title="Delete">×</button></div>`).join("")
+    :`<div class="empty">${FILTER==="open"?"No open missions. Add one above, or type “add …” in the command line.":"Nothing completed yet."}</div>`;
+  renderBrief();
+}
+async function addTodo(text,high,due){
+  text=(text||"").trim();if(!text)return;
+  const row={text,priority:high?"high":"normal",due:due||null};
+  if(DEMO){TODOS.unshift(Object.assign({},row,{id:++MEM_ID,done:false,created_at:new Date().toISOString()}));return renderTodos();}
+  const r=await sb.from("admin_todos").insert(row).select().single();
+  if(r.error)return say("Could not save mission: "+r.error.message,false);
+  TODOS.unshift(r.data);renderTodos();
+}
+async function toggleTodo(id){
+  const t=TODOS.find(x=>x.id==id);if(!t)return;
+  const upd={done:!t.done,done_at:!t.done?new Date().toISOString():null};Object.assign(t,upd);renderTodos();
+  if(!DEMO){const r=await sb.from("admin_todos").update(upd).eq("id",id);if(r.error){say("Sync failed: "+r.error.message,false);loadTodos();}}
+  if(upd.done)say("Mission complete. Nicely done.");
+}
+async function delTodo(id){
+  TODOS=TODOS.filter(x=>x.id!=id);renderTodos();
+  if(!DEMO){const r=await sb.from("admin_todos").delete().eq("id",id);if(r.error){say("Delete failed: "+r.error.message,false);loadTodos();}}
+}
+$("mForm").addEventListener("submit",e=>{e.preventDefault();addTodo($("mText").value,HIGH,$("mDue").value);$("mText").value="";$("mDue").value="";HIGH=false;$("mPrio").classList.remove("high");});
+$("mPrio").addEventListener("click",()=>{HIGH=!HIGH;$("mPrio").classList.toggle("high",HIGH);});
+$("todos").addEventListener("click",e=>{const b=e.target.closest("[data-act]");if(!b)return;const id=b.closest(".todo").dataset.id;
+  if(b.dataset.act==="toggle")toggleTodo(id);else delTodo(id);});
+document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{FILTER=b.dataset.f;document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===b));renderTodos();}));
+
+/* ================= QUICK LINKS ================= */
+const safeUrl=u=>(/^https?:\/\/[^\s"'<>]+$/i.test(u)||/^[\w./-]+\.html([?#][^\s"'<>]*)?$/i.test(u))?u:null;
+async function loadLinks(){
+  if(DEMO){if(!LINKS.length)LINKS=demoLinks();return renderLinks();}
+  const r=await sb.from("admin_links").select("*").order("sort").order("id");
+  LINKS=r.error?demoLinks():(r.data||[]);renderLinks();
+}
+function renderLinks(){
+  $("links").innerHTML=`<span class="dlabel">QUICK LINKS</span>`+LINKS.map(l=>{const u=safeUrl(l.url);if(!u)return"";
+    const ext=/^https?:/i.test(u);
+    return `<a class="tile" href="${esc(u)}" ${ext?'target="_blank" rel="noopener"':""}>
+      <div class="mono">${esc((l.title||"?").replace(/[^A-Za-z0-9]/g,"").slice(0,2).toUpperCase()||"•")}</div>
+      <div><div class="tt">${esc(l.title)}</div><div class="tg">${esc(l.grp||"")}${ext?" ↗":""}</div></div>
+      <button class="x" data-del="${esc(l.id)}" title="Remove">×</button></a>`;}).join("")+
+    `<div class="tile add" id="addLink" title="Add link">+</div>`;
+}
+$("links").addEventListener("click",async e=>{
+  const d=e.target.closest("[data-del]");
+  if(d){e.preventDefault();e.stopPropagation();const id=d.dataset.del;LINKS=LINKS.filter(l=>String(l.id)!==id);renderLinks();
+    if(!DEMO){const r=await sb.from("admin_links").delete().eq("id",id);if(r.error)say("Could not remove link: "+r.error.message,false);}return;}
+  const addT=e.target.closest("#addLink");
+  if(addT){
+    addT.outerHTML=`<form class="lform" id="lForm"><input class="field" id="lTitle" placeholder="Title" required maxlength="40"><input class="field" id="lUrl" placeholder="https://…" required><button class="hbtn">Add</button></form>`;
+    $("lTitle").focus();
+    $("lForm").addEventListener("submit",async ev=>{ev.preventDefault();
+      let url=$("lUrl").value.trim();if(!/^https?:\/\//i.test(url)&&!/\.html/i.test(url))url="https://"+url;
+      if(!safeUrl(url))return say("That doesn't look like a valid link.",false);
+      const row={title:$("lTitle").value.trim(),url,grp:"Custom",sort:500};
+      if(DEMO){LINKS.push(Object.assign({},row,{id:++MEM_ID}));renderLinks();return;}
+      const r=await sb.from("admin_links").insert(row).select().single();
+      if(r.error)return say("Could not save link: "+r.error.message,false);
+      LINKS.push(r.data);renderLinks();});
+  }
 });
 
-/* ---------------- voice + command line ---------------- */
+/* ================= BRIEF + VOICE + COMMANDS ================= */
+function renderBrief(){
+  const ags=AG?liveAgents():[],w=ags.filter(a=>agentState(a).st==="running").length,open=TODOS.filter(t=>!t.done).length;
+  const p=AG?[ags.length+" agent"+(ags.length==1?"":"s")+" online",w+" working"]:[AG===undefined?"scanning agent network":"agent network offline"];
+  p.push(open+" open mission"+(open==1?"":"s"));
+  $("brief").textContent=p.join(" · ");
+}
+function statusReport(){
+  const ags=AG?liveAgents():[],w=ags.filter(a=>agentState(a).st==="running");
+  const open=TODOS.filter(t=>!t.done),hi=open.filter(t=>t.priority==="high");
+  let s=`${greeting()}, ${NAME}. `;
+  s+=AG?`${ags.length} agents are online${w.length?`, and ${w.length} ${w.length==1?"is":"are"} currently working: ${w.map(a=>a.name).join(", ")}.`:", all standing by."}`:"The agent network is offline.";
+  s+=` You have ${open.length} open mission${open.length==1?"":"s"}`+(hi.length?`, ${hi.length} marked high priority.`:".");
+  return s;
+}
 let VOICES=[];function loadVoices(){try{VOICES=speechSynthesis.getVoices();}catch(_){}}
 if("speechSynthesis" in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices;}
-// Beste norske stemme: naturlige mannsstemmer (Finn) først, så andre norske. Aldri engelsk.
-function norskStemme(){
-  const no=VOICES.filter(v=>/^(nb|no|nn)([-_]|$)/i.test(v.lang)||/norw|norsk|bokm/i.test(v.name));
-  const rank=v=>(/natural|online|neural/i.test(v.name)?0:2)+(/finn|jon|male|mann/i.test(v.name)?0:1);
-  return no.sort((a,b)=>rank(a)-rank(b))[0]||null;
+function jarvisVoice(){
+  const en=VOICES.filter(v=>/^en/i.test(v.lang));
+  const rank=v=>(/en-GB/i.test(v.lang)?0:4)+(/natural|online|neural/i.test(v.name)?0:2)+(/ryan|thomas|george|daniel|arthur|oliver|guy|davis|mark|david|christopher|eric|male/i.test(v.name)?0:1);
+  return en.sort((a,b)=>rank(a)-rank(b))[0]||null;
 }
-let VARSLET=false;
 function speak(text){
-  if(VOICE&&VOICES.length&&!norskStemme()&&!VARSLET){VARSLET=true;
-    setTimeout(()=>say("Fant ingen norsk stemme på denne PC-en. Skriv «stemmer» for å se hvordan du legger den til.",false),1500);}
   if(!VOICE||!("speechSynthesis" in window))return;
-  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);
-    const v=norskStemme();
-    if(v){u.voice=v;u.lang=v.lang;}else u.lang="nb-NO";u.rate=1.02;u.pitch=.9;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=jarvisVoice();
+    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-GB";u.rate=1;u.pitch=.85;
     u.onstart=()=>$("wave").classList.add("on");u.onend=u.onerror=()=>$("wave").classList.remove("on");
     speechSynthesis.speak(u);}catch(_){}
 }
 let typeT=null;
-function say(text,talk){
-  const el=$("log");clearInterval(typeT);el.textContent="> ";let i=0;
-  typeT=setInterval(()=>{el.textContent="> "+text.slice(0,++i);if(i>=text.length)clearInterval(typeT);},14);
-  if(talk!==false)speak(text);
-}
-function statusReport(){
-  if(!DATA)return"Jeg venter fortsatt på data fra databasen.";
-  const t=DATA.totalt||{},otd=pct(t.i_tide,t.levert);
-  const run=AG&&AG.sessions?AG.sessions.filter(s=>s.status==="running").length:null;
-  let s=`${greeting()}, ${NAME}. Du har ${t.kunder} ${t.kunder==1?"kunde":"kunder"} og ${fmt(t.po_linjer)} PO-linjer til en samlet verdi av ${mill(t.spend).replace(" M"," millioner").replace(" k"," tusen")} kroner. Leveringspresisjonen er ${otd} prosent.`;
-  if(t.nye_innleveringer)s+=` ${t.nye_innleveringer} ${t.nye_innleveringer==1?"ny innlevering venter":"nye innleveringer venter"} på deg.`;
-  if(run!=null)s+=` ${run} ${run==1?"agent kjører":"agenter kjører"} akkurat nå.`;
-  return s;
-}
+function say(text,talk){const el=$("log");clearInterval(typeT);let i=0;
+  typeT=setInterval(()=>{el.textContent="> "+text.slice(0,++i);if(i>=text.length)clearInterval(typeT);},12);
+  if(talk!==false)speak(text);}
+function findAgent(q){q=q.toLowerCase();return liveAgents().find(a=>a.name.toLowerCase()===q)||liveAgents().find(a=>a.name.toLowerCase().includes(q));}
 const CMDS={
-  hjelp:()=>say("Kommandoer: status, kunder, agenter, macgregor, importer, oppdater, stemme, stemmer, logg ut.",false),
+  help:()=>say("Commands: status · agents · open <agent> · add <mission> (end with ! for high priority) · done <number> · missions · link <name> · refresh · voice · sign out",false),
   status:()=>say(statusReport()),
-  kunder:()=>{const k=(DATA&&DATA.kunder||[]).filter(k=>k.portal!=="admin.html");say(k.length?"Kunder: "+k.map(k=>k.firma+" ("+mill(k.spend)+" kr)").join(", ")+".":"Ingen kunder ennå.");},
-  agenter:()=>{if(!AG||AG.configured===false)return say("Agent-nettverket er ikke koblet til ennå.");const a=(AG.agents||[]).filter(x=>!x.archived);const r=(AG.sessions||[]).filter(s=>s.status==="running").length;say(`${a.length} agenter registrert, ${r} aktive. ${a.map(x=>x.name).slice(0,6).join(", ")}.`);},
-  macgregor:()=>{say("Åpner MacGregor-portalen.");setTimeout(()=>location.href="macgregor-dashboard.html",700);},
-  importer:()=>{say("Åpner importmodulen.");setTimeout(()=>location.href="last-opp.html",700);},
-  oppdater:()=>{refresh();say("Oppdaterer alle datakilder.");},
-  stemme:()=>toggleVoice(),
-  stemmer:()=>{const v=norskStemme();
-    say(v?"Bruker norsk stemme: "+v.name+".":"Ingen norsk stemme funnet. Windows: Innstillinger → Tid og språk → Tale → Legg til stemmer → Norsk (bokmål). Eller åpne siden i Microsoft Edge for de naturlige stemmene Finn og Pernille.",false);},
-  "logg ut":()=>logout(),
+  agents:()=>{if(!AG)return say("The agent network is offline.");const a=liveAgents();say(a.length?a.map(x=>x.name+" ("+STX[agentState(x).st][1].toLowerCase()+")").join(", ")+".":"No agents registered.");},
+  missions:()=>{const o=TODOS.filter(t=>!t.done);say(o.length?o.slice(0,6).map((t,i)=>(i+1)+". "+t.text).join("   "):"No open missions.");},
+  refresh:()=>{refresh();say("Refreshing all systems.");},
+  voice:()=>toggleVoice(),
+  "sign out":()=>logout(),
 };
-const ALIAS={help:"hjelp",rapport:"status",hei:"status","hva skjer":"status",agents:"agenter",agent:"agenter",kunde:"kunder",refresh:"oppdater",import:"importer","last opp":"importer",mg:"macgregor",logout:"logg ut",stemmen:"stemme",voice:"stemme"};
-$("cForm").addEventListener("submit",e=>{e.preventDefault();const v=$("cIn").value.trim().toLowerCase();$("cIn").value="";if(!v)return;
-  let key=CMDS[v]?v:ALIAS[v];
-  if(!key)key=Object.keys(CMDS).find(k=>v.includes(k))||(Object.entries(ALIAS).find(([a])=>v.includes(a))||[])[1];
-  const fn=CMDS[key];fn?fn():say(`Beklager, «${v}» forstod jeg ikke. Skriv «hjelp».`,false);});
+$("cForm").addEventListener("submit",e=>{e.preventDefault();const raw=$("cIn").value.trim();$("cIn").value="";if(!raw)return;const v=raw.toLowerCase();let m;
+  if((m=raw.match(/^(add|todo|mission)\s+(.+)/i))){const hi=/!\s*$/.test(m[2])||/^!/.test(m[2]);const txt=m[2].replace(/^!\s*|\s*!\s*$/g,"");addTodo(txt,hi);return say("Mission logged: "+txt+(hi?". Marked high priority.":"."));}
+  if((m=v.match(/^(done|complete)\s+(\d+)/))){const o=TODOS.filter(t=>!t.done);const t=o[+m[2]-1];return t?toggleTodo(t.id):say("No open mission with that number.",false);}
+  if((m=raw.match(/^(open|show)\s+(.+)/i))){const a=findAgent(m[2]);return a?openAgent(a.id):say("I couldn't find an agent called "+m[2]+".",false);}
+  if((m=raw.match(/^(link|go to|goto)\s+(.+)/i))){const q=m[2].toLowerCase();const l=LINKS.find(x=>x.title.toLowerCase().includes(q));
+    if(!l||!safeUrl(l.url))return say("No link matching "+m[2]+".",false);say("Opening "+l.title+".");return window.open(safeUrl(l.url),/^https?:/i.test(l.url)?"_blank":"_self");}
+  const alias={"?":"help",report:"status",hello:"status",hi:"status",agent:"agents",todo:"missions",todos:"missions",tasks:"missions",logout:"sign out","log out":"sign out",reload:"refresh"};
+  const key=CMDS[v]?v:alias[v];if(key)return CMDS[key]();
+  const a=findAgent(v);if(a)return openAgent(a.id);
+  say(`I didn't catch “${raw}”. Type “help”.`,false);
+});
 function toggleVoice(){VOICE=!VOICE;$("voiceBtn").classList.toggle("on",VOICE);try{localStorage.setItem("lc_voice",VOICE?"1":"0");}catch(_){}
-  if(VOICE)say(statusReport());else{try{speechSynthesis.cancel();}catch(_){}say("Stemme deaktivert.",false);}}
+  if(VOICE)say(statusReport());else{try{speechSynthesis.cancel();}catch(_){}say("Voice disabled.",false);}}
 $("voiceBtn").addEventListener("click",toggleVoice);
-$("refBtn").addEventListener("click",()=>CMDS.oppdater());
-async function logout(){try{localStorage.removeItem("logichain_session");if(sb)await sb.auth.signOut();}catch(_){}location.href="index.html";}
+$("refBtn").addEventListener("click",()=>CMDS.refresh());
+async function logout(){try{localStorage.removeItem("logichain_session");if(sb)await sb.auth.signOut();}catch(_){}location.href="index-en.html";}
 $("outBtn").addEventListener("click",logout);
-document.addEventListener("keydown",e=>{if(e.key==="/"&&document.activeElement!==$("cIn")&&!/input|textarea/i.test(document.activeElement.tagName)){e.preventDefault();$("cIn").focus();}});
+document.addEventListener("keydown",e=>{if(e.key==="/"&&!/input|textarea/i.test(document.activeElement.tagName)){e.preventDefault();$("cIn").focus();}});
 
-/* ---------------- auth ---------------- */
-async function start(){
-  $("gate").classList.add("hidden");$("app").classList.remove("hidden");
+/* ================= AUTH + START ================= */
+function refresh(){loadAgents();loadTodos();loadLinks();}
+function start(){
+  $("gate").classList.add("hidden");$("app").classList.remove("hidden");$("coreLbl").classList.remove("hidden");
   $("hello").textContent=(greeting()+", "+NAME).toUpperCase();
-  tick();TIMERS.push(setInterval(tick,1000));
-  renderSys();refresh();
-  TIMERS.push(setInterval(loadOverview,60000),setInterval(loadAgents,30000),setInterval(loadWeb,120000));
-  setTimeout(()=>say(greeting()+", "+NAME+". Kommandosentralen er klar.",false),900);
+  tick();setInterval(tick,1000);refresh();setInterval(loadAgents,25000);
+  setTimeout(()=>say(greeting()+", "+NAME+". Command center online.",false),900);
 }
 async function verify(){
   if(DEMO){$("demoTag").classList.remove("hidden");return start();}
-  if(!sb){$("gErr").textContent="Kunne ikke laste innloggingsbiblioteket.";return $("gate").classList.remove("hidden");}
+  if(!sb){$("gErr").textContent="Could not load the sign-in library.";return $("gate").classList.remove("hidden");}
   const r=await sb.auth.getSession();SESSION=r&&r.data&&r.data.session;
-  if(!SESSION){return $("gate").classList.remove("hidden");}
-  const p=await sb.from("kunder").select("firma,admin").eq("user_id",SESSION.user.id).maybeSingle();
-  if(!p.data||!p.data.admin){
-    $("gErr").textContent="Denne brukeren har ikke admin-tilgang.";await sb.auth.signOut();SESSION=null;
-    return $("gate").classList.remove("hidden");}
-  const em=SESSION.user.email||"";const nm=em.split("@")[0].split(/[._-]/)[0];
-  NAME=nm?nm.charAt(0).toUpperCase()+nm.slice(1):"Einar";
+  if(!SESSION)return $("gate").classList.remove("hidden");
+  const p=await sb.from("kunder").select("admin").eq("user_id",SESSION.user.id).maybeSingle();
+  if(!p.data||!p.data.admin){$("gErr").textContent="This account does not have admin clearance.";await sb.auth.signOut();SESSION=null;return $("gate").classList.remove("hidden");}
+  const nm=(SESSION.user.email||"").split("@")[0].split(/[._-]/)[0];NAME=nm?nm.charAt(0).toUpperCase()+nm.slice(1):"Einar";
   start();
 }
 $("gForm").addEventListener("submit",async e=>{e.preventDefault();$("gErr").textContent="";
   const r=await sb.auth.signInWithPassword({email:$("gMail").value.trim(),password:$("gPass").value});
-  if(r.error){$("gErr").textContent=r.error.message==="Invalid login credentials"?"Feil e-post eller passord.":r.error.message;return;}
+  if(r.error){$("gErr").textContent=r.error.message==="Invalid login credentials"?"Wrong email or password.":r.error.message;return;}
   $("gPass").value="";verify();});
 if(sb)sb.auth.onAuthStateChange((ev,s)=>{if(s)SESSION=s;});
 try{VOICE=localStorage.getItem("lc_voice")==="1";$("voiceBtn").classList.toggle("on",VOICE);}catch(_){}
 
-/* ---------------- demo data ---------------- */
-function demoData(){
-  const m=["2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09","2026-10"];
-  const now=Date.now(),h=3600e3;
-  return{generert:new Date().toISOString(),
-    totalt:{kunder:3,po_linjer:4210,spend:148600000,leverandorer:261,materialer:2340,levert:3620,i_tide:2930,apne:590,brukere:5,innlogget_7d:3,nye_innleveringer:2},
-    kunder:[
-      {firma:"MacGregor Norway",portal:"macgregor-dashboard.html",po_linjer:3091,spend:112400000,levert:2710,i_tide:2240,apne:381,sist_innlogget:new Date(now-2*h).toISOString()},
-      {firma:"Norsk Industri AS",portal:"logichain-dashboard-demo.html",po_linjer:687,spend:24900000,levert:560,i_tide:420,apne:127,sist_innlogget:new Date(now-50*h).toISOString()},
-      {firma:"Vestfold Maritime",portal:null,po_linjer:432,spend:11300000,levert:350,i_tide:270,apne:82,sist_innlogget:null}],
-    innleveringer:[
-      {id:"d1",fil:"x/1730_macgregor_okt.csv",rader:412,spend:9800000,status:"ny",mottatt:new Date(now-1.5*h).toISOString(),firma:"MacGregor Norway"},
-      {id:"d2",fil:"x/1729_vestfold_q3.csv",rader:96,spend:2100000,status:"ny",mottatt:new Date(now-20*h).toISOString(),firma:"Vestfold Maritime"},
-      {id:"d3",fil:"x/1728_macgregor_sep.csv",rader:388,spend:8700000,status:"importert",mottatt:new Date(now-30*24*h).toISOString(),firma:"MacGregor Norway"}],
-    spend_mnd:m.map((k,i)=>({mnd:k,spend:11e6+Math.round(Math.sin(i*1.3)*3.2e6+i*6e5),linjer:380+i*9})),
-    forsinket_lev:[{navn:"Bergen Mek. Verksted",firma:"MacGregor Norway",sene:64,snitt_dager:14.2},{navn:"Hydraflow Systems AB",firma:"MacGregor Norway",sene:41,snitt_dager:9.8},{navn:"Grenland Teknikk AS",firma:"Norsk Industri AS",sene:22,snitt_dager:7.1}]};
-}
-function demoAgents(){const now=Date.now(),mi=60e3;
-  const agents=[{id:"a1",name:"Leverandør-analytiker",model:"claude-opus-5-5",version:4},{id:"a2",name:"PO-oppfølger",model:"claude-sonnet-5-5",version:2},{id:"a3",name:"Prisovervåker",model:"claude-haiku-5-5",version:7},{id:"a4",name:"Rapportskriver",model:"claude-sonnet-5-5",version:1}];
-  return{configured:true,agents,sessions:[
-    {id:"s1",status:"running",title:"Analyse av sene leveranser – oktober",agent_id:"a1",agent_name:"Leverandør-analytiker",updated_at:new Date(now-2*mi).toISOString()},
-    {id:"s2",status:"running",title:"Purring: 14 forfalte PO-linjer",agent_id:"a2",agent_name:"PO-oppfølger",updated_at:new Date(now-6*mi).toISOString()},
-    {id:"s3",status:"idle",title:"Ukentlig prissjekk Octopart",agent_id:"a3",agent_name:"Prisovervåker",updated_at:new Date(now-95*mi).toISOString()},
-    {id:"s4",status:"idle",title:"Månedsrapport MacGregor",agent_id:"a4",agent_name:"Rapportskriver",updated_at:new Date(now-26*60*mi).toISOString()},
-    {id:"s5",status:"terminated",title:"Test-økt",agent_id:"a3",agent_name:"Prisovervåker",updated_at:new Date(now-3*24*60*mi).toISOString()}]};}
+/* ================= DEMO DATA (?demo=1) ================= */
+function demoAgents(){const n=Date.now(),iso=x=>new Date(n-x*60e3).toISOString();
+  return{configured:true,agents:[
+    {id:"a1",name:"Nora",model:"claude-opus-5-5",version:6,description:"Procurement analysis agent – reads supplier files sent to nora@logichain.no and reports findings."},
+    {id:"a2",name:"Isak",model:"claude-sonnet-5-5",version:3,description:"Sales & outreach assistant."},
+    {id:"a3",name:"CEO Agent",model:"claude-opus-5-5",version:2,description:"Weekly strategy briefs."},
+    {id:"a4",name:"Price Watch",model:"claude-haiku-5-5",version:5,description:"Tracks component prices."},
+    {id:"a5",name:"Report Writer",model:"claude-sonnet-5-5",version:1,description:"Monthly customer reports."}],
+  sessions:[
+    {id:"s1",status:"running",title:"Analyse MacGregor October deliveries",agent_id:"a1",agent_name:"Nora",updated_at:iso(1)},
+    {id:"s2",status:"running",title:"Draft follow-up to Vestfold Maritime",agent_id:"a2",agent_name:"Isak",updated_at:iso(4)},
+    {id:"s3",status:"idle",title:"Weekly strategy brief – week 45",agent_id:"a3",agent_name:"CEO Agent",updated_at:iso(80)},
+    {id:"s4",status:"idle",title:"Octopart price sweep",agent_id:"a4",agent_name:"Price Watch",updated_at:iso(190)},
+    {id:"s5",status:"idle",title:"Supplier scorecard Q3",agent_id:"a1",agent_name:"Nora",updated_at:iso(1500)},
+    {id:"s6",status:"terminated",title:"Test run",agent_id:"a5",agent_name:"Report Writer",updated_at:iso(4300)}]};}
+function demoLog(id){const n=Date.now(),iso=x=>new Date(n-x*60e3).toISOString();
+  return{configured:true,session:{id,status:id==="s1"?"running":"idle"},log:[
+    {kind:"status",time:iso(14),text:"running"},
+    {kind:"user",time:iso(14),text:"New file from MacGregor: deliveries_oct.xlsx. Find late suppliers and summarise the top risks."},
+    {kind:"thinking",time:iso(13),text:"I'll load the workbook, compute delivery deviation per supplier and rank by share of late lines."},
+    {kind:"tool",time:iso(13),name:"bash",text:"command: python analyse.py deliveries_oct.xlsx"},
+    {kind:"result",time:iso(12),text:"Loaded 412 PO lines · 38 suppliers\nLate (>5 days): 61 lines\nTop: Bergen Mek. Verksted (14), Hydraflow Systems AB (9), Grenland Teknikk (6)"},
+    {kind:"tool",time:iso(10),name:"send_email",server:"outlook",text:"to: einar@logichain.no\nsubject: October delivery risk summary"},
+    {kind:"result",time:iso(10),text:"Message queued."},
+    {kind:"agent",time:iso(9),text:"Done. 61 of 412 lines were more than 5 days late (14.8 %). Bergen Mek. Verksted accounts for almost a quarter of them, with an average delay of 14 days.\n\nRecommended: an escalation meeting with Bergen Mek. this week, and a safety-stock review for the three hydraulic cylinders they supply."}]};}
+function demoTodos(){const n=Date.now(),d=x=>new Date(n+x*864e5).toISOString().slice(0,10),h=x=>new Date(n-x*36e5).toISOString();
+  return[{id:1,text:"Follow up MacGregor on October data file",priority:"high",due:d(1),done:false,created_at:h(3)},
+    {id:2,text:"Review Nora's supplier scorecard",priority:"normal",due:d(3),done:false,created_at:h(26)},
+    {id:3,text:"Confirm logichain.no DNS switch with domene.no",priority:"high",due:d(0),done:false,created_at:h(50)},
+    {id:4,text:"Prepare pitch deck for Vestfold Maritime",priority:"normal",due:null,done:false,created_at:h(80)},
+    {id:5,text:"Set up Jarvis command center",priority:"normal",due:null,done:true,done_at:h(.1),created_at:h(90)}];}
+function demoLinks(){return[["logichain.no","https://logichain.no","Logichain"],["MacGregor portal","macgregor-dashboard.html","Logichain"],["Data import","last-opp.html","Logichain"],["Demo dashboard","logichain-dashboard-demo-en.html","Logichain"],
+  ["Claude Console","https://platform.claude.com","Tools"],["Supabase","https://supabase.com/dashboard/project/iksnoymoqvweudilfuzy","Tools"],["Cloudflare","https://dash.cloudflare.com","Tools"],["GitHub repo","https://github.com/logichainas/logichain","Tools"],["Outlook","https://outlook.office.com","Tools"]]
+  .map((l,i)=>({id:i+1,title:l[0],url:l[1],grp:l[2],sort:i}));}
 
-/* ---------------- go ---------------- */
+/* ================= GO ================= */
+try{initScene();}catch(e){console.warn("3D scene unavailable",e);}
 boot().then(()=>{endBoot();verify();});
 })();
 </script>
