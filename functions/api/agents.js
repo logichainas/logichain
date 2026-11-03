@@ -54,7 +54,7 @@ export async function onRequestGet({ request, env }) {
   if (!auth.startsWith("Bearer ")) return json({ error: "Ikke innlogget" }, 401);
   if (!(await isAdmin(auth))) return json({ error: "Ingen tilgang" }, 403);
 
-  const key = env.ANTHROPIC_API_KEY;
+  const key = env.ANTHROPIC_API_KEY || env["logichain-jarvis"] || env.LOGICHAIN_JARVIS;
   if (!key) return json({ configured: false });
 
   try {
