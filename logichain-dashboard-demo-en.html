@@ -143,7 +143,7 @@ rect.clickable:hover{fill:#6db3ff}
     <input type="text" id="globalSearch" placeholder="🔍 Search supplier, material, PO ..." oninput="doSearch()" onfocus="doSearch()">
     <div class="sdd" id="searchDD"></div>
   </div>
-  <a class="home-btn" href="logichain-dashboard-demo.html" title="Bytt til norsk" aria-label="Bytt til norsk"><svg aria-hidden="true" style="display:block;border-radius:2px" width="20" height="15" viewBox="0 0 22 16"><rect width="22" height="16" fill="#BA0C2F"/><rect x="6" width="4" height="16" fill="#fff"/><rect y="6" width="22" height="4" fill="#fff"/><rect x="7" width="2" height="16" fill="#00205B"/><rect y="7" width="22" height="2" fill="#00205B"/></svg></a>
+  <a class="home-btn" href="logichain-dashboard-demo.html" title="Bytt til norsk" aria-label="Switch to Norwegian"><svg aria-hidden="true" style="display:block;border-radius:2px" width="20" height="15" viewBox="0 0 22 16"><rect width="22" height="16" fill="#BA0C2F"/><rect x="6" width="4" height="16" fill="#fff"/><rect y="6" width="22" height="4" fill="#fff"/><rect x="7" width="2" height="16" fill="#00205B"/><rect y="7" width="22" height="2" fill="#00205B"/></svg></a>
   <a class="home-btn" href="index-en.html">← Back to website</a>
   <a class="home-btn" id="logoutBtn" href="#" onclick="doLogout();return false" style="display:none">Log out</a>
   <span class="demo-badge">DEMO DATA</span>
@@ -227,9 +227,9 @@ rect.clickable:hover{fill:#6db3ff}
   <div class="card">
     <h3 class="sect">How Logichain works</h3>
     <div class="grid3">
-      <div class="step"><div class="stepnum">1</div><div><h4>Last opp Excel</h4><p>Suppliers send their reports in Excel. Logichain reads the files directly – no manual copying.</p></div></div>
+      <div class="step"><div class="stepnum">1</div><div><h4>Upload Excel</h4><p>Suppliers send their reports in Excel. Logichain reads the files directly – no manual copying.</p></div></div>
       <div class="step"><div class="stepnum">2</div><div><h4>Logichain validates and consolidates</h4><p>Data is checked, standardised and consolidated into one model: orders, deliveries, deviations, prices and volumes.</p></div></div>
-      <div class="step"><div class="stepnum">3</div><div><h4>Beslutninger</h4><p>The dashboard shows KPIs, identified potential and prioritised actions – ready to use in management meetings.</p></div></div>
+      <div class="step"><div class="stepnum">3</div><div><h4>Decisions</h4><p>The dashboard shows KPIs, identified potential and prioritised actions – ready to use in management meetings.</p></div></div>
     </div>
   </div>
 </section>
@@ -562,7 +562,7 @@ const monthsData=MONTHS.map((m,i)=>{
   return{m,n:ml.length,otd:ml.length?Math.round(ml.filter(l=>l.status==="On time").length/ml.length*100):0}});
 document.getElementById("kpi-po").innerHTML=
   kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="On time").length)} of ${fmt(lines.length)} on time`,overallOTD>=80?"good":"bad")+
-  kpi("Evaluated deliveries",fmt(lines.length),"PO-linjer i utvalget")+
+  kpi("Evaluated deliveries",fmt(lines.length),"PO lines in selection")+
   kpi("Late",Math.round(lateLines/lines.length*100)+"%",fmt(lateLines)+" late deliveries","bad")+
   kpi("Avg |dev|",avgAbs+" days","absolute deviation per delivery")+
   kpi("PO documents",fmt(new Set(lines.map(l=>l.po)).size),"unique purchase orders")+
@@ -596,7 +596,7 @@ document.getElementById("kpi-po").innerHTML=
     paths+=`<circle r="40" cx="100" cy="100" fill="none" stroke="${c}" stroke-width="26" stroke-dasharray="${(f*C).toFixed(2)} ${(C-f*C).toFixed(2)}" stroke-dashoffset="${(C*(0.25-cumf)).toFixed(2)}" transform="rotate(-90 100 100)"/>`;
     cumf+=f;});
   document.getElementById("chartDonut").innerHTML=`<svg viewBox="0 0 200 200" width="190">${paths}<text x="100" y="96" text-anchor="middle" fill="#fff" font-size="26" font-weight="800">${overallOTD}%</text><text x="100" y="114" text-anchor="middle" fill="#8fa0c0" font-size="10">Overall OTD</text></svg>
-  <div class="legend" style="justify-content:center;margin-top:10px"><span><i style="background:#2ecc71"></i>I tide</span><span><i style="background:#e05d5d"></i>For sent</span><span><i style="background:#f0b429"></i>For tidlig</span></div>`;
+  <div class="legend" style="justify-content:center;margin-top:10px"><span><i style="background:#2ecc71"></i>On time</span><span><i style="background:#e05d5d"></i>Late</span><span><i style="background:#f0b429"></i>Early</span></div>`;
   const mk=(arr,good)=>arr.map(s=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(30,42,74,.5);font-size:12.5px"><span>${s.name}</span><b class="${good?"good":"bad"}">${s.otd}%</b></div>`).join("");
   document.getElementById("chartTop").innerHTML=mk([...suppliers].filter(s=>s.lines>=3).sort((a,b)=>b.otd-a.otd).slice(0,5),true);
   document.getElementById("chartBottom").innerHTML=mk([...suppliers].filter(s=>s.lines>=3).sort((a,b)=>a.otd-b.otd).slice(0,5),false);
@@ -619,8 +619,8 @@ window.levDetail=function(id){
   <div class="kpis" style="margin-bottom:12px">
     ${kpi("Spend 2026",fmt(s.spend)+" NOK",s.group)}
     ${kpi("OTD",s.otd+"%","on time of "+s.lines+" deliveries",s.otd>=80?"good":s.otd<50?"bad":"warn")}
-    ${kpi("Late",s.latePct+"%",a.late+" leveringer","bad")}
-    ${kpi("Snitt |avvik|",s.avgAbs+" days","per levering")}
+    ${kpi("Late",s.latePct+"%",a.late+" deliveries","bad")}
+    ${kpi("Avg. |deviation|",s.avgAbs+" days","per delivery")}
     ${kpi("Identified potential",savPer[id]>5000?fmt(savPer[id])+" NOK":"Small","see documentation","good")}
   </div>
   ${savPer[id]>5000?`<p style="margin-bottom:10px"><a class="evlink" onclick="showEvidence('sup',${id})">See documentation for the potential →</a></p>`:""}
@@ -679,7 +679,7 @@ document.getElementById("tailBox").innerHTML=`
   <p style="color:var(--muted);font-size:12.5px;line-height:1.55;margin-top:8px">Tail spend is the small suppliers beyond the 80 % cut. They often represent a disproportionate amount of administrative work (orders, follow-up, invoices) per krone of spend – a classic consolidation and automation area. Logichain identifies candidates and estimates the potential under Savings Potential.</p>
   <p style="margin-top:8px"><a class="evlink" onclick="showEvidence('consol')">See documentation for consolidation potential →</a></p>`;
 document.getElementById("ssTable").innerHTML=`<tr><th>Material</th><th>Category</th><th>Only supplier</th><th style="text-align:right">Spend</th><th>Risk</th></tr>`+
-  singleSource.slice(0,10).map(x=>`<tr><td><b>${matName(x.mi)}</b></td><td>${matCat(x.mi)}</td><td>${x.sup.name}</td><td style="text-align:right">${fmt(x.spend)}</td><td><span class="pill ${x.spend>1e6?"pD":x.spend>3e5?"pC":"pB"}">${x.spend>1e6?"High":x.spend>3e5?"Medium":"Lav"}</span></td></tr>`).join("")+
+  singleSource.slice(0,10).map(x=>`<tr><td><b>${matName(x.mi)}</b></td><td>${matCat(x.mi)}</td><td>${x.sup.name}</td><td style="text-align:right">${fmt(x.spend)}</td><td><span class="pill ${x.spend>1e6?"pD":x.spend>3e5?"pC":"pB"}">${x.spend>1e6?"High":x.spend>3e5?"Medium":"Low"}</span></td></tr>`).join("")+
   (singleSource.length===0?`<tr><td colspan="5">No single-source materials found.</td></tr>`:"");
 
 /* ================= SAVINGS ================= */
@@ -716,7 +716,7 @@ window.showEvidence=function(type,id){
   let html="";
   if(type==="expedite"){
     const ls=lines.filter(l=>l.status==="Late").sort((a,b)=>b.value-a.value);
-    html=evHeader("Ekspedisjon & premiumfrakt",savExpedite)+
+    html=evHeader("Expediting & premium freight",savExpedite)+
       `<div class="assump"><b>Assumptions:</b> ${fmt(lateLines)} delayed PO lines × ${fmt(EXPEDITE_COST)} NOK assumed extra cost per delayed line (expediting, premium freight, overtime). The amount is adjustable per customer.</div>
       <h3 class="sect">Underlying PO lines (showing ${Math.min(ls.length,25)} of ${fmt(ls.length)})</h3>`+linesTable(ls.slice(0,25));
   }else if(type==="buffer"){
@@ -724,34 +724,34 @@ window.showEvidence=function(type,id){
     html=evHeader("Excess safety stock",savBuffer)+
       `<div class="assump"><b>Assumptions:</b> Suppliers with average deviation &gt; 7 days are assumed to force excess safety stock. Estimate per supplier: 12 % of annual spend × (avg deviation / 30). Reduced carrying cost with better delivery discipline.</div>
       <table><tr><th>Supplier</th><th>Rating</th><th>Avg |dev|</th><th style="text-align:right">Spend</th><th style="text-align:right">Estimated potential</th></tr>`+
-      rows.map(s=>`<tr><td>${s.name}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.avgAbs} days</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${fmt(agg[s.id].spend*0.12*(parseFloat(s.avgAbs)/30))} kr</td></tr>`).join("")+`</table>`;
+      rows.map(s=>`<tr><td>${s.name}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.avgAbs} days</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${fmt(agg[s.id].spend*0.12*(parseFloat(s.avgAbs)/30))} NOK</td></tr>`).join("")+`</table>`;
   }else if(type==="reneg"){
     const rows=suppliers.filter(s=>s.rating==="C"||s.rating==="D").sort((a,b)=>b.spend-a.spend);
     html=evHeader("Review of C/D suppliers",savReneg)+
       `<div class="assump"><b>Assumptions:</b> Price benchmarking against best practice assumed to give 5 % savings on purchase volume to C- and D-rated suppliers. Underlying data: all PO lines to these suppliers in the period.</div>
       <table><tr><th>Supplier</th><th>Rating</th><th>Deliveries</th><th style="text-align:right">Spend</th><th style="text-align:right">Estimated potential</th></tr>`+
-      rows.slice(0,20).map(s=>`<tr><td>${s.name}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.lines}</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${fmt(s.spend*0.05)} kr</td></tr>`).join("")+`</table>`;
+      rows.slice(0,20).map(s=>`<tr><td>${s.name}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.lines}</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${fmt(s.spend*0.05)} NOK</td></tr>`).join("")+`</table>`;
   }else if(type==="consol"){
     const rows=suppliers.filter(s=>agg[s.id].n<5).sort((a,b)=>b.spend-a.spend);
     html=evHeader("Consolidation of small suppliers",savConsol)+
       `<div class="assump"><b>Assumptions:</b> Suppliers with &lt; 5 deliveries in the period have weak negotiating power. Consolidating that volume est. 8 % savings.</div>
       <p style="color:var(--muted);font-size:12px;margin-bottom:8px">Showing ${Math.min(rows.length,25)} of ${rows.length} suppliers.</p>
       <table><tr><th>Supplier</th><th>Rating</th><th>Deliveries</th><th style="text-align:right">Spend</th><th style="text-align:right">Estimated potential</th></tr>`+
-      rows.slice(0,25).map(s=>`<tr><td>${s.name}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.lines}</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${fmt(s.spend*0.08)} kr</td></tr>`).join("")+`</table>`;
+      rows.slice(0,25).map(s=>`<tr><td>${s.name}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.lines}</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${fmt(s.spend*0.08)} NOK</td></tr>`).join("")+`</table>`;
   }else if(type==="sup"){
     const s=suppliers.find(x=>x.id===id);const a=agg[s.id];
     const parts=[];
     const lateN=a.late;
-    if(lateN>0)parts.push(["Ekspedisjon & frakt",lateN*EXPEDITE_COST,`${lateN} delayed deliveries × ${fmt(EXPEDITE_COST)} kr`]);
+    if(lateN>0)parts.push(["Expediting & freight",lateN*EXPEDITE_COST,`${lateN} delayed deliveries × ${fmt(EXPEDITE_COST)} NOK`]);
     const dev=a.n?a.devAbs/a.n:0;
     if(dev>7)parts.push(["Safety stock",a.spend*0.12*(dev/30),`Avg. deviation ${dev.toFixed(1)} days × 12 % of spend (${fmt(a.spend)} NOK) ÷ 30`]);
-    if(s.rating==="C"||s.rating==="D")parts.push(["Prisrevisjon",a.spend*0.05,`${s.rating}-rating × 5 % of spend`]);
-    if(a.n<5)parts.push(["Consolidation",a.spend*0.08,`${a.n} leveringer (< 5) × 8 % av spend`]);
+    if(s.rating==="C"||s.rating==="D")parts.push(["Price review",a.spend*0.05,`${s.rating}-rating × 5 % of spend`]);
+    if(a.n<5)parts.push(["Consolidation",a.spend*0.08,`${a.n} deliveries (< 5) × 8 % of spend`]);
     const tot=parts.reduce((x,p)=>x+p[1],0);
     html=evHeader(s.name+" – identified potential",tot)+
       `<div class="assump"><b>How the figure is built:</b> each source below shows the formula and the underlying data. None of the items are guaranteed savings – they are candidates that should be examined in the sourcing process.</div>
       <table><tr><th>Source</th><th style="text-align:right">Amount</th><th>Calculation</th></tr>`+
-      parts.map(p=>`<tr><td><b>${p[0]}</b></td><td style="text-align:right" class="good">${fmt(p[1])} kr</td><td style="color:var(--muted)">${p[2]}</td></tr>`).join("")+
+      parts.map(p=>`<tr><td><b>${p[0]}</b></td><td style="text-align:right" class="good">${fmt(p[1])} NOK</td><td style="color:var(--muted)">${p[2]}</td></tr>`).join("")+
       (parts.length===0?`<tr><td colspan="3">No identified potential above threshold for this supplier.</td></tr>`:"")+`</table>
       <h3 class="sect" style="margin-top:14px">Underlying PO lines (showing ${Math.min(a.n,15)} of ${a.n})</h3>`+
       linesTable(lines.filter(l=>l.sup.id===id).slice(0,15));
@@ -773,7 +773,7 @@ suppliers.filter(s=>s.rating==="D"&&s.otd<45).sort((a,b)=>b.spend-a.spend).slice
 const small=suppliers.filter(s=>agg[s.id].n<5);
 if(small.length)tiltak.push({prio:"midt",t:`Consolidate ${small.length} small suppliers`,d:`${small.length} suppliers have fewer than 5 deliveries and weak negotiating power. Consolidate the volume with fewer, larger suppliers and estimate c. 8 % savings on that volume.`,v:savConsol,ev:["consol"]});
 const cdTop=[...suppliers].filter(s=>s.rating==="C"||s.rating==="D").sort((a,b)=>b.spend-a.spend)[0];
-if(cdTop)tiltak.push({prio:"midt",t:"Renegotiate prices with "+cdTop.name,d:`${cdTop.name} er ${cdTop.rating}-rated but accounts for ${fmt(cdTop.spend)} NOK in purchases. Benchmark prices against best practice and use the volume as a negotiation card – est. 5 % savings.`,v:agg[cdTop.id].spend*0.05,ev:["reneg"]});
+if(cdTop)tiltak.push({prio:"midt",t:"Renegotiate prices with "+cdTop.name,d:`${cdTop.name} is ${cdTop.rating}-rated but accounts for ${fmt(cdTop.spend)} NOK in purchases. Benchmark prices against best practice and use the volume as a negotiation card – est. 5 % savings.`,v:agg[cdTop.id].spend*0.05,ev:["reneg"]});
 const devBad=suppliers.filter(s=>parseFloat(s.avgAbs)>10).sort((a,b)=>b.avgAbs-a.avgAbs).slice(0,2);
 devBad.forEach(s=>tiltak.push({prio:"midt",t:"Introduce fixed delivery windows for "+s.name,d:`An average deviation of ${s.avgAbs} days creates unnecessary safety stock. Require a confirmed delivery date 14 days before the promised date and agreed deviation alerts – reduces the safety stock requirement.`,v:savPer[s.id]*0.5,ev:["sup",s.id]}));
 if(overallOTD<80)tiltak.push({prio:"høy",t:"Group-wide OTD target and escalation process",d:`Overall OTD is ${overallOTD} % against a 90 % target. Introduce a monthly OTD report to all suppliers, automatic escalation after 2 consecutive delays, and OTD requirements in new contracts.`,v:savExpedite*0.4,ev:["expedite"]});
@@ -1022,7 +1022,7 @@ window.showMat=function(mi){
   const pts=p.rows.map((v,i)=>v?`${8+i*(150/8)},${34-(v-90)*0.6}`:"").filter(Boolean).join(" ");
   html+=`<h3 class="sect" style="margin-top:14px">Price development (index, first month = 100)</h3>
   <svg width="100%" height="60" viewBox="0 0 160 38" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="${chg>1?"#e05d5d":chg<-1?"#2ecc71":"#3d8bff"}" stroke-width="2"/></svg>
-  <h3 class="sect" style="margin-top:14px">PO-linjer (viser ${Math.min(ls.length,15)} of ${ls.length}) – click for details</h3>
+  <h3 class="sect" style="margin-top:14px">PO lines (showing ${Math.min(ls.length,15)} of ${ls.length}) – click for details</h3>
   <table><tr><th>PO</th><th>Supplier</th><th>Prosj.</th><th>Qty</th><th style="text-align:right">Value</th><th>Status</th></tr>`+
   ls.slice(0,15).map(l=>`<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.sup.name}</td><td>${l.proj}</td><td>${l.qty}</td><td style="text-align:right">${fmt(l.value)}</td><td class="${l.status==="On time"?"st-ok":l.status==="Late"?"st-late":"st-early"}">${l.status}</td></tr>`).join("")+`</table>`;
   document.getElementById("modalBox").innerHTML=html;
@@ -1032,7 +1032,7 @@ window.showMat=function(mi){
 window.showLine=function(po,line){
   const l=lines.find(x=>x.po===po&&x.line===line);if(!l)return;
   const others=lines.filter(x=>x.po===po&&x.line!==line).slice(0,10);
-  let html=`<div class="mh"><div><h2>📦 ${l.po} · linje ${l.line}</h2>
+  let html=`<div class="mh"><div><h2>📦 ${l.po} · line ${l.line}</h2>
     <div style="font-size:12px;color:var(--muted)">Project ${l.proj}</div></div>
     <button class="mclose" onclick="hideModal()">Close ✕</button></div>
   <div class="mlinks">
@@ -1041,7 +1041,7 @@ window.showLine=function(po,line){
   </div>
   <div class="kpis" style="margin:12px 0">
     ${kpi("Linjeverdi",fmt(l.value)+" NOK","")}
-    ${kpi("Avvik",(l.dev>0?"+":"")+l.dev+" days","levert vs. love-dato",l.dev>OTD_TOL?"bad":l.dev<-OTD_TOL?"warn":"good")}
+    ${kpi("Deviation",(l.dev>0?"+":"")+l.dev+" days","delivered vs. promised date",l.dev>OTD_TOL?"bad":l.dev<-OTD_TOL?"warn":"good")}
     ${kpi("Status",l.status,"",l.status==="On time"?"good":l.status==="Late"?"bad":"warn")}
     ${kpi("Quantity",l.qty,"units")}
   </div>
@@ -1100,7 +1100,7 @@ window.renderOctoTab=function(){
       <button class="btn btn-demo" style="padding:8px 16px;font-size:12.5px" onclick="showOcto(${mi})">Open Octopart panel →</button>
     </div>`;}).join("");
   document.getElementById("octoSS").innerHTML=`<tr><th>Material</th><th>Only supplier</th><th style="text-align:right">Spend</th><th>Risk</th><th></th></tr>`+
-    singleSource.slice(0,10).map(x=>`<tr><td><b>${matName(x.mi)}</b></td><td>${x.sup.name}</td><td style="text-align:right">${fmt(x.spend)}</td><td><span class="pill ${x.spend>1e6?"pD":x.spend>3e5?"pC":"pB"}">${x.spend>1e6?"High":x.spend>3e5?"Medium":"Lav"}</span></td><td><a class="evlink" onclick="showOcto(${x.mi})">🌐 Sjekk marked →</a></td></tr>`).join("")+
+    singleSource.slice(0,10).map(x=>`<tr><td><b>${matName(x.mi)}</b></td><td>${x.sup.name}</td><td style="text-align:right">${fmt(x.spend)}</td><td><span class="pill ${x.spend>1e6?"pD":x.spend>3e5?"pC":"pB"}">${x.spend>1e6?"High":x.spend>3e5?"Medium":"Low"}</span></td><td><a class="evlink" onclick="showOcto(${x.mi})">🌐 Check market →</a></td></tr>`).join("")+
     (singleSource.length===0?`<tr><td colspan="5">No single-source materials found.</td></tr>`:"");
   octoSearch();
 };
