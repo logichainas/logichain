@@ -144,17 +144,18 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 
 /* dock: quick links */
 .dock{padding:0 24px 4px;perspective:900px}
-.dockin{display:flex;gap:12px;overflow-x:auto;padding:16px 4px 10px;scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.35) transparent;align-items:flex-end}
-.dlabel{font:700 10px var(--hud);letter-spacing:.3em;color:var(--cyan);writing-mode:vertical-rl;transform:rotate(180deg);opacity:.8;flex:none;align-self:center}
-.tile{flex:none;width:132px;height:84px;position:relative;border:1px solid var(--line);background:linear-gradient(150deg,rgba(10,48,76,.85),rgba(2,14,24,.8));
+.dockin{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:14px 4px 10px;align-items:stretch}
+.dlabel{display:none}
+.tile{flex:1 1 118px;max-width:150px;min-width:104px;height:74px;position:relative;border:1px solid var(--line);background:linear-gradient(150deg,rgba(10,48,76,.85),rgba(2,14,24,.8));
   text-decoration:none;color:var(--text);padding:10px 11px;display:flex;flex-direction:column;justify-content:space-between;transform:rotateX(22deg);transform-origin:bottom;transition:transform .25s,box-shadow .25s,border-color .25s;box-shadow:0 14px 28px rgba(0,0,0,.5)}
 .tile:hover{transform:rotateX(0) translateY(-8px);border-color:var(--cyan);box-shadow:0 20px 40px rgba(0,0,0,.6),var(--glow)}
-.tile .mono{width:28px;height:28px;display:grid;place-items:center;font:900 12px var(--hud);color:var(--bg);background:var(--cyan);box-shadow:var(--glow);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.tile>div:last-of-type{min-width:0}
+.tile .mono{flex:none;width:24px;height:24px;display:grid;place-items:center;font:900 12px var(--hud);color:var(--bg);background:var(--cyan);box-shadow:var(--glow);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
 .tile .tt{font-weight:700;font-size:14px;line-height:1.1;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile .tg{font:9px var(--hud);letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
 .tile .x{position:absolute;top:4px;right:4px}
 .tile:hover .x{opacity:1}
-.tile.add{align-items:center;justify-content:center;border-style:dashed;cursor:pointer;color:var(--cyan);font:700 26px var(--hud);width:84px}
+.tile.add{align-items:center;justify-content:center;border-style:dashed;cursor:pointer;color:var(--cyan);font:700 26px var(--hud);flex:0 0 74px;min-width:74px}
 .lform{display:flex;gap:6px;flex:none;align-items:center}
 .lform .field{width:150px;padding:8px 10px;font-size:14px}
 
@@ -222,6 +223,13 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .stl{align-self:center;font:600 10px var(--hud);letter-spacing:.24em;color:var(--dim)}
 .erl{align-self:stretch;color:var(--red);border:1px solid rgba(255,77,109,.4);padding:8px 12px;font-size:14px}
 
+@media (max-height:760px) and (min-width:1101px){
+  header{padding:8px 24px}.clock .t{font-size:18px}
+  .tile{height:58px;padding:7px 9px;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px}
+  .tile .tg{display:none}.dockin{padding:10px 4px 6px;gap:8px}
+  #cmd{padding:6px 24px 7px}#log{margin-bottom:2px}
+  #comms{bottom:150px}
+}
 @media (max-width:1100px){
   body{overflow:auto}
   #app{position:relative;min-height:100vh;display:block;pointer-events:auto}
@@ -229,7 +237,8 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
   .stage .mid{height:48vh;order:-1}
   .side.l,.side.r{transform:none}
   .side .panel{max-height:62vh}
-  #cmd{position:sticky;bottom:0}
+  #cmd{position:fixed;left:0;right:0;bottom:0;z-index:25}
+  #app{padding-bottom:110px}
   #viewer .holo{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr)}
   .vs{border-right:0;border-bottom:1px solid var(--line);max-height:160px}
 }
