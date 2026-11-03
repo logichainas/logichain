@@ -488,7 +488,7 @@ function upDate(s){if(!s)return null;s=s.trim();var m=s.match(/^(\d{1,2})\.(\d{1
   if(m)return m[3]+"-"+m[2].padStart(2,"0")+"-"+m[1].padStart(2,"0");
   m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return m[1]+"-"+m[2].padStart(2,"0")+"-"+m[3].padStart(2,"0");return "BAD";}
 function upNum(s){return s?Number(String(s).replace(/\s/g,"").replace(",",".")):NaN;}
-var UPFILE=null;
+var UPFILE=null,UPSTATS={rader:null,spend:null};
 document.addEventListener("change",async function(e){
   if(e.target.id!=="upFile")return;
   var f=e.target.files[0];if(!f)return;
@@ -506,14 +506,15 @@ document.addEventListener("change",async function(e){
     if(!po)E("Mangler PO-nummer");
     if(!sup)E("Mangler leverandørnavn");
     if(!mat)E("Mangler materialnummer");
-    if(!(bd instanceof Date)||bd==="BAD")E("Bestillingsdato mangler/ugyldig");
-    if(!(ld instanceof Date)||ld==="BAD")E("Love-dato mangler/ugyldig");
+    if(!bd||bd==="BAD")E("Bestillingsdato mangler/ugyldig");
+    if(!ld||ld==="BAD")E("Love-dato mangler/ugyldig");
     if(dd==="BAD")E("Faktisk leveringsdato ugyldig");
     if(isNaN(val))E("Linjeverdi mangler/ugyldig");
     var key=(po+"#"+(get(r,"linjenr")||"1")).toUpperCase();
     if(seen[key])E("Duplikat PO+linje");else seen[key]=1;
     if(!isNaN(val))spend+=val;
   });
+  UPSTATS={rader:rows.length,spend:Math.round(spend)};
   document.getElementById("upSend").disabled=errs.length>0;
   rep.innerHTML="<b>Validering:</b> "+rows.length+" rader · "+errs.length+" feil · spend "+Math.round(spend).toLocaleString("no-NO")+" NOK"+
     (errs.length?"<br><span style='color:#e05d5d'>"+errs.slice(0,10).join("<br>")+"</span>":"<br><span style='color:#2ecc71'>✓ Filen er klar til å sendes til Logichain.</span>");
@@ -528,10 +529,10 @@ document.addEventListener("click",async function(e){
     var p=await __SBC.from("kunder").select("id").eq("user_id",sess.user.id).maybeSingle();
     if(!p.data)throw new Error("Ingen kundeprofil");
     var KID=p.data.id;
-    var path="innleveringer/"+KID+"/"+Date.now()+"_"+UPFILE.name;
+    var path=KID+"/"+Date.now()+"_"+UPFILE.name.replace(/[^\w.\-]+/g,"_");
     var up=await __SBC.storage.from("innleveringer").upload(path,UPFILE);
     if(up.error)throw up.error;
-    var ins=await __SBC.from("innleveringer").insert({kunde_id:KID,fil:path,status:"ny"});
+    var ins=await __SBC.from("innleveringer").insert({kunde_id:KID,fil:path,status:"ny",rader:UPSTATS.rader,spend:UPSTATS.spend});
     if(ins.error)throw ins.error;
     rep.innerHTML="<p style='color:#2ecc71;font-weight:700'>✅ Sendt! Einar er varslet og kvalitetssikrer dataene – dashboardet oppdateres når han har importert dem.</p>";
     btn.textContent="Sendt ✓";
@@ -614,7 +615,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
       }
     }
   }catch(e){DIAG+="unntak: "+(e.message||e);}
-  try{window.__ERRS.push("DIAGNOSE: "+DIAG+" | REAL="+REAL);__showErr();}catch(_){}
+  try{console.info("Logichain diagnose:",DIAG,"| REAL="+REAL);}catch(_){}
 if(!REAL){
 const pick=a=>a[Math.floor(rnd()*a.length)];
 const NAMES=["Nordic Steel AS","Hydraflow Systems AB","Bergen Mek. Verksted","Trondheim Maritim AS","Fjell Metall AS","Aalborg Industri A/S","Stavanger Vekst AS","Øresund Komponenter AB","Halden Presisjon AS","Luleå Verkstad AB","Grenland Teknikk AS","Aarhus Metal Parts A/S","Vestfold Hydraulikk AS","Sandnes Stålprodusent","Kongsberg Drift AS","Malmö Processteknik AB","Oslo Fjord Industri AS","Drammen Rørforsyning","Ålesund Maskin AS","Umeå Maskinering AB","Kristiansand Kjetil AS","Södertälje Smed AB","Molde Profil AS","Haugesund Bolt AS","Karlskrona Verkstad AB","Tønsberg Tårn AS","Fredrikstad Fittings","Sundsvall Snurrning AB","Moss Montasje AS","Göteborg Gjutning AB","Skien Sveiseverksted","Randers Rustfritt A/S","Bodø Befestning AS","Västerås Ventiler AB","Arendal Aluminium","Porsgrunn Pumper AS","Helsingborg Hylsor AB","Mo i Rana Mekanisk","Tromsø Teknikk AS","Jönköping Jern AB","Hamar Hubstang AS","Esbjerg Ekstra A/S","Notodden Nippring","Sarpsborg Systemer AS","Linköping Laser AB"];
@@ -672,21 +673,23 @@ suppliers.forEach(s=>{
 const fmt=n=>Math.round(n).toLocaleString("nb-NO");
 const fmtM=n=>n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" mill kr":fmt(n)+" kr";
 const fmtK=n=>n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" M":n>=1e3?Math.round(n/1e3)+" k":fmt(n);
-const dstr=d=>d.toLocaleDateString("no-NO",{day:"2-digit",month:"2-digit",year:"numeric"});
+const dstr=d=>!d?"–":d.toLocaleDateString("no-NO",{day:"2-digit",month:"2-digit",year:"numeric"});
 const matName=i=>MATS[i]?MATS[i][1]:"?", matCat=i=>MATS[i]?MATS[i][2]:"?", matCode=i=>MATS[i]?MATS[i][0]:"?";
 
 const totVal=lines.reduce((a,l)=>a+l.value,0);
 const totQty=lines.reduce((a,l)=>a+l.qty,0);
 
 const agg={};
-suppliers.forEach(s=>agg[s.id]={n:0,onTime:0,late:0,early:0,devSum:0,devAbs:0,spend:0});
-lines.forEach(l=>{const a=agg[l.sup.id];a.n++;a.spend+=l.value;a.devSum+=l.dev;a.devAbs+=Math.abs(l.dev);
+suppliers.forEach(s=>agg[s.id]={n:0,ev:0,onTime:0,late:0,early:0,devSum:0,devAbs:0,spend:0});
+lines.forEach(l=>{const a=agg[l.sup.id];a.n++;a.spend+=l.value;
+  if(l.status==="Ikke levert")return; // ikke levert ennå: teller ikke i leveringspresisjon
+  a.ev++;a.devSum+=l.dev;a.devAbs+=Math.abs(l.dev);
   if(l.status==="I tide")a.onTime++;else if(l.status==="For sent")a.late++;else a.early++;});
 
 suppliers.forEach(s=>{const a=agg[s.id];
-  s.lines=a.n;s.otd=a.n?Math.round(a.onTime/a.n*100):0;
-  s.avgDev=a.n?(a.devSum/a.n).toFixed(1):"0";s.avgAbs=a.n?(a.devAbs/a.n).toFixed(1):"0";
-  s.latePct=a.n?Math.round(a.late/a.n*100):0;s.spend=a.spend;});
+  s.lines=a.n;s.otd=a.ev?Math.round(a.onTime/a.ev*100):0;
+  s.avgDev=a.ev?(a.devSum/a.ev).toFixed(1):"0";s.avgAbs=a.ev?(a.devAbs/a.ev).toFixed(1):"0";
+  s.latePct=a.ev?Math.round(a.late/a.ev*100):0;s.spend=a.spend;});
 
 /* ---- spend aggregations ---- */
 const spendByMonth=MONTHS.map((m,i)=>lines.filter(l=>l.month===i).reduce((a,l)=>a+l.value,0));
@@ -763,7 +766,7 @@ function renderPO(){
     !q||l.po.toLowerCase().includes(q)||l.sup.name.toLowerCase().includes(q)||
     matName(l.mat).toLowerCase().includes(q)||matCode(l.mat).toLowerCase().includes(q)||l.proj.includes(q)));
   document.getElementById("poTable").innerHTML=`<tr><th>PO-nr</th><th>Linje</th><th>Leverandør</th><th>Materiale</th><th>Prosj.</th><th>Bestilt</th><th>Love-dato</th><th>Levert</th><th>Avvik</th><th>Status</th><th style="text-align:right">Verdi</th></tr>`+
-    rows.slice(0,120).map(l=>`<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.line}</td><td><a class="cellink" onclick="event.stopPropagation();openSup(${l.sup.id})">${l.sup.name}</a></td><td><a class="cellink" onclick="event.stopPropagation();showMat(${l.mat})">${matName(l.mat)}</a></td><td>${l.proj}</td><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.dev>0?"+":""}${l.dev} dgr</td><td><span class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</span></td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("");
+    rows.slice(0,120).map(l=>`<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.line}</td><td><a class="cellink" onclick="event.stopPropagation();openSup(${l.sup.id})">${l.sup.name}</a></td><td><a class="cellink" onclick="event.stopPropagation();showMat(${l.mat})">${matName(l.mat)}</a></td><td>${l.proj}</td><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.status==="Ikke levert"?"–":(l.dev>0?"+":"")+l.dev+" dgr"}</td><td><span class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</span></td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("");
   document.getElementById("poCount").textContent=`Viser ${Math.min(rows.length,120)} av ${fmt(rows.length)} treff · ${fmt(lines.length)} PO-linjer totalt · ${poMonth===null?"alle måneder":MONTHS[poMonth]} · klikk på en rad for detaljer`;
 }
 renderPO();
@@ -837,7 +840,7 @@ window.levDetail=function(id){
   ${savPer[id]>5000?`<p style="margin-bottom:10px"><a class="evlink" onclick="showEvidence('sup',${id})">Se dokumentasjon for potensialet →</a></p>`:""}
   <h3 class="sect">Største avvik (nyeste leveringer)</h3>
   <table><tr><th>PO</th><th>Materiale</th><th>Love-dato</th><th>Levert</th><th>Avvik</th><th>Status</th><th style="text-align:right">Verdi</th></tr>
-  ${lv.map(l=>`<tr><td>${l.po}</td><td><a class="cellink" onclick="showMat(${l.mat})">${matName(l.mat)}</a></td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.dev>0?"+":""}${l.dev} dgr</td><td class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")}</table>`;
+  ${lv.map(l=>`<tr><td>${l.po}</td><td><a class="cellink" onclick="showMat(${l.mat})">${matName(l.mat)}</a></td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.status==="Ikke levert"?"–":(l.dev>0?"+":"")+l.dev+" dgr"}</td><td class="${l.status==="I tide"?"st-ok":l.status==="For sent"?"st-late":"st-early"}">${l.status}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")}</table>`;
   setCrumbs([["Logichain","goto('forside')"],["Leverandører","goto('lev')"],[s.name]]);
   el.scrollIntoView({behavior:"smooth",block:"nearest"});
 };
@@ -863,7 +866,7 @@ function hbars(el,rows,fmtV){
 }
 document.getElementById("kpi-spend").innerHTML=
   kpi("Total spend 2026",fmtM(totVal),fmt(lines.length)+" PO-linjer","","Summen av alle PO-linjene i perioden")+
-  kpi("Spend per måned (snitt)",fmtM(totVal/9),"Jan – Sep","","Gjennomsnittlig månedlig innkjøpsvolum")+
+  kpi("Spend per måned (snitt)",fmtM(totVal/Math.max(1,MONTHS.length)),MONTHS.length?MONTHS[0]+" – "+MONTHS[MONTHS.length-1]:"–","","Gjennomsnittlig månedlig innkjøpsvolum")+
   kpi("Top 5-konsentrasjon",top5Share+"%","av total spend hos topp 5 leverandører",top5Share>60?"warn":"","Leverandøravhengighet: andel av spenden hos de fem største – klikk på listen under for å se dem")+
   kpi("Tail spend",tailShare+"%",tailSup.length+" leverandører står for andel > 80 %-kutten","","De små leverandørene etter 80 %-kutten – ofte mye administrasjon per krone")+
   kpi("Single-source materialer",singleSource.length,"uten dokumentert alternativ",singleSource.length>2?"warn":"","Materialer som kun én leverandør kan levere – forsyningssrisiko")+

@@ -6,29 +6,40 @@ Logichain er en procurement intelligence-plattform som samler innkjøpsdata fra 
 leverandører i ett interaktivt dashboard — spend-analyse, leverandørytelse,
 leveringspresisjon og identifisert sparepotensial, med full dokumentasjon bak hvert tall.
 
-## 🌐 Live demo
+## 🌐 Nettside og hosting
 
-Nettsiden åpnes automatisk via GitHub Pages:
+Siden hostes på **Cloudflare Pages** (prosjekt `logichain`), koblet til dette repoet:
 
-- **Nettside:** `index.html`
-- **Interaktivt dashboard (demodata):** `logichain-dashboard-demo.html`
+- Push til `main` → publiseres automatisk på **https://logichain.no**
+- Push til en annen gren → egen forhåndsvisning på `https://<gren>.logichain-40w.pages.dev`
+- Ingen build-steg: Cloudflare serverer filene i rotmappen direkte
 
-## 📦 Moduler
+| Fil | Hva |
+|---|---|
+| `index.html` / `index-en.html` | Nettside (norsk / engelsk) med innlogging |
+| `logichain-dashboard-demo.html` / `-en.html` | Interaktivt dashboard med demodata |
+| `macgregor-dashboard.html` | Kundeportal for MacGregor (ekte data fra Supabase) |
+| `last-opp.html` | Admin: importer CSV med PO-linjer til Supabase |
+| `supabase/` | SQL-skript og oppsettsguide for database og innlogging |
+| `cloudflare/octopart-worker.js` | Worker som henter markedspriser fra Nexar/Octopart |
+
+## 📦 Moduler i dashboardet
 
 1. **Executive Overview** — hele innkjøpsfunksjonen på én skjerm
 2. **Spend Intelligence** — spend per leverandør/kategori/måned, top 10, konsentrasjon, pris- og volumutvikling, tail spend, single-source-risiko
 3. **Leverandører** — rating A–D, OTD, avvik og historikk per leverandør
 4. **PO Performance** — alle innkjøpsordre søkbare ned til linjenivå
-5. **Sparingspotensial** — identifisert potensial med «view evidence»-dokumentasjon
-6. **Tiltak** — prioriterte handlinger med estimert verdi
+5. **Marked (Octopart)** — markedspriser, lager og leveringstid fra distributører
+6. **Sparingspotensial** — identifisert potensial med «view evidence»-dokumentasjon
+7. **Tiltak** — prioriterte handlinger med estimert verdi
 
 ## 🛠️ Teknologi
 
-Ren HTML/CSS/JavaScript — ingen rammeverk, ingen avhengigheter, ingen build-prosess.
-Alt kjører i nettleseren.
+Ren HTML/CSS/JavaScript uten build-prosess. Eksterne avhengigheter:
+**Supabase** (innlogging og database, lastes fra CDN) og en **Cloudflare Worker** for Octopart-data.
 
-> Alle tall i demoen er generert demodata og illustrerer produktet — det er ikke
-> ekte kundedata, og estimert sparing er identifisert potensial, ikke garanti.
+> Tallene i demoen er generert demodata og illustrerer produktet — ikke ekte
+> kundedata. Estimert sparing er identifisert potensial, ikke garanti.
 
 ---
 

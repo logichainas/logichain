@@ -18,30 +18,33 @@ Slik kobler du på **ekte innlogging** (e-post + passord via Supabase):
 3. Vil du styre firmanavn/seed: **SQL Editor** →  
    `update kunder set firma='Kundens Navn AS', seed=4211 where epost='kunde@firma.no';`
 
-## 4. Lim inn nøklene i nettsiden
-1. **Settings** (tannhjul) → **API** → kopier **Project URL** og **anon public**-nøkkelen
-2. Åpne `index.html`, `index-en.html`, `logichain-dashboard-demo.html` og `logichain-dashboard-demo-en.html`
-   og finn denne linjen (øverst i scriptet i hver fil):
+## 4. Kjør resten av SQL-skriptene (i denne rekkefølgen)
+1. `supabase/data-schema.sql` – tabeller for leverandører, materialer og PO-linjer
+2. `supabase/tilgang-fix.sql` – kunder kan kun lese; innleveringer + fillager
+3. `supabase/admin-tilgang.sql` – admin-flagg og skrivetilgang for Logichain
+4. `supabase/fix-2026-11.sql` – portal-kolonne, admin-lesing av innleveringer, opprydding av duplikater og unike indekser
 
-```js
-const SUPABASE={url:"",anonKey:""};
+Alle skriptene kan trygt kjøres flere ganger.
+
+## 5. Gi kunden egen portal (valgfritt)
+Kunder uten portal havner i demo-dashboardet. Slik sender du en kunde til sitt eget dashboard:
+
+```sql
+update kunder set portal = 'macgregor-dashboard.html' where epost = 'kunde@firma.no';
 ```
 
-3. Lim inn: `const SUPABASE={url:"https://xxxx.supabase.co",anonKey:"eyJhbG..."};`
+## 6. Nøkler og URL-er
+- Project URL og **publishable/anon**-nøkkelen ligger allerede i HTML-filene (`const SUPABASE={...}`).
+- **Authentication → URL Configuration**: sett *Site URL* til `https://logichain.no` og legg til
+  `https://logichain.no/**`, `https://www.logichain.no/**` og `https://*.logichain-40w.pages.dev/**` under *Redirect URLs*.
 
-**Tips:** bruk Find & Replace i editor — søk etter `SUPABASE={url:""` i alle fire filene.
-
-## 5. Push og test
-1. Commit + push (eller be Logichain-assistenten gjøre det)
-2. Gå til nettsiden → **Logg inn** med en kundekonto du opprettet i steg 3
-3. Du lander nå på kundens dashboard — med firmanavn i toppbaren og kundens egne tall
+## 7. Last inn ekte data
+1. Logg inn som admin og åpne `last-opp.html`
+2. Velg CSV (malen kan lastes ned i kundeportalen) → valider → **Importér**
+3. Eksisterende PO-linjer hoppes over automatisk; huk av «Erstatt» for å laste alt på nytt
 
 ## Sikkerhet – hvorfor dette er trygt
-- **anon-nøkkelen** er offentlig by design; den gir ikke tilgang til data uten innlogging
+- **anon/publishable-nøkkelen** er offentlig by design; uten innlogging gir den ingen data
 - Passord håndteres 100 % av Supabase (aldri lagret i koden)
-- **RLS** sørger for at hver bruker kun kan lese sin egen kunderad
-- Vil du hemmeligholde demo-lenker per kunde kan du fortsatt bruke `?kunde=`-parametren
-
-## Fallback
-Før nøklene er limt inn, fungerer den gamle demo-innloggingen
-(`demo@norskindustri.no` / `demo1234`) som før — ingenting ødelegges underveis.
+- **RLS** sørger for at hver kunde kun leser sine egne rader, og bare admin kan skrive
+- Kunder kan sende inn filer (innleveringer), men ikke endre dashboard-data

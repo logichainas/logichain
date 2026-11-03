@@ -621,7 +621,7 @@ document.getElementById("cform").addEventListener("submit",e=>{
 });
 function openLogin(){document.getElementById("loginBg").classList.add("show");}
 function closeLogin(){document.getElementById("loginBg").classList.remove("show");}
-function closeLogin(){document.getElementById("loginBg").classList.remove("show");}
+
 (function(){
   if(!location.hash||location.hash.indexOf("access_token")<0||!sb)return;
   const p=new URLSearchParams(location.hash.slice(1));

@@ -39,22 +39,24 @@ create table if not exists po_linjer (
   leveringsdato date
 );
 
--- RLS: hver bruker kan kun lese/skrive rader for SIN kunde
+-- RLS: kunder kan KUN lese egne rader. Skriving gjøres av admin
+-- (se admin-tilgang.sql). Ingen "for all"-policyer her – de ga kundene skrivetilgang.
 alter table leverandorer enable row level security;
 alter table materialer  enable row level security;
 alter table po_linjer   enable row level security;
 
 drop policy if exists "lev_own" on leverandorer;
-create policy "lev_own" on leverandorer for all
-  using (kunde_id in (select id from kunder where user_id = auth.uid()))
-  with check (kunde_id in (select id from kunder where user_id = auth.uid()));
-
 drop policy if exists "mat_own" on materialer;
-create policy "mat_own" on materialer for all
-  using (kunde_id in (select id from kunder where user_id = auth.uid()))
-  with check (kunde_id in (select id from kunder where user_id = auth.uid()));
+drop policy if exists "po_own"  on po_linjer;
 
-drop policy if exists "po_own" on po_linjer;
-create policy "po_own" on po_linjer for all
-  using (kunde_id in (select id from kunder where user_id = auth.uid()))
-  with check (kunde_id in (select id from kunder where user_id = auth.uid()));
+drop policy if exists "lev_read" on leverandorer;
+create policy "lev_read" on leverandorer for select
+  using (kunde_id in (select id from kunder where user_id = auth.uid()));
+drop policy if exists "mat_read" on materialer;
+create policy "mat_read" on materialer for select
+  using (kunde_id in (select id from kunder where user_id = auth.uid()));
+drop policy if exists "po_read" on po_linjer;
+create policy "po_read" on po_linjer for select
+  using (kunde_id in (select id from kunder where user_id = auth.uid()));
+
+-- Kjør admin-tilgang.sql og fix-2026-11.sql etterpå (admin-lesing, skriving og unike indekser).

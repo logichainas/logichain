@@ -24,7 +24,7 @@ const TOKEN_URL = "https://identity.nexar.com/connect/token";
 const GRAPHQL_URL = "https://api.nexar.com/graphql";
 
 const QUERY = `query PartSearch($q: String!) {
-  supSearchMpn(q: $q, limit: 8) {
+  supSearchMpn(q: $q, limit: 8, currency: "NOK") {
     hits {
       part {
         mpn
@@ -36,7 +36,7 @@ const QUERY = `query PartSearch($q: String!) {
           sku
           stock { level }
           leadTimes { displayValue }
-          prices { quantity price }
+          prices { quantity price currency convertedPrice convertedCurrency }
         }
       }
     }
@@ -63,18 +63,48 @@ async function getToken(env) {
   return cachedToken.value;
 }
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Content-Type": "application/json",
-};
+// Kun Logichain sine egne sider får bruke proxyen (ellers kan hvem som helst bruke opp Nexar-kvoten)
+const ALLOWED_ORIGINS = [
+  "https://logichain.no",
+  "https://www.logichain.no",
+  "https://logichain-40w.pages.dev",
+];
+function allowedOrigin(origin) {
+  if (!origin) return null;
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  // forhåndsvisninger fra Cloudflare Pages: https://<gren>.logichain-40w.pages.dev
+  if (/^https:\/\/[a-z0-9-]+\.logichain-40w\.pages\.dev$/.test(origin)) return origin;
+  return null;
+}
+function corsHeaders(origin) {
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Vary": "Origin",
+    "Content-Type": "application/json",
+  };
+}
+// Laveste stykkpris for antall 1 (eller minste antall), helst omregnet til NOK
+function unitPriceNOK(prices) {
+  if (!prices || !prices.length) return null;
+  const sorted = [...prices].sort((a, b) => (a.quantity || 0) - (b.quantity || 0));
+  const p = sorted[0];
+  if (p.convertedPrice != null && p.convertedCurrency === "NOK") return p.convertedPrice;
+  if (p.currency === "NOK") return p.price;
+  return null;
+}
 
 export default {
   async fetch(request, env) {
+    const origin = allowedOrigin(request.headers.get("Origin"));
+    if (!origin) return new Response("Forbidden", { status: 403 });
+    const CORS = corsHeaders(origin);
     if (request.method === "OPTIONS") return new Response(null, {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": origin,
+        "Vary": "Origin",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Max-Age": "86400",
       },
     });
     if (request.method !== "POST") return new Response("POST only", { status: 405 });
@@ -83,7 +113,7 @@ export default {
     if (url.pathname !== "/octopart") return new Response("Not found", { status: 404 });
 
     let q;
-    try { q = ((await request.json()).q || "").trim(); }
+    try { q = String((await request.json()).q || "").trim().slice(0, 100); }
     catch { return new Response(JSON.stringify({ error: "Ugyldig JSON" }), { status: 400, headers: CORS }); }
     if (!q) return new Response(JSON.stringify({ error: "Mangler søkestreng" }), { status: 400, headers: CORS });
 
@@ -109,7 +139,8 @@ export default {
             sku: o.sku || "",
             stock: o.stock?.level || 0,
             leadTime: o.leadTimes?.[0]?.displayValue || "",
-            unitPrice: o.prices?.length ? o.prices[0].price : null,
+            unitPrice: unitPriceNOK(o.prices),
+            currency: "NOK",
           })),
         };
       });

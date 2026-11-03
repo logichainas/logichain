@@ -197,13 +197,13 @@ rect.clickable:hover{fill:#6db3ff}
   <div class="grid4" style="margin-bottom:16px">
     <div class="feature">
       <div style="font-size:24px">💰</div>
-      <h4>Sparingspotensial</h4>
+      <h4>Savings potential</h4>
       <p>Identified potential with full documentation: which materials, POs and assumptions lie behind it.</p>
       <a onclick="goto('spar')">Open →</a>
     </div>
     <div class="feature">
       <div style="font-size:24px">🛠️</div>
-      <h4>Tiltak</h4>
+      <h4>Actions</h4>
       <p>Prioritised actions with estimated value and evidence – ready for supplier follow-up.</p>
       <a onclick="goto('tiltak')">Open →</a>
     </div>
@@ -225,7 +225,7 @@ rect.clickable:hover{fill:#6db3ff}
     <h3 class="sect">How Logichain works</h3>
     <div class="grid3">
       <div class="step"><div class="stepnum">1</div><div><h4>Last opp Excel</h4><p>Suppliers send their reports in Excel. Logichain reads the files directly – no manual copying.</p></div></div>
-      <div class="step"><div class="stepnum">2</div><div><h4>Logichain validerer og samler</h4><p>Data is checked, standardised and consolidated into one model: orders, deliveries, deviations, prices and volumes.</p></div></div>
+      <div class="step"><div class="stepnum">2</div><div><h4>Logichain validates and consolidates</h4><p>Data is checked, standardised and consolidated into one model: orders, deliveries, deviations, prices and volumes.</p></div></div>
       <div class="step"><div class="stepnum">3</div><div><h4>Beslutninger</h4><p>The dashboard shows KPIs, identified potential and prioritised actions – ready to use in management meetings.</p></div></div>
     </div>
   </div>
@@ -532,8 +532,8 @@ const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl
 
 /* ================= EXECUTIVE OVERVIEW ================= */
 document.getElementById("kpi-forside").innerHTML=
-  kpi("Total purchases 2026",fmtM(totVal),`${fmt(lines.length)} PO lines · ${suppliers.length} suppliers`},"","Sum of all line values in the period")+
-  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="On time").length)} of ${fmt(lines.length)} i tide`,overallOTD>=80?"good":"bad","On-Time Delivery: share of deliveries delivered on the promised date")+
+  kpi("Total purchases 2026",fmtM(totVal),`${fmt(lines.length)} PO lines · ${suppliers.length} suppliers`,"","Sum of all line values in the period")+
+  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="On time").length)} of ${fmt(lines.length)} on time`,overallOTD>=80?"good":"bad","On-Time Delivery: share of deliveries delivered on the promised date")+
   kpi("Active suppliers",suppliers.length,"with deliveries in the period","","Suppliers with at least one PO line in the period")+
   kpi("Top 5 concentration",top5Share+"%","share of total spend with the top 5","","How much of the purchasing goes to the five largest suppliers – a high share means supplier dependency")+
   kpi("Single-source materials",singleSource.length,"without an alternative supplier",singleSource.length>3?"warn":"","Materials supplied by only one supplier – see Spend Intelligence")+
@@ -557,9 +557,9 @@ const monthsData=MONTHS.map((m,i)=>{
   const ml=lines.filter(l=>l.month===i);
   return{m,n:ml.length,otd:ml.length?Math.round(ml.filter(l=>l.status==="On time").length/ml.length*100):0}});
 document.getElementById("kpi-po").innerHTML=
-  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="On time").length)} of ${fmt(lines.length)} i tide`,overallOTD>=80?"good":"bad")+
+  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="On time").length)} of ${fmt(lines.length)} on time`,overallOTD>=80?"good":"bad")+
   kpi("Evaluated deliveries",fmt(lines.length),"PO-linjer i utvalget")+
-  kpi("Late",Math.round(lateLines/lines.length*100)+"%",fmt(lateLines)+" forsinkede leveringer","bad")+
+  kpi("Late",Math.round(lateLines/lines.length*100)+"%",fmt(lateLines)+" late deliveries","bad")+
   kpi("Avg |dev|",avgAbs+" days","absolute deviation per delivery")+
   kpi("PO documents",fmt(new Set(lines.map(l=>l.po)).size),"unique purchase orders")+
   kpi("Projects",PROJECTS.length,"active project numbers");
@@ -614,7 +614,7 @@ window.levDetail=function(id){
   el.innerHTML=`<h3 class="sect">${s.name} · <span class="pill p${s.rating}">${s.rating}</span></h3>
   <div class="kpis" style="margin-bottom:12px">
     ${kpi("Spend 2026",fmt(s.spend)+" NOK",s.group)}
-    ${kpi("OTD",s.otd+"%","i tide av "+s.lines+" leveringer",s.otd>=80?"good":s.otd<50?"bad":"warn")}
+    ${kpi("OTD",s.otd+"%","on time of "+s.lines+" deliveries",s.otd>=80?"good":s.otd<50?"bad":"warn")}
     ${kpi("Late",s.latePct+"%",a.late+" leveringer","bad")}
     ${kpi("Snitt |avvik|",s.avgAbs+" days","per levering")}
     ${kpi("Identified potential",savPer[id]>5000?fmt(savPer[id])+" NOK":"Small","see documentation","good")}
@@ -647,7 +647,7 @@ function hbars(el,rows,fmtV){
     <div class="bar"><i style="width:${r.val/max*100}%;background:${r.color||"linear-gradient(90deg,#2e7cf6,#6db3ff)"}"></i></div></div>`).join("");
 }
 document.getElementById("kpi-spend").innerHTML=
-  kpi("Total spend 2026",fmtM(totVal),fmt(lines.length)+" PO-linjer","","Summen av alle PO-linjene i perioden")+
+  kpi("Total spend 2026",fmtM(totVal),fmt(lines.length)+" PO lines","","Sum of all PO lines in the period")+
   kpi("Spend per month (avg)",fmtM(totVal/9),"Jan – Sep","","Average monthly purchase volume")+
   kpi("Top 5-konsentrasjon",top5Share+"%","of total spend with the top 5 suppliers",top5Share>60?"warn":"","Supplier dependency: share of spend with the five largest – click the list below to see them")+
   kpi("Tail spend",tailShare+"%",tailSup.length+" suppliers account for the share beyond the 80 % cut","","The small suppliers beyond the 80 % cut – often heavy administration per NOK")+
@@ -658,11 +658,11 @@ document.getElementById("chartSpendMonth").innerHTML=vbars(
   spendByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmtK(v),l=>l,"showMonth");
 hbars(document.getElementById("chartSpendCat"),
   spendByCat.sort((a,b)=>b.val-a.val).map(c=>({label:c.cat,val:c.val})),fmtM);
-document.getElementById("top10Table").innerHTML=`<tr><th>#</th><th>Supplier</th><th>Rating</th><th style="text-align:right">Spend</th><th style="text-align:right">Andel</th><th>Andel av total</th></tr>`+
+document.getElementById("top10Table").innerHTML=`<tr><th>#</th><th>Supplier</th><th>Rating</th><th style="text-align:right">Spend</th><th style="text-align:right">Share</th><th>Share of total</th></tr>`+
   topSorted.slice(0,10).map((s,i)=>`<tr class="click" onclick="levDetail(${s.id});goto('lev')"><td>${i+1}</td><td><b>${s.name}</b></td><td><span class="pill p${s.rating}">${s.rating}</span></td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right">${(s.spend/totVal*100).toFixed(1)}%</td><td><div class="bar" style="width:160px"><i style="width:${s.spend/topSorted[0].spend*100}%"></i></div></td></tr>`).join("");
 document.getElementById("chartVolMonth").innerHTML=vbars(
   qtyByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmt(v),l=>l,"showMonth");
-document.getElementById("priceTable").innerHTML=`<tr><th>Material</th><th>Category</th><th style="text-align:right">Spend</th><th style="text-align:right">Prisindeks Jan→Sep</th><th style="text-align:right">Endring</th><th>Utvikling</th></tr>`+
+document.getElementById("priceTable").innerHTML=`<tr><th>Material</th><th>Category</th><th style="text-align:right">Spend</th><th style="text-align:right">Price index Jan→Sep</th><th style="text-align:right">Endring</th><th>Utvikling</th></tr>`+
   priceIdx.map(p=>({p,spend:lines.filter(l=>l.mat===p.mi).reduce((a,l)=>a+l.value,0)}))
     .sort((a,b)=>b.spend-a.spend).slice(0,8).map(({p,spend})=>{
       const pts=p.rows.map((v,i)=>v?`${8+i*(150/8)},${34-(v-90)*0.6}`:"").filter(Boolean).join(" ");
@@ -671,12 +671,12 @@ document.getElementById("priceTable").innerHTML=`<tr><th>Material</th><th>Catego
       return `<tr><td><a class="cellink" onclick="showMat(${p.mi})"><b>${matName(p.mi)}</b></a> <span style="color:var(--muted);font-size:10.5px">${matCode(p.mi)}</span></td><td>${matCat(p.mi)}</td><td style="text-align:right">${fmt(spend)}</td><td style="text-align:right">${first} → ${last}</td><td style="text-align:right" class="${chg>1?"bad":chg<-1?"good":""}">${chg>0?"+":""}${chg.toFixed(1)}%</td><td><svg width="160" height="38"><line x1="8" x2="158" y1="34" y2="34" stroke="#1e2a4a"/><polyline points="${pts}" fill="none" stroke="${chg>1?"#e05d5d":chg<-1?"#2ecc71":"#3d8bff"}" stroke-width="2"/></svg></td></tr>`}).join("");
 document.getElementById("tailBox").innerHTML=`
   ${kpi("Suppliers in tail",tailSup.length,"after top suppliers covering 80 % of spend")}
-  ${kpi("Tail spend",fmtM(tailSpend),tailShare+"% av total spend")}
+  ${kpi("Tail spend",fmtM(tailSpend),tailShare+"% of total spend")}
   <p style="color:var(--muted);font-size:12.5px;line-height:1.55;margin-top:8px">Tail spend is the small suppliers beyond the 80 % cut. They often represent a disproportionate amount of administrative work (orders, follow-up, invoices) per krone of spend – a classic consolidation and automation area. Logichain identifies candidates and estimates the potential under Savings Potential.</p>
   <p style="margin-top:8px"><a class="evlink" onclick="showEvidence('consol')">See documentation for consolidation potential →</a></p>`;
 document.getElementById("ssTable").innerHTML=`<tr><th>Material</th><th>Category</th><th>Only supplier</th><th style="text-align:right">Spend</th><th>Risk</th></tr>`+
   singleSource.slice(0,10).map(x=>`<tr><td><b>${matName(x.mi)}</b></td><td>${matCat(x.mi)}</td><td>${x.sup.name}</td><td style="text-align:right">${fmt(x.spend)}</td><td><span class="pill ${x.spend>1e6?"pD":x.spend>3e5?"pC":"pB"}">${x.spend>1e6?"High":x.spend>3e5?"Medium":"Lav"}</span></td></tr>`).join("")+
-  (singleSource.length===0?`<tr><td colspan="5">Ingen single-source-materialer funnet.</td></tr>`:"");
+  (singleSource.length===0?`<tr><td colspan="5">No single-source materials found.</td></tr>`:"");
 
 /* ================= SAVINGS ================= */
 const cats=[
@@ -701,7 +701,7 @@ document.getElementById("sparTable").innerHTML=`<tr><th>Supplier</th><th>Rating<
 function evHeader(title,amt){
   return `<div class="mh"><div><h2>📄 ${title}</h2>
     <div style="font-size:13px" class="good">Identified potential: <b>${fmtM(amt)}</b> / year</div></div>
-    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+    <button class="mclose" onclick="hideModal()">Close ✕</button></div>
     <div class="assump">Logichain shows <b>identified potential</b> based on the customer's own data and the assumptions below. It is a starting point for further examination – <b>not a guarantee of realised savings</b> and not a replacement for detailed sourcing analysis. (Demo data.)</div>`;
 }
 function linesTable(ls){
@@ -740,7 +740,7 @@ window.showEvidence=function(type,id){
     const lateN=a.late;
     if(lateN>0)parts.push(["Ekspedisjon & frakt",lateN*EXPEDITE_COST,`${lateN} delayed deliveries × ${fmt(EXPEDITE_COST)} kr`]);
     const dev=a.n?a.devAbs/a.n:0;
-    if(dev>7)parts.push(["Safety stock",a.spend*0.12*(dev/30),`Snittavvik ${dev.toFixed(1)} days × 12 % av spend (${fmt(a.spend)} NOK) ÷ 30`]);
+    if(dev>7)parts.push(["Safety stock",a.spend*0.12*(dev/30),`Avg. deviation ${dev.toFixed(1)} days × 12 % of spend (${fmt(a.spend)} NOK) ÷ 30`]);
     if(s.rating==="C"||s.rating==="D")parts.push(["Prisrevisjon",a.spend*0.05,`${s.rating}-rating × 5 % of spend`]);
     if(a.n<5)parts.push(["Consolidation",a.spend*0.08,`${a.n} leveringer (< 5) × 8 % av spend`]);
     const tot=parts.reduce((x,p)=>x+p[1],0);
@@ -872,7 +872,7 @@ window.showMonth=function(i){
   const catMax=cats.length?cats[0].v:1;
   let html=`<div class="mh"><div><h2>📅 Spend · ${MONTHS[i]} 2026</h2>
     <div style="font-size:12px;color:var(--muted)">The month's purchasing activity</div></div>
-    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+    <button class="mclose" onclick="hideModal()">Close ✕</button></div>
   <div class="kpis" style="margin:12px 0">
     ${kpi("Spend in the month",fmtM(spend),fmt(ls.length)+" PO lines")}
     ${kpi("Vs. previous month",prev===null?"–":(d>0?"+":"")+d.toFixed(1)+"%",prev?fmtM(prev)+" in "+MONTHS[i-1]:"first month in the series",d===null?"":d>0?"bad":"good")}
@@ -896,15 +896,15 @@ window.showMonth=function(i){
 const OCTO={endpoint:""};
 const OCTO_MATCH={
  "MOT-75KW":{mpn:"M3BP 100 SMB",mfr:"ABB",desc:"3-fase asynkronmotor 75 kW IE3, 4-pol",
-  offers:[["RS Components","829-4419",14,1,"2 uker",42100],["Elfa Distrelec","304-18-22",6,1,"3 uker",43500],["Elektroskandia","M3BP100",2,1,"4 uker",44800]],
+  offers:[["RS Components","829-4419",14,1,"2 weeks",42100],["Elfa Distrelec","304-18-22",6,1,"3 uker",43500],["Elektroskandia","M3BP100",2,1,"4 uker",44800]],
   alts:[["WEG W22 IE3 75 kW","WEG",40500],["Siemens 1LE1501-1AB","Siemens",43900]],
   octoUrl:"https://octopart.com/search?q=M3BP+100+SMB"},
  "KBL-4G":{mpn:"UNITRONIC LiFY 4G25",mfr:"Lapp Group",desc:"Styrkekabel 4G25, 100 m tromle",
-  offers:[["RS Components","289-1177",210,1,"2 dager",4520],["Elfa Distrelec","110-24-08",85,1,"3 dager",4610],["DigiKey","LAP-4G25",40,1,"4 dager",4780]],
+  offers:[["RS Components","289-1177",210,1,"2 days",4520],["Elfa Distrelec","110-24-08",85,1,"3 days",4610],["DigiKey","LAP-4G25",40,1,"4 days",4780]],
   alts:[["ÖLFLEX 4G25","Lapp (alt.)",4400],["H05VV-F 4G25","Nexans",4150]],
   octoUrl:"https://octopart.com/search?q=UNITRONIC+4G25"},
  "FLT-200":{mpn:"HC8400FKN16H",mfr:"Pall Corporation",desc:"Hydraulikkfilter 200 micron",
-  offers:[["TME","HC8400",34,1,"5 dager",2780],["RS Components","123-4088",11,1,"2 uker",2890],["Elfa Distrelec","552-11-90",7,1,"2 uker",2950]],
+  offers:[["TME","HC8400",34,1,"5 days",2780],["RS Components","123-4088",11,1,"2 weeks",2890],["Elfa Distrelec","552-11-90",7,1,"2 weeks",2950]],
   alts:[["Bosch Rexroth 2.0060H","Bosch",2650],["MP Filtri MPU200","MP Filtri",2740]],
   octoUrl:"https://octopart.com/search?q=HC8400FKN16H"},
  "VENT-150":{mpn:"JIP-015N",mfr:"Danfoss",desc:"Ventil DN150 PN16, flenset",
@@ -919,7 +919,7 @@ window.showOcto=function(mi){
   if(!m){
     document.getElementById("modalBox").innerHTML=`<div class="mh"><div><h2>🌐 Octopart · ${mt[1]}</h2>
       <div style="font-size:12px;color:var(--muted)">Market data for components</div></div>
-      <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+      <button class="mclose" onclick="hideModal()">Close ✕</button></div>
       <div class="assump">Octopart/Nexar primarily covers <b>electronic components</b> – this material (${mt[2]}) cannot be matched automatically against the parts database.
       You can still search manually:</div>
       <p><a class="evlink" onclick="window.open('https://octopart.com/search?q='+encodeURIComponent('${mt[0]}'),'_blank')">Open search on octopart.com →</a></p>
@@ -933,7 +933,7 @@ window.showOcto=function(mi){
   window.__octo={avgUnit,best};
   let html=`<div class="mh"><div><h2>🌐 Octopart market data <span class="mock-badge">MOCK DATA</span></h2>
     <div style="font-size:12px;color:var(--muted)">${mt[1]} · ${mt[0]}</div></div>
-    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+    <button class="mclose" onclick="hideModal()">Close ✕</button></div>
   <div class="assump"><b>Identified part:</b> <b>${m.mpn}</b> (${m.mfr}) – ${m.desc}.<br>
   Benchmarking against the market price is a <b>starting point for negotiations</b> – not a guarantee. Not a replacement for sourcing analysis.</div>
   <div class="kpis" style="margin:12px 0">
@@ -1001,7 +1001,7 @@ window.showMat=function(mi){
   const ss=matSups[mi].length===1;
   let html=`<div class="mh"><div><h2>📦 ${mt[1]}</h2>
     <div style="font-size:12px;color:var(--muted)">${mt[0]} · ${mt[2]}</div></div>
-    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>`;
+    <button class="mclose" onclick="hideModal()">Close ✕</button></div>`;
   if(ss)html+=`<div class="assump" style="border-color:rgba(224,93,93,.4);color:var(--bad)">⚠️ <b>Single-source:</b> this material is supplied by only one supplier (${suppliers[matSups[mi][0]].name}). Consider securing alternative sources.</div>`;
   html+=`<div class="kpis" style="margin:12px 0">
     ${kpi("Total spend",fmt(spend)+" NOK",fmt(ls.length)+" PO lines")}
@@ -1029,8 +1029,8 @@ window.showLine=function(po,line){
   const l=lines.find(x=>x.po===po&&x.line===line);if(!l)return;
   const others=lines.filter(x=>x.po===po&&x.line!==line).slice(0,10);
   let html=`<div class="mh"><div><h2>📦 ${l.po} · linje ${l.line}</h2>
-    <div style="font-size:12px;color:var(--muted)">Prosjekt ${l.proj}</div></div>
-    <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>
+    <div style="font-size:12px;color:var(--muted)">Project ${l.proj}</div></div>
+    <button class="mclose" onclick="hideModal()">Close ✕</button></div>
   <div class="mlinks">
     <a onclick="openSup(${l.sup.id})">🏢 Supplier: ${l.sup.name}</a>
     <a onclick="showMat(${l.mat})">📦 Material: ${matName(l.mat)}</a>
@@ -1041,7 +1041,7 @@ window.showLine=function(po,line){
     ${kpi("Status",l.status,"",l.status==="On time"?"good":l.status==="Late"?"bad":"warn")}
     ${kpi("Quantity",l.qty,"units")}
   </div>
-  <table><tr><th>Bestillingsdato</th><th>Love-dato</th><th>Faktisk levert</th><th>Prosjekt</th></tr>
+  <table><tr><th>Order date</th><th>Promised date</th><th>Actual delivery</th><th>Project</th></tr>
   <tr><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.proj}</td></tr></table>`;
   if(others.length)html+=`<h3 class="sect" style="margin-top:14px">Other lines on the same PO – click for details</h3>
   <table><tr><th>Line</th><th>Material</th><th>Qty</th><th style="text-align:right">Value</th><th>Status</th></tr>`+
@@ -1058,7 +1058,7 @@ window.doSearch=function(){
   const sups=suppliers.filter(s=>s.name.toLowerCase().includes(q)).slice(0,4);
   if(sups.length)out+=`<div class="grp">Suppliers</div>`+sups.map(s=>`<div class="item" onclick="openSup(${s.id})"><span>${s.name}</span><span class="tag">${s.group}</span></div>`).join("");
   const mats=MATS.map((m,i)=>i).filter(i=>matName(i).toLowerCase().includes(q)||matCode(i).toLowerCase().includes(q)).slice(0,4);
-  if(mats.length)out+=`<div class="grp">Materialer</div>`+mats.map(i=>`<div class="item" onclick="showMat(${i})"><span>${matName(i)}</span><span class="tag">${matCode(i)}</span></div>`).join("");
+  if(mats.length)out+=`<div class="grp">Materials</div>`+mats.map(i=>`<div class="item" onclick="showMat(${i})"><span>${matName(i)}</span><span class="tag">${matCode(i)}</span></div>`).join("");
   const seen={};lines.filter(l=>l.po.toLowerCase().includes(q)).forEach(l=>{if(!seen[l.po])seen[l.po]=l.line;});
   const pos=Object.keys(seen).slice(0,4);
   if(pos.length)out+=`<div class="grp">Purchase orders</div>`+pos.map(p=>`<div class="item" onclick="showLine('${p}',${seen[p]})"><span>${p}</span><span class="tag">PO</span></div>`).join("");
@@ -1097,7 +1097,7 @@ window.renderOctoTab=function(){
     </div>`;}).join("");
   document.getElementById("octoSS").innerHTML=`<tr><th>Material</th><th>Only supplier</th><th style="text-align:right">Spend</th><th>Risk</th><th></th></tr>`+
     singleSource.slice(0,10).map(x=>`<tr><td><b>${matName(x.mi)}</b></td><td>${x.sup.name}</td><td style="text-align:right">${fmt(x.spend)}</td><td><span class="pill ${x.spend>1e6?"pD":x.spend>3e5?"pC":"pB"}">${x.spend>1e6?"High":x.spend>3e5?"Medium":"Lav"}</span></td><td><a class="evlink" onclick="showOcto(${x.mi})">🌐 Sjekk marked →</a></td></tr>`).join("")+
-    (singleSource.length===0?`<tr><td colspan="5">Ingen single-source-materialer funnet.</td></tr>`:"");
+    (singleSource.length===0?`<tr><td colspan="5">No single-source materials found.</td></tr>`:"");
   octoSearch();
 };
 window.octoSearch=function(){

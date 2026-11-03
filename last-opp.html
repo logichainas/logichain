@@ -153,9 +153,10 @@ document.getElementById("importBtn").addEventListener("click",async ()=>{
   const rep=document.getElementById("report");
   try{
     if(document.getElementById("replace").checked){
-      await sb.from("po_linjer").delete().eq("kunde_id",KID);
-      await sb.from("leverandorer").delete().eq("kunde_id",KID);
-      await sb.from("materialer").delete().eq("kunde_id",KID);
+      for(const t of ["po_linjer","leverandorer","materialer"]){
+        const d=await sb.from(t).delete().eq("kunde_id",KID);
+        if(d.error)throw new Error("Kunne ikke slette "+t+": "+d.error.message);
+      }
     }
     const fetchAll=async function(tbl,cols){
       var out=[],from=0,done=false;
@@ -168,15 +169,17 @@ document.getElementById("importBtn").addEventListener("click",async ()=>{
       return out;
     };
     const exL=await fetchAll("leverandorer","id,navn");
-    const supMap={};(exL.data||[]).forEach(r=>supMap[r.navn.toLowerCase()]=r.id);
-    const missingSup=[...new Set(PENDING.valid.map(r=>r.supName.toLowerCase()))].filter(n=>!supMap[n]);
+    const supMap={};exL.forEach(r=>supMap[r.navn.toLowerCase()]=r.id);
+    // behold leverandørnavnet slik det står i filen (første forekomst)
+    const supName={};PENDING.valid.forEach(r=>{const k=r.supName.toLowerCase();if(!supName[k])supName[k]=r.supName.trim();});
+    const missingSup=Object.keys(supName).filter(n=>!supMap[n]);
     if(missingSup.length){
-      const ins=await sb.from("leverandorer").insert(missingSup.map(n=>({kunde_id:KID,navn:n.charAt(0).toUpperCase()+n.slice(1)}))).select("id,navn");
+      const ins=await sb.from("leverandorer").insert(missingSup.map(n=>({kunde_id:KID,navn:supName[n]}))).select("id,navn");
       if(ins.error)throw ins.error;
       (ins.data||[]).forEach(r=>supMap[r.navn.toLowerCase()]=r.id);
     }
     const exM=await fetchAll("materialer","id,kode");
-    const matMap={};(exM.data||[]).forEach(r=>matMap[r.kode.toLowerCase()]=r.id);
+    const matMap={};exM.forEach(r=>matMap[r.kode.toLowerCase()]=r.id);
     const seenMat={};const missingMat=[];
     PENDING.valid.forEach(r=>{const k=r.matCode.toLowerCase();
       if(!seenMat[k]){seenMat[k]=true;if(!matMap[k])missingMat.push({kunde_id:KID,kode:r.matCode,beskrivelse:r.desc||r.matCode,kategori:r.cat||"–",standardpris:r.up||0});}});
@@ -189,13 +192,19 @@ document.getElementById("importBtn").addEventListener("click",async ()=>{
       leverandor_id:supMap[r.supName.toLowerCase()],material_id:matMap[r.matCode.toLowerCase()],
       prosjekt:r.proj||null,antall:r.qty,enhetspris:r.up,verdi:r.val,
       bestillingsdato:r.order,love_dato:r.prom,leveringsdato:r.del}));
+    // hopp over PO-linjer som allerede finnes (unngår duplikater ved ny import)
+    const exP=await fetchAll("po_linjer","po,linjenr");
+    const havePO={};exP.forEach(r=>havePO[String(r.po).toUpperCase()+"#"+r.linjenr]=1);
+    const fresh=payload.filter(r=>!havePO[String(r.po).toUpperCase()+"#"+r.linjenr]);
+    const skipped=payload.length-fresh.length;
+    payload.length=0;fresh.forEach(r=>payload.push(r));
     let imported=0;
     for(let i=0;i<payload.length;i+=100){
       const ins=await sb.from("po_linjer").insert(payload.slice(i,i+100));
       if(ins.error)throw ins.error;
       imported+=Math.min(100,payload.length-i);
     }
-    rep.innerHTML="<p style='color:#2ecc71;font-weight:700'>✅ Import ferdig: "+imported+" PO-linjer, "+missingSup.length+" nye leverandører, "+missingMat.length+" nye materialer.</p><p><a href='macgregor-dashboard.html' style='color:#6db3ff'>Åpne dashboardet →</a></p>";
+    rep.innerHTML="<p style='color:#2ecc71;font-weight:700'>✅ Import ferdig: "+imported+" PO-linjer, "+missingSup.length+" nye leverandører, "+missingMat.length+" nye materialer"+(skipped?", "+skipped+" eksisterende linjer hoppet over":"")+".</p><p><a href='macgregor-dashboard.html' style='color:#6db3ff'>Åpne dashboardet →</a></p>";
     btn.textContent="Import ferdig ✓";
   }catch(err){
     rep.innerHTML="<div class='err' style='display:block'>Import feilet: "+(err.message||err)+"</div>";

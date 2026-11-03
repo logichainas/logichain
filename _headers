@@ -1,0 +1,9 @@
+# Cloudflare Pages: HTML hentes alltid ferskt, så nye versjoner vises med en gang
+/*.html
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
