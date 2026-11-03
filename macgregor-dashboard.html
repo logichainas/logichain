@@ -227,6 +227,7 @@ rect.clickable:hover{fill:#6db3ff}
   </div>
 
   <div class="kpis" id="kpi-forside"></div>
+  <div id="aiInsights"></div>
 
   <div class="grid3" style="margin-bottom:16px">
     <div class="feature">
@@ -1360,6 +1361,37 @@ document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" 
   window.goto=goto;window.renderPO=renderPO;window.renderLev=renderLev;
 }
 boot();
+</script>
+<script>
+/* ===== Logichain-innsikt (publiseres kun etter godkjenning av Logichain) ===== */
+(async function(){
+  try{
+    if(typeof supabase==="undefined")return;
+    const c=supabase.createClient("https://iksnoymoqvweudilfuzy.supabase.co","sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH");
+    const s=(await c.auth.getSession()).data.session;if(!s)return;
+    const me=(await c.from("kunder").select("id,seed,admin").eq("user_id",s.user.id).maybeSingle()).data;if(!me)return;
+    let kid=me.id;
+    if(me.admin&&(me.seed+"")!=="4211"){const mg=(await c.from("kunder").select("id").eq("seed",4211).limit(1).maybeSingle()).data;if(mg)kid=mg.id;}
+    const r=await c.from("dashboard_insights").select("*").eq("kunde_id",kid).order("published_at",{ascending:false}).limit(1);
+    const i=r.data&&r.data[0];if(!i)return;
+    const e=x=>String(x==null?"":x).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+    const kr=n=>n==null?"–":(n>=1e6?(n/1e6).toFixed(2).replace(".",",").replace(/,?0+$/,"")+" mill kr":Math.round(n).toLocaleString("nb-NO")+" kr");
+    const pr={high:["Høy","#e05d5d"],medium:["Middels","#f0b429"],low:["Lav","#2ecc71"]};
+    document.getElementById("aiInsights").innerHTML=`<div class="card" style="border-color:rgba(109,179,255,.45);background:linear-gradient(135deg,rgba(109,179,255,.08),transparent 60%),var(--panel)">
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
+        <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#6db3ff;font-weight:700">Logichain-analyse</div>
+        <div style="font-size:12px;color:var(--muted,#8fa0c0)">Publisert ${e(new Date(i.published_at).toLocaleDateString("nb-NO",{day:"numeric",month:"long",year:"numeric"}))}</div></div>
+      <h2 style="margin:6px 0 6px;font-size:22px">${e(i.title)}</h2>
+      ${i.summary?`<p style="margin:0 0 12px;line-height:1.5">${e(i.summary)}</p>`:""}
+      ${(i.savings_low!=null||i.savings_high!=null)?`<div style="display:inline-block;padding:10px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:12px"><div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted,#8fa0c0)">Identifisert sparepotensial</div><div style="font-size:22px;font-weight:800;color:#2ecc71">${kr(i.savings_low)} – ${kr(i.savings_high)}</div></div>`:""}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+        ${(i.findings||[]).length?`<div><div style="font-weight:700;margin-bottom:6px">Hovedfunn</div><ul style="margin:0;padding-left:18px;line-height:1.5">${i.findings.map(f=>`<li><b>${e(f.title)}</b> – ${e(f.detail)}${f.impact_nok?` <span style="color:#2ecc71">(${kr(f.impact_nok)})</span>`:""}</li>`).join("")}</ul></div>`:""}
+        ${(i.actions||[]).length?`<div><div style="font-weight:700;margin-bottom:6px">Anbefalte tiltak</div><ul style="margin:0;padding-left:18px;line-height:1.5">${i.actions.map(a=>{const p=pr[a.priority]||["",""];return `<li>${p[0]?`<span style="color:${p[1]};font-weight:700">[${p[0]}]</span> `:""}<b>${e(a.title)}</b> – ${e(a.detail)}</li>`;}).join("")}</ul></div>`:""}
+      </div>
+      ${(i.data_quality||[]).length?`<details style="margin-top:12px"><summary style="cursor:pointer;color:var(--muted,#8fa0c0)">Datakvalitet (${i.data_quality.length})</summary><ul style="margin:6px 0 0;padding-left:18px">${i.data_quality.map(d=>`<li>${e(d)}</li>`).join("")}</ul></details>`:""}
+    </div>`;
+  }catch(err){console.info("Logichain insights:",err&&err.message);}
+})();
 </script>
 </body>
 </html>

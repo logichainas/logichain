@@ -194,6 +194,37 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 @keyframes micPulse{70%{box-shadow:0 0 0 14px rgba(255,77,109,0)}100%{box-shadow:0 0 0 0 rgba(255,77,109,0)}}
 .mic.off{opacity:.35;cursor:not-allowed}
 
+/* ---------- approvals ---------- */
+.run{display:flex;gap:10px;align-items:center;padding:9px 6px;border-bottom:1px dashed rgba(0,229,255,.13);transition:.2s}
+.run.go{cursor:pointer}.run.go:hover{background:rgba(255,181,71,.07)}
+.run .m{flex:1;min-width:0}.run b{display:block;color:#fff;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.run small{font:11px var(--mono);color:var(--muted)}
+.steps{display:flex;gap:3px;margin-top:5px}.steps i{height:3px;flex:1;background:rgba(0,229,255,.12)}
+.steps i.done{background:var(--cyan);box-shadow:0 0 6px var(--cyan)}.steps i.now{background:var(--amber);box-shadow:0 0 6px var(--amber);animation:pulse 1.4s infinite}
+.steps i.bad{background:var(--red)}
+.c-amb{color:var(--amber)}
+#apPanel.has{border-color:rgba(255,181,71,.6);box-shadow:0 25px 70px rgba(0,0,0,.55),0 0 24px rgba(255,181,71,.25)}
+#review{position:fixed;inset:0;z-index:55;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.6);backdrop-filter:blur(3px)}
+.rv{width:min(1100px,100%);height:min(820px,100%);display:flex!important;flex-direction:column;padding:0!important;animation:holoIn .55s cubic-bezier(.2,.9,.25,1) both}
+.rvbody{flex:1;padding:18px 22px;display:flex;flex-direction:column;gap:16px}
+.rvfoot{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:14px 20px;border-top:1px solid var(--line)}
+.rvfoot label{display:flex;align-items:center;gap:8px;font:600 13px var(--hud);letter-spacing:.12em;color:var(--muted)}
+.rvfoot select{width:auto;min-width:200px;padding:8px 10px;font-size:15px}
+.rvfoot .ck input{accent-color:var(--cyan);width:16px;height:16px}
+.hbtn.rej:hover{border-color:var(--red);color:#fff;box-shadow:0 0 12px rgba(255,77,109,.5)}
+.rsec h4{font:700 11px var(--hud);letter-spacing:.24em;color:var(--cyan);margin-bottom:8px}
+.rsec p,.rsec li{font-size:15px;line-height:1.45;color:var(--text)}
+.rsec ul{margin-left:18px}
+.kpis{display:flex;gap:12px;flex-wrap:wrap}
+.kp{border:1px solid var(--line);background:var(--glass2);padding:10px 14px;min-width:140px}
+.kp b{display:block;font:700 20px var(--hud);color:#fff}.kp span{font:10px var(--hud);letter-spacing:.18em;color:var(--muted)}
+.warn{border:1px solid rgba(255,181,71,.4);background:rgba(255,181,71,.06);padding:10px 14px}
+.warn li{color:#ffe2b0}
+.tbl{width:100%;border-collapse:collapse;font:12px var(--mono)}
+.tbl th{text-align:left;color:var(--cyan);font-weight:600;padding:5px 6px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:5px 6px;border-bottom:1px dashed rgba(0,229,255,.1);color:var(--text);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.tbl td.n{text-align:right}
+
 /* ---------- holo viewer (agent work) ---------- */
 #viewer{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.55);backdrop-filter:blur(3px)}
 #viewer .holo{width:min(1180px,100%);height:min(780px,100%);display:grid;grid-template-columns:300px 1fr;grid-template-rows:auto minmax(0,1fr);
@@ -299,6 +330,10 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 
   <div class="stage">
     <section class="side l">
+      <div class="panel br" id="apPanel" style="flex:.85;min-height:0">
+        <div class="ph"><h2>APPROVALS</h2><span id="apCount"></span></div>
+        <div class="scroll" id="approvals"><div class="empty">Loading pipeline …</div></div>
+      </div>
       <div class="panel br" style="flex:1">
         <div class="ph"><h2>MISSIONS</h2><span id="mCount"></span></div>
         <form class="mform" id="mForm" autocomplete="off">
@@ -349,6 +384,27 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 <div id="toast"></div>
 
 <div class="coreLbl hidden" id="coreLbl"><div class="k">AGENTS ONLINE</div><div class="v" id="coreV">—</div><div class="s" id="coreS"></div></div>
+
+<!-- APPROVAL REVIEW -->
+<div id="review" class="hidden">
+  <div class="holo panel br rv">
+    <div class="vh">
+      <div class="orb" style="--c:#ffb547"></div>
+      <div><h3 id="rvTitle">Review proposal</h3><p id="rvMeta"></p></div>
+      <div class="sp"></div>
+      <button class="hbtn" id="rvClose">Close ✕</button>
+    </div>
+    <div class="rvbody scroll" id="rvBody"></div>
+    <div class="rvfoot" id="rvFoot">
+      <label>Customer <select class="field" id="rvKunde"></select></label>
+      <label class="ck"><input type="checkbox" id="rvPo" checked> Upload PO lines</label>
+      <label class="ck"><input type="checkbox" id="rvIns" checked> Publish insights</label>
+      <span style="flex:1"></span>
+      <button class="hbtn rej" id="rvReject">Reject</button>
+      <button class="talk" id="rvApprove">✓ Approve &amp; upload</button>
+    </div>
+  </div>
+</div>
 
 <!-- AGENT WORK VIEWER -->
 <div id="viewer" class="hidden">
@@ -448,7 +504,7 @@ function initScene(){
   addEventListener("resize",resize);resize();
   addEventListener("mousemove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1;mouse.set(mx,-my);
     document.body.style.setProperty("--mx",mx.toFixed(3));document.body.style.setProperty("--my",my.toFixed(3));});
-  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms"))return;if(S.hover)openAgent(S.hover.agent.id);});
+  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review"))return;if(S.hover)openAgent(S.hover.agent.id);});
 
   S.build=function(agents){
     while(nodes.children.length)nodes.remove(nodes.children[0]);
@@ -590,7 +646,7 @@ function closeViewer(){$("viewer").classList.add("hidden");clearInterval(VIEW.ti
 $("vClose").addEventListener("click",closeViewer);
 $("vRef").addEventListener("click",()=>VIEW.session&&openSession(VIEW.session));
 $("viewer").addEventListener("click",e=>{if(e.target.id==="viewer")closeViewer();});
-addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("viewer").classList.contains("hidden"))closeViewer();else hideComms();}});
+addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("review").classList.contains("hidden"))closeReview();else if(!$("viewer").classList.contains("hidden"))closeViewer();else hideComms();}});
 
 /* ================= MISSIONS (to-do) ================= */
 let MEM_ID=100,TODOS_LOADED=false;
@@ -680,6 +736,7 @@ function renderBrief(){
   const ags=AG?liveAgents():[],w=ags.filter(a=>agentState(a).st==="running").length,open=TODOS.filter(t=>!t.done).length;
   const p=AG?[ags.length+" agent"+(ags.length==1?"":"s")+" online",w+" working"]:[AG===undefined?"scanning agent network":"agent network offline"];
   p.push(open+" open mission"+(open==1?"":"s"));
+  const pend=RUNS.filter(r=>r.status==="awaiting_approval").length;if(pend)p.push(pend+" awaiting approval");
   $("brief").textContent=p.join(" · ");
 }
 function statusReport(){
@@ -756,7 +813,8 @@ function jarvisContext(){
     agent_network:AG?"online":"offline",
     agents:(AG?liveAgents():[]).map(a=>{const{st,mine}=agentState(a);return{name:a.name,model:a.model,description:a.description,state:st,
       sessions:mine.slice(0,4).map(s=>({title:s.title,status:s.status,last_activity:loc(s.updated_at||s.created_at)}))};}),
-    quick_links:LINKS.map(l=>l.title)
+    quick_links:LINKS.map(l=>l.title),
+    pipeline:RUNS.slice(0,8).map(r=>({run:r.id,file:r.file_name,status:r.status,updated:loc(r.updated_at),summary:r.proposal_summary||null}))
   };
 }
 async function runActions(acts){
@@ -853,7 +911,9 @@ function broGreeting(){
   let ms;
   if(!open.length)ms="Mission board's clean. Nothing on your plate.";
   else ms=`You've got ${open.length} mission${open.length==1?"":"s"} on deck`+(due.length?`, and ${due.length} ${due.length==1?"is":"are"} due today, so let's knock ${due.length==1?"that":"those"} out first.`:hi.length?`, ${hi.length} marked high priority.`:".");
-  return `${hello} ${crew} ${ms} ${pick(["Let's get it.","I got you.","Say the word.","We're cooking."])}`;
+  const pend=RUNS.filter(r=>r.status==="awaiting_approval").length;
+  const ap=pend?` Heads up: ${pend} upload${pend==1?" is":"s are"} waiting for your approval.`:"";
+  return `${hello} ${crew} ${ms}${ap} ${pick(["Let's get it.","I got you.","Say the word.","We're cooking."])}`;
 }
 let GREETED=false;
 function greetOnLogin(){
@@ -891,11 +951,114 @@ function speakNow(text,onBlocked){
 }
 
 /* ================= AUTH + START ================= */
-function refresh(){loadAgents();loadTodos();loadLinks();}
+/* ================= APPROVALS (Nora → Planner → you) ================= */
+let RUNS=[],KUNDER=[],RV=null;
+const RUN_STEPS=["analysing","planning","awaiting_approval","applied"];
+const RUN_LBL={analysing:["c-idle","NORA ANALYSING"],report_ready:["c-idle","REPORT READY"],planning:["c-idle","PLANNER WORKING"],awaiting_approval:["c-amb","NEEDS APPROVAL"],
+  applying:["c-amb","UPLOADING"],applied:["c-run","UPLOADED"],rejected:["c-off","REJECTED"],failed:["c-err","FAILED"]};
+async function loadRuns(){
+  if(DEMO){if(!RUNS.length)RUNS=demoRuns();return renderRuns();}
+  const r=await sb.from("analysis_runs").select("id,created_at,updated_at,status,file_name,sender,proposal_summary,kunde_id,error,nora_session_id,planner_session_id,apply_result").order("created_at",{ascending:false}).limit(15);
+  if(r.error){$("approvals").innerHTML=`<div class="empty">Pipeline not set up yet. Run <code>supabase/pipeline.sql</code>.</div>`;return;}
+  RUNS=r.data||[];renderRuns();
+}
+function renderRuns(){
+  const pend=RUNS.filter(r=>r.status==="awaiting_approval").length;
+  $("apCount").textContent=pend?pend+" waiting":"all clear";$("apPanel").classList.toggle("has",pend>0);
+  $("approvals").innerHTML=RUNS.length?RUNS.map(r=>{
+    const l=RUN_LBL[r.status]||["c-off",r.status.toUpperCase()];
+    const idx=r.status==="report_ready"?1:r.status==="applying"?3:RUN_STEPS.indexOf(r.status);
+    const steps=RUN_STEPS.map((_,i)=>`<i class="${r.status==="failed"&&i===Math.max(0,idx)?"bad":r.status==="rejected"&&i===2?"bad":i<idx||r.status==="applied"?"done":i===idx?"now":""}"></i>`).join("");
+    return `<div class="run ${r.status==="awaiting_approval"||r.status==="applied"||r.status==="failed"?"go":""}" data-run="${r.id}">
+      <div class="m"><b>${esc(r.file_name||"Run #"+r.id)}</b><small>#${r.id} · ${esc(ago(r.updated_at||r.created_at))}${r.error&&r.status!=="applied"?" · ⚠":""}</small><div class="steps">${steps}</div></div>
+      <span class="st ${l[0]}">${l[1]}</span></div>`;}).join(""):`<div class="empty">No files in the pipeline yet. Email an Excel file to nora@logichain.no.</div>`;
+  renderBrief();
+}
+$("approvals").addEventListener("click",e=>{const el=e.target.closest(".run.go");if(el)openReview(+el.dataset.run);});
+async function loadKunder(){
+  if(DEMO){KUNDER=[{id:"k1",firma:"MacGregor Norway",portal:"macgregor-dashboard.html"},{id:"k2",firma:"Vestfold Maritime",portal:null}];return;}
+  const r=await sb.from("kunder").select("id,firma,portal").order("firma");KUNDER=(r.data||[]).filter(k=>k.portal!=="admin.html");
+}
+const nok=n=>n==null||!isFinite(n)?"–":(Math.abs(n)>=1e6?(n/1e6).toFixed(2).replace(/\.?0+$/,"")+" M":Math.round(n).toLocaleString("en-GB"))+" NOK";
+async function openReview(id){
+  let run=RUNS.find(r=>r.id===id);if(!run)return;
+  if(!DEMO){const r=await sb.from("analysis_runs").select("*").eq("id",id).single();if(r.data)run=r.data;}
+  RV=run;await loadKunder();
+  const p=run.proposal||{},ins=p.insights||{},lines=p.po_lines||[];
+  $("rvTitle").textContent=(run.status==="awaiting_approval"?"Review · ":"")+(run.file_name||"Run #"+run.id);
+  $("rvMeta").textContent=["Run #"+run.id,run.sender,RUN_LBL[run.status]?RUN_LBL[run.status][1]:run.status,ago(run.updated_at)].filter(Boolean).join(" · ");
+  const val=lines.reduce((a,l)=>a+(+l.line_value_nok||0),0);
+  $("rvBody").innerHTML=`
+    ${run.error?`<div class="erl">⚠ ${esc(run.error)}</div>`:""}
+    ${run.apply_result&&run.status==="applied"?`<div class="msg system" style="align-self:stretch">Uploaded to <b>${esc(run.apply_result.kunde||"")}</b>: ${esc(run.apply_result.po_lines_added??0)} PO lines added, ${esc(run.apply_result.po_lines_skipped_existing??0)} already existed, ${esc(run.apply_result.suppliers_added??0)} new suppliers, ${esc(run.apply_result.materials_added??0)} new materials${run.apply_result.insights_published?", insights published":""}.</div>`:""}
+    <div class="rsec"><h4>PLANNER SUMMARY</h4><p>${esc(p.summary||run.proposal_summary||"No proposal yet.")}</p></div>
+    <div class="kpis">
+      <div class="kp"><b>${lines.length.toLocaleString("en-GB")}</b><span>PO LINES</span></div>
+      <div class="kp"><b>${nok(val)}</b><span>LINE VALUE</span></div>
+      <div class="kp"><b>${nok(ins.savings_low_nok)} – ${nok(ins.savings_high_nok)}</b><span>SAVINGS RANGE</span></div>
+      <div class="kp"><b>${(p.excluded||[]).reduce((a,x)=>a+(+x.count||0),0)}</b><span>ROWS EXCLUDED</span></div>
+    </div>
+    ${(p.warnings||[]).length?`<div class="rsec warn"><h4 style="color:var(--amber)">CHECK BEFORE APPROVING</h4><ul>${p.warnings.map(w=>`<li>${esc(w)}</li>`).join("")}</ul></div>`:""}
+    ${ins.title?`<div class="rsec"><h4>INSIGHTS FOR THE CUSTOMER DASHBOARD</h4><p><b>${esc(ins.title)}</b></p><p>${esc(ins.summary||"")}</p>
+      ${(ins.findings||[]).length?`<ul>${ins.findings.map(f=>`<li><b>${esc(f.title)}</b> – ${esc(f.detail)}${f.impact_nok?` <span class="c-amb">(${nok(f.impact_nok)})</span>`:""}</li>`).join("")}</ul>`:""}</div>`:""}
+    ${(ins.actions||[]).length?`<div class="rsec"><h4>RECOMMENDED ACTIONS</h4><ul>${ins.actions.map(a=>`<li><span class="${a.priority==="high"?"c-err":a.priority==="medium"?"c-amb":"c-idle"}">[${esc(a.priority||"")}]</span> <b>${esc(a.title)}</b> – ${esc(a.detail)}</li>`).join("")}</ul></div>`:""}
+    ${(p.excluded||[]).length?`<div class="rsec"><h4>EXCLUDED</h4><ul>${p.excluded.map(x=>`<li>${esc(x.count)} × ${esc(x.reason)}</li>`).join("")}</ul></div>`:""}
+    ${lines.length?`<div class="rsec"><h4>PO LINES (FIRST 25 OF ${lines.length})</h4><div style="overflow-x:auto"><table class="tbl"><tr><th>PO</th><th>Line</th><th>Supplier</th><th>Material</th><th>Qty</th><th>Unit price</th><th>Value</th><th>Ordered</th><th>Promised</th><th>Delivered</th></tr>
+      ${lines.slice(0,25).map(l=>`<tr><td>${esc(l.po)}</td><td>${esc(l.line)}</td><td>${esc(l.supplier)}</td><td title="${esc(l.material_description)}">${esc(l.material_code)}</td><td class="n">${esc(l.quantity)}</td><td class="n">${esc(Math.round((+l.unit_price_nok||0)*100)/100)}</td><td class="n">${esc(Math.round(+l.line_value_nok||0).toLocaleString("en-GB"))}</td><td>${esc(l.order_date||"")}</td><td>${esc(l.promised_date||"")}</td><td>${esc(l.delivery_date||"")}</td></tr>`).join("")}</table></div></div>`:""}
+    <div class="rsec" style="font:12px var(--mono);color:var(--muted)">${run.nora_session_id?`<a href="#" data-sess="${esc(run.nora_session_id)}">Open Nora's work log</a>`:""}${run.planner_session_id?` · <a href="#" data-sess="${esc(run.planner_session_id)}">Open Planner's work log</a>`:""}</div>`;
+  const canDecide=run.status==="awaiting_approval";
+  $("rvFoot").classList.toggle("hidden",!canDecide);
+  $("rvKunde").innerHTML=`<option value="">— choose customer —</option>`+KUNDER.map(k=>`<option value="${esc(k.id)}" ${run.kunde_id===k.id?"selected":""}>${esc(k.firma)}</option>`).join("");
+  $("review").classList.remove("hidden");
+}
+$("rvBody").addEventListener("click",e=>{const a=e.target.closest("[data-sess]");if(!a)return;e.preventDefault();
+  const sid=a.dataset.sess,s=(AG&&AG.sessions||[]).find(x=>x.id===sid);$("review").classList.add("hidden");
+  if(s)openAgent(s.agent_id,sid);else say("That session isn't in the recent list – open it in Claude Console.",false);});
+function closeReview(){$("review").classList.add("hidden");RV=null;}
+$("rvClose").addEventListener("click",closeReview);
+$("review").addEventListener("click",e=>{if(e.target.id==="review")closeReview();});
+async function decide(action){
+  if(!RV)return;const kundeId=$("rvKunde").value;
+  if(action==="approve"&&!kundeId)return say("Pick the customer first, boss.");
+  if(action==="approve"&&!$("rvPo").checked&&!$("rvIns").checked)return say("Nothing selected to upload.",false);
+  const firma=(KUNDER.find(k=>k.id===kundeId)||{}).firma;
+  if(action==="approve"&&!confirm(`Upload to ${firma}'s dashboard?\n\n${$("rvPo").checked?"• "+((RV.proposal||{}).po_lines||[]).length+" PO lines\n":""}${$("rvIns").checked?"• Insights card\n":""}`))return;
+  if(action==="reject"&&!confirm("Reject this proposal? Nothing will be uploaded."))return;
+  $("rvApprove").disabled=$("rvReject").disabled=true;$("rvApprove").textContent=action==="approve"?"Uploading …":"✓ Approve & upload";
+  let j;
+  try{
+    if(DEMO){await new Promise(r=>setTimeout(r,900));j={ok:true,status:action==="approve"?"applied":"rejected",result:{kunde:firma,po_lines_added:((RV.proposal||{}).po_lines||[]).length,po_lines_skipped_existing:0,suppliers_added:3,materials_added:12,insights_published:true}};
+      const r=RUNS.find(x=>x.id===RV.id);r.status=j.status;r.apply_result=j.result;}
+    else{
+      const res=await fetch(SUPABASE.url+"/functions/v1/apply-proposal",{method:"POST",headers:{"Content-Type":"application/json",apikey:SUPABASE.anonKey,Authorization:"Bearer "+(SESSION&&SESSION.access_token)},
+        body:JSON.stringify({runId:RV.id,action,kundeId,includePoLines:$("rvPo").checked,includeInsights:$("rvIns").checked})});
+      j=await res.json().catch(()=>({error:"HTTP "+res.status}));if(!res.ok&&!j.error)j.error="HTTP "+res.status;}
+  }catch(e){j={error:e.message};}
+  $("rvApprove").disabled=$("rvReject").disabled=false;$("rvApprove").textContent="✓ Approve & upload";
+  if(j.error)return say("Upload failed: "+j.error,false);
+  closeReview();loadRuns();
+  if(j.status==="applied"){const r=j.result||{};say(`Done, boss. ${r.po_lines_added??0} PO lines are live on ${r.kunde||"the"} dashboard${r.insights_published?", insights published":""}. Let's go!`);}
+  else say("Proposal rejected. Nothing was uploaded.");
+}
+$("rvApprove").addEventListener("click",()=>decide("approve"));
+$("rvReject").addEventListener("click",()=>decide("reject"));
+function demoRuns(){const n=Date.now(),iso=x=>new Date(n-x*60e3).toISOString();
+  const lines=Array.from({length:40},(_,i)=>({po:"PO"+(45000+Math.floor(i/3)),line:i%3+1,supplier:["Scandi Supply","Nordic Components","Global Parts","EuroTech"][i%4],material_code:"MAT-"+(1000+i*7),material_description:"Component "+(i+1),category:"Mechanical",project:null,quantity:5+i,unit:"pcs",unit_price_nok:120+i*3.5,line_value_nok:(5+i)*(120+i*3.5),order_date:"2026-0"+(1+i%9)+"-1"+(i%9),promised_date:"2026-0"+(1+i%9)+"-2"+(i%9),delivery_date:i%7?"2026-0"+(1+i%9)+"-2"+(i%9):null}));
+  return[{id:3,status:"awaiting_approval",file_name:"purchasing_q3.xlsx",sender:"buyer@macgregor.com",updated_at:iso(6),created_at:iso(19),nora_session_id:"s5",planner_session_id:"sp1",
+      proposal:{summary:"975 posted PO lines are ready to upload (25 cancelled/returned excluded). Insights show a realistic savings range of NOK 0.7–2.3M, driven by price variance between suppliers for the same materials.",
+        po_lines:lines,excluded:[{reason:"Cancelled",count:15},{reason:"Returned",count:10}],
+        warnings:["PO numbers are reused across suppliers – line numbers were renumbered within each PO.","FX rates in the file are fixed/illustrative, so NOK totals depend on them."],
+        insights:{title:"Price variance is your biggest lever",summary:"Buying each material at the median posted price would save about NOK 0.71M; at the lowest observed price up to NOK 2.26M (7.3% of spend).",savings_low_nok:710000,savings_high_nok:2260000,
+          findings:[{title:"Global Parts and EuroTech are priciest",detail:"13.3% and 12.5% above the lowest price on average.",impact_nok:820000},{title:"Price spikes",detail:"18 lines at 1.3–1.5× the lowest price.",impact_nok:272000}],
+          actions:[{title:"Consolidate volume",detail:"Move top-10 materials to Scandi Supply / Nordic Components.",priority:"high"},{title:"Verify flagged invoices",detail:"AP to check 12 invoice IDs against payment runs.",priority:"medium"}],data_quality:["PO numbers unreliable","Invoice IDs span suppliers"]}}},
+    {id:2,status:"planning",file_name:"vestfold_oct.xlsx",updated_at:iso(2),created_at:iso(9)},
+    {id:1,status:"applied",file_name:"macgregor_sep.xlsx",updated_at:iso(1500),created_at:iso(1600),apply_result:{kunde:"MacGregor Norway",po_lines_added:412,po_lines_skipped_existing:0,suppliers_added:2,materials_added:30,insights_published:true},proposal:{summary:"Applied.",po_lines:[]}}];}
+
+function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();}
 function start(){
   $("gate").classList.add("hidden");$("app").classList.remove("hidden");$("coreLbl").classList.remove("hidden");
   $("hello").textContent=(greeting()+", boss").toUpperCase();
-  tick();setInterval(tick,1000);refresh();setInterval(loadAgents,25000);
+  tick();setInterval(tick,1000);refresh();setInterval(loadAgents,25000);setInterval(loadRuns,20000);
   CHAT=[];saveChat();
   greetOnLogin();
 
