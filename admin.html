@@ -511,10 +511,19 @@ document.addEventListener("click",async e=>{
 /* ---------------- voice + command line ---------------- */
 let VOICES=[];function loadVoices(){try{VOICES=speechSynthesis.getVoices();}catch(_){}}
 if("speechSynthesis" in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices;}
+// Beste norske stemme: naturlige mannsstemmer (Finn) først, så andre norske. Aldri engelsk.
+function norskStemme(){
+  const no=VOICES.filter(v=>/^(nb|no|nn)([-_]|$)/i.test(v.lang)||/norw|norsk|bokm/i.test(v.name));
+  const rank=v=>(/natural|online|neural/i.test(v.name)?0:2)+(/finn|jon|male|mann/i.test(v.name)?0:1);
+  return no.sort((a,b)=>rank(a)-rank(b))[0]||null;
+}
+let VARSLET=false;
 function speak(text){
+  if(VOICE&&VOICES.length&&!norskStemme()&&!VARSLET){VARSLET=true;
+    setTimeout(()=>say("Fant ingen norsk stemme på denne PC-en. Skriv «stemmer» for å se hvordan du legger den til.",false),1500);}
   if(!VOICE||!("speechSynthesis" in window))return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);
-    const v=VOICES.find(v=>/^(nb|no|nn)/i.test(v.lang))||VOICES.find(v=>/^en-GB/i.test(v.lang));
+    const v=norskStemme();
     if(v){u.voice=v;u.lang=v.lang;}else u.lang="nb-NO";u.rate=1.02;u.pitch=.9;
     u.onstart=()=>$("wave").classList.add("on");u.onend=u.onerror=()=>$("wave").classList.remove("on");
     speechSynthesis.speak(u);}catch(_){}
@@ -535,7 +544,7 @@ function statusReport(){
   return s;
 }
 const CMDS={
-  hjelp:()=>say("Kommandoer: status, kunder, agenter, macgregor, importer, oppdater, stemme, logg ut.",false),
+  hjelp:()=>say("Kommandoer: status, kunder, agenter, macgregor, importer, oppdater, stemme, stemmer, logg ut.",false),
   status:()=>say(statusReport()),
   kunder:()=>{const k=(DATA&&DATA.kunder||[]).filter(k=>k.portal!=="admin.html");say(k.length?"Kunder: "+k.map(k=>k.firma+" ("+mill(k.spend)+" kr)").join(", ")+".":"Ingen kunder ennå.");},
   agenter:()=>{if(!AG||AG.configured===false)return say("Agent-nettverket er ikke koblet til ennå.");const a=(AG.agents||[]).filter(x=>!x.archived);const r=(AG.sessions||[]).filter(s=>s.status==="running").length;say(`${a.length} agenter registrert, ${r} aktive. ${a.map(x=>x.name).slice(0,6).join(", ")}.`);},
@@ -543,6 +552,8 @@ const CMDS={
   importer:()=>{say("Åpner importmodulen.");setTimeout(()=>location.href="last-opp.html",700);},
   oppdater:()=>{refresh();say("Oppdaterer alle datakilder.");},
   stemme:()=>toggleVoice(),
+  stemmer:()=>{const v=norskStemme();
+    say(v?"Bruker norsk stemme: "+v.name+".":"Ingen norsk stemme funnet. Windows: Innstillinger → Tid og språk → Tale → Legg til stemmer → Norsk (bokmål). Eller åpne siden i Microsoft Edge for de naturlige stemmene Finn og Pernille.",false);},
   "logg ut":()=>logout(),
 };
 const ALIAS={help:"hjelp",rapport:"status",hei:"status","hva skjer":"status",agents:"agenter",agent:"agenter",kunde:"kunder",refresh:"oppdater",import:"importer","last opp":"importer",mg:"macgregor",logout:"logg ut",stemmen:"stemme",voice:"stemme"};
