@@ -41,29 +41,49 @@ VIBE
 WHAT YOU KNOW
 - You get a CONTEXT block with the live state: current time, Einar's open/completed missions (to-dos), his Claude agents and their latest sessions, and his quick links. Only use that data; never invent agents, sessions, numbers or results. If you don't know, say so and suggest opening the agent's work log.
 
-WHAT YOU CAN DO (via actions)
-- add_todo: {"type":"add_todo","text":"...","priority":"high"|"normal","due":"YYYY-MM-DD" or null}
-- complete_todo: {"type":"complete_todo","id":<mission id from context>}
-- open_agent: {"type":"open_agent","name":"<agent name>"}   (opens its work log on screen)
-- open_link: {"type":"open_link","title":"<link title>"}
-- refresh: {"type":"refresh"}
-- brief_agent: {"type":"brief_agent","name":"<agent name>","title":"<short title>","task":"<a complete, specific brief written for that agent: goal, scope, what the report must contain, deliverable format (Excel/Markdown in /mnt/session/outputs)>"}
-  This opens a pre-filled brief on screen; Einar reviews it and presses Send himself. Say that he needs to hit Send.
-Only include an action when Einar asks for it or clearly implies it. You cannot send emails or change anything else — be honest about that.
+WHAT YOU CAN DO (tools)
+- You have tools to add/complete missions, open an agent's work log, open a quick link, refresh, and draft a brief for an agent.
+- brief_agent opens a pre-filled brief on screen; Einar reviews it and presses Send himself. You cannot send it or start agents yourself, so tell him to hit Send.
+- Only use a tool when Einar asks for it or clearly implies it. You cannot send emails or change anything else — be honest about that.
 
-OUTPUT FORMAT
-Respond with ONLY a JSON object, nothing before or after:
-{"reply":"<what you say out loud>","actions":[ ... ]}`;
+HOW TO ANSWER
+- Always write your spoken reply as normal text (short, see VIBE), and call tools in the same turn when needed.
+- Never write JSON or tool parameters in your text.`;
 
-function parseModelJson(text) {
-  const t = String(text || "").trim();
-  try { return JSON.parse(t); } catch (_) {}
-  const m = t.match(/\{[\s\S]*\}/);
-  if (m) { try { return JSON.parse(m[0]); } catch (_) {} }
-  return { reply: t.replace(/[{}"]/g, "").slice(0, 600), actions: [] };
+const TOOLS = [
+  { name: "add_todo", description: "Add a mission (to-do) for Einar.",
+    input_schema: { type: "object", properties: {
+      text: { type: "string" }, priority: { type: "string", enum: ["high", "normal"] },
+      due: { type: "string", description: "YYYY-MM-DD, optional" } }, required: ["text"] } },
+  { name: "complete_todo", description: "Mark an open mission as done, by its id from CONTEXT.",
+    input_schema: { type: "object", properties: { id: { type: "integer" } }, required: ["id"] } },
+  { name: "open_agent", description: "Open an agent's work log on screen.",
+    input_schema: { type: "object", properties: { name: { type: "string" } }, required: ["name"] } },
+  { name: "open_link", description: "Open one of Einar's quick links by title.",
+    input_schema: { type: "object", properties: { title: { type: "string" } }, required: ["title"] } },
+  { name: "refresh", description: "Refresh all data in the command center.",
+    input_schema: { type: "object", properties: {} } },
+  { name: "brief_agent", description: "Draft a task for one of Einar's agents. Opens a pre-filled brief form; Einar reviews and presses Send.",
+    input_schema: { type: "object", properties: {
+      name: { type: "string", description: "Agent name exactly as in CONTEXT" },
+      title: { type: "string", description: "Short title, max ~80 chars" },
+      task: { type: "string", description: "Complete, specific brief for the agent: goal, scope, what the report must contain, deliverable format (Excel/Markdown saved in /mnt/session/outputs)." } },
+      required: ["name", "task"] } },
+];
+
+const ALLOWED = new Set(TOOLS.map((t) => t.name));
+
+// Merge consecutive messages with the same role (the API expects alternation)
+function normalize(msgs) {
+  const out = [];
+  for (const m of msgs) {
+    const last = out[out.length - 1];
+    if (last && last.role === m.role) last.content += "\n\n" + m.content;
+    else out.push({ ...m });
+  }
+  while (out.length && out[0].role !== "user") out.shift();
+  return out;
 }
-
-const ALLOWED = new Set(["add_todo", "complete_todo", "open_agent", "open_link", "refresh", "brief_agent"]);
 
 export async function onRequestPost({ request, env }) {
   const auth = request.headers.get("Authorization") || "";
@@ -86,10 +106,10 @@ export async function onRequestPost({ request, env }) {
   while (history.length && history[0].role !== "user") history.shift();
 
   const context = JSON.stringify(body.context || {}).slice(0, 12000);
-  const messages = [
+  const messages = normalize([
     ...history,
     { role: "user", content: `CONTEXT (live state, JSON):\n${context}\n\nEINAR SAYS:\n${message}` },
-  ];
+  ]);
 
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -98,13 +118,18 @@ export async function onRequestPost({ request, env }) {
       "anthropic-version": "2023-06-01",
       "content-type": "application/json",
     },
-    body: JSON.stringify({ model: MODEL, max_tokens: 700, system: SYSTEM, messages }),
+    body: JSON.stringify({ model: MODEL, max_tokens: 2500, system: SYSTEM, tools: TOOLS, tool_choice: { type: "auto" }, messages }),
   });
   const data = await r.json().catch(() => ({}));
   if (!r.ok) return json({ error: `Claude API ${r.status}: ${data?.error?.message || "error"}` }, 502);
 
-  const text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
-  const out = parseModelJson(text);
-  const actions = (Array.isArray(out.actions) ? out.actions : []).filter((a) => a && ALLOWED.has(a.type)).slice(0, 5);
-  return json({ reply: String(out.reply || "").slice(0, 1500), actions });
+  const blocks = data.content || [];
+  let reply = blocks.filter((b) => b.type === "text").map((b) => b.text).join(" ").trim();
+  const actions = blocks.filter((b) => b.type === "tool_use" && ALLOWED.has(b.name))
+    .map((b) => ({ type: b.name, ...(b.input || {}) })).slice(0, 5);
+  if (!reply) reply = actions.some((a) => a.type === "brief_agent")
+    ? "Brief's ready on screen, boss. Give it a look and hit Send."
+    : actions.length ? "On it, boss." : "Hmm, I blanked on that one, boss. Try again?";
+  if (data.stop_reason === "max_tokens" && !actions.length) reply += " (I got cut off there.)";
+  return json({ reply: reply.slice(0, 1500), actions });
 }
