@@ -1,8 +1,10 @@
 /**
  * Logichain · /api/agents  (Cloudflare Pages Function)
  *
- *   GET /api/agents                 → agents + recent sessions
- *   GET /api/agents?session=<id>    → work log (events) for one session
+ *   GET  /api/agents                    → agents + recent sessions
+ *   GET  /api/agents?session=<id>       → work log (events) + output files for one session
+ *   GET  /api/agents?download=<fileId>  → download an output file (proxied)
+ *   POST /api/agents  {agent_id, task, title?} → start a new session for that agent ("brief")
  *
  * The Claude API key lives only here, as a Cloudflare secret
  * (ANTHROPIC_API_KEY or "logichain-jarvis"). Never in the browser.
@@ -12,6 +14,25 @@
 const SUPABASE_URL = "https://iksnoymoqvweudilfuzy.supabase.co";
 const SUPABASE_ANON = "sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH";
 const API = "https://api.anthropic.com/v1";
+const DEFAULT_ENVIRONMENT = "env_01JRRjqD3KBCcjH2iiwkYbdR";
+const FILES_VERSION = "2026-10-21";
+
+const filesHeaders = (key) => ({
+  Authorization: `Bearer ${key}`,
+  "anthropic-version": FILES_VERSION,
+  "anthropic-beta": "managed-agents-2026-04-01",
+});
+
+async function sessionFiles(sessionId, key) {
+  const r = await fetch(`${API}/files?scope_id=${encodeURIComponent(sessionId)}&limit=100`, { headers: filesHeaders(key) });
+  if (!r.ok) return [];
+  const j = await r.json().catch(() => ({}));
+  return (j.data || [])
+    .filter((f) => f.downloadable !== false)
+    .map((f) => ({ id: f.id, filename: f.filename, size: f.size_bytes ?? null, mime: f.mime_type ?? null, created_at: f.created_at ?? null }));
+}
+
+const keyFrom = (env) => env.ANTHROPIC_API_KEY || env["logichain-jarvis"] || env.LOGICHAIN_JARVIS;
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -100,19 +121,39 @@ export async function onRequestGet({ request, env }) {
   if (!auth.startsWith("Bearer ")) return json({ error: "Not signed in" }, 401);
   if (!(await isAdmin(auth))) return json({ error: "Access denied" }, 403);
 
-  const key = env.ANTHROPIC_API_KEY || env["logichain-jarvis"] || env.LOGICHAIN_JARVIS;
+  const key = keyFrom(env);
   if (!key) return json({ configured: false });
 
   const url = new URL(request.url);
   const sessionId = url.searchParams.get("session");
+  const downloadId = url.searchParams.get("download");
+
+  // ---- download an output file ----
+  if (downloadId) {
+    if (!/^file_[A-Za-z0-9_-]{3,100}$/.test(downloadId)) return json({ error: "Bad file id" }, 400);
+    const [meta, content] = await Promise.all([
+      fetch(`${API}/files/${downloadId}`, { headers: filesHeaders(key) }).then((r) => (r.ok ? r.json() : {})).catch(() => ({})),
+      fetch(`${API}/files/${downloadId}/content`, { headers: filesHeaders(key) }),
+    ]);
+    if (!content.ok) return json({ error: `Download failed (${content.status})` }, 502);
+    const name = String(meta.filename || downloadId).replace(/[^\w.\- ]+/g, "_");
+    return new Response(content.body, {
+      headers: {
+        "Content-Type": meta.mime_type || content.headers.get("Content-Type") || "application/octet-stream",
+        "Content-Disposition": `attachment; filename="${name}"`,
+        "Cache-Control": "no-store",
+      },
+    });
+  }
 
   try {
     // ---- one session's work log ----
     if (sessionId) {
       if (!/^[A-Za-z0-9_-]{3,100}$/.test(sessionId)) return json({ error: "Bad session id" }, 400);
-      const [session, events] = await Promise.all([
+      const [session, events, files] = await Promise.all([
         claude(`/sessions/${sessionId}`, key),
         claude(`/sessions/${sessionId}/events?limit=200&order=desc`, key),
+        sessionFiles(sessionId, key),
       ]);
       const log = (events.data || []).map(slimEvent).filter(Boolean).reverse();
       return json({
@@ -125,6 +166,7 @@ export async function onRequestGet({ request, env }) {
           updated_at: session.updated_at || null,
         },
         log,
+        files,
         truncated: !!events.next_page,
       });
     }
@@ -153,6 +195,7 @@ export async function onRequestGet({ request, env }) {
         title: s.title || null,
         agent_id: agentId,
         agent_name: names[agentId] || pick(s.agent, "name") || agentId,
+        environment_id: s.environment_id || pick(s.environment, "id") || null,
         created_at: s.created_at || null,
         updated_at: s.updated_at || null,
       };
@@ -160,5 +203,61 @@ export async function onRequestGet({ request, env }) {
     return json({ configured: true, fetched_at: new Date().toISOString(), agents: agentList, sessions: sessionList });
   } catch (e) {
     return json({ configured: true, error: String(e.message || e) }, 502);
+  }
+}
+
+// ---- brief an agent: start a new session with the task as the first message ----
+export async function onRequestPost({ request, env }) {
+  const auth = request.headers.get("Authorization") || "";
+  if (!auth.startsWith("Bearer ")) return json({ error: "Not signed in" }, 401);
+  if (!(await isAdmin(auth))) return json({ error: "Access denied" }, 403);
+  const key = keyFrom(env);
+  if (!key) return json({ error: "No Claude API key configured" }, 500);
+
+  let body;
+  try { body = await request.json(); } catch (_) { return json({ error: "Bad JSON" }, 400); }
+  const agentId = String(body.agent_id || "");
+  const task = String(body.task || "").trim();
+  if (!/^agent_[A-Za-z0-9_-]{3,100}$/.test(agentId)) return json({ error: "Choose an agent" }, 400);
+  if (task.length < 10) return json({ error: "Describe the task (at least a sentence)" }, 400);
+  if (task.length > 20000) return json({ error: "Task is too long" }, 400);
+  const title = String(body.title || task.split("\n")[0]).trim().slice(0, 120);
+
+  try {
+    // Reuse the environment from this agent's latest session, otherwise the default one
+    let environmentId = DEFAULT_ENVIRONMENT;
+    try {
+      const last = await claude(`/sessions?agent_id=${encodeURIComponent(agentId)}&limit=1`, key);
+      const s = (last.data || [])[0];
+      environmentId = s?.environment_id || pick(s?.environment, "id") || DEFAULT_ENVIRONMENT;
+    } catch (_) { /* keep default */ }
+
+    const text = [
+      task,
+      "",
+      "Deliverables: save any report or data you produce as files in /mnt/session/outputs/ (Excel .xlsx for tables/reports, Markdown .md for written reports) so they can be downloaded from the Logichain command center. Finish with a short summary of what you did and where the files are.",
+    ].join("\n");
+
+    const r = await fetch(`${API}/sessions`, {
+      method: "POST",
+      headers: {
+        "x-api-key": key,
+        "anthropic-version": "2023-06-01",
+        "anthropic-beta": "managed-agents-2026-04-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        agent: agentId,
+        environment_id: environmentId,
+        title,
+        metadata: { source: "jarvis-brief" },
+        initial_events: [{ type: "user.message", content: [{ type: "text", text }] }],
+      }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) return json({ error: `Could not start the agent: ${r.status} ${j?.error?.message || ""}`.trim() }, 502);
+    return json({ ok: true, session: { id: j.id, status: j.status, title: j.title || title, agent_id: agentId } });
+  } catch (e) {
+    return json({ error: String(e.message || e) }, 502);
   }
 }

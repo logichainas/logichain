@@ -47,7 +47,9 @@ WHAT YOU CAN DO (via actions)
 - open_agent: {"type":"open_agent","name":"<agent name>"}   (opens its work log on screen)
 - open_link: {"type":"open_link","title":"<link title>"}
 - refresh: {"type":"refresh"}
-Only include an action when Einar asks for it or clearly implies it. You cannot send emails, start agent sessions or change anything else — be honest about that.
+- brief_agent: {"type":"brief_agent","name":"<agent name>","title":"<short title>","task":"<a complete, specific brief written for that agent: goal, scope, what the report must contain, deliverable format (Excel/Markdown in /mnt/session/outputs)>"}
+  This opens a pre-filled brief on screen; Einar reviews it and presses Send himself. Say that he needs to hit Send.
+Only include an action when Einar asks for it or clearly implies it. You cannot send emails or change anything else — be honest about that.
 
 OUTPUT FORMAT
 Respond with ONLY a JSON object, nothing before or after:
@@ -61,7 +63,7 @@ function parseModelJson(text) {
   return { reply: t.replace(/[{}"]/g, "").slice(0, 600), actions: [] };
 }
 
-const ALLOWED = new Set(["add_todo", "complete_todo", "open_agent", "open_link", "refresh"]);
+const ALLOWED = new Set(["add_todo", "complete_todo", "open_agent", "open_link", "refresh", "brief_agent"]);
 
 export async function onRequestPost({ request, env }) {
   const auth = request.headers.get("Authorization") || "";

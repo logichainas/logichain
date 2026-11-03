@@ -225,6 +225,20 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .tbl td{padding:5px 6px;border-bottom:1px dashed rgba(0,229,255,.1);color:var(--text);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
 .tbl td.n{text-align:right}
 
+/* ---------- brief modal + files ---------- */
+#briefM{position:fixed;inset:0;z-index:56;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.6);backdrop-filter:blur(3px)}
+.bf{width:min(760px,100%);max-height:100%;display:flex!important;flex-direction:column;padding:0!important;animation:holoIn .5s cubic-bezier(.2,.9,.25,1) both}
+.bfbody{padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+.bfbody label{display:flex;flex-direction:column;gap:6px;font:600 11px var(--hud);letter-spacing:.2em;color:var(--cyan)}
+.bfbody textarea{resize:vertical;font:500 15px/1.45 var(--ui);min-height:160px}
+.bfbody select{font-size:16px}
+.bfhint{font-size:13px;color:var(--muted)}
+.fh{font:700 10px var(--hud);letter-spacing:.24em;color:var(--cyan);margin:16px 0 8px;padding-top:12px;border-top:1px solid var(--line)}
+.fl{display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--line);background:var(--glass2);margin-bottom:6px;cursor:pointer;transition:.2s}
+.fl:hover{border-color:var(--cyan);box-shadow:var(--glow)}
+.fl b{flex:1;min-width:0;font:600 13px var(--mono);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fl small{font:10px var(--mono);color:var(--muted)}
+
 /* ---------- holo viewer (agent work) ---------- */
 #viewer{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.55);backdrop-filter:blur(3px)}
 #viewer .holo{width:min(1180px,100%);height:min(780px,100%);display:grid;grid-template-columns:300px 1fr;grid-template-rows:auto minmax(0,1fr);
@@ -351,7 +365,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 
     <section class="side r">
       <div class="panel br" style="flex:1.1;min-height:0">
-        <div class="ph"><h2>AGENT ROSTER</h2><span id="aCount"></span></div>
+        <div class="ph"><h2>AGENT ROSTER</h2><span><span id="aCount"></span> <button class="mini" id="briefBtn" title="Give an agent a task">+ BRIEF</button></span></div>
         <div class="scroll" id="roster"><div class="empty">Scanning agent network …</div></div>
       </div>
       <div class="panel br" style="flex:1;min-height:0">
@@ -385,6 +399,29 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 
 <div class="coreLbl hidden" id="coreLbl"><div class="k">AGENTS ONLINE</div><div class="v" id="coreV">—</div><div class="s" id="coreS"></div></div>
 
+<!-- BRIEF AN AGENT -->
+<div id="briefM" class="hidden">
+  <form class="holo panel br bf" id="bfForm" autocomplete="off">
+    <div class="vh">
+      <div class="orb" style="--c:#3dffb0"></div>
+      <div><h3>Brief an agent</h3><p>Starts a new session. The agent saves its report as downloadable files.</p></div>
+      <div class="sp"></div>
+      <button type="button" class="hbtn" id="bfClose">Close ✕</button>
+    </div>
+    <div class="bfbody">
+      <label>Agent<select class="field" id="bfAgent" required></select></label>
+      <label>Title<input class="field" id="bfTitle" maxlength="120" placeholder="e.g. Nordic market analysis for Logichain"></label>
+      <label>Task<textarea class="field" id="bfTask" rows="9" required placeholder="What should the agent do, what should the report contain, and in which format?"></textarea></label>
+      <div class="bfhint">Tip: be specific about scope, sources, deliverable (Excel/Markdown) and deadline. You can follow the work live in the agent's work log.</div>
+    </div>
+    <div class="rvfoot">
+      <span style="flex:1" id="bfErr" class="c-err"></span>
+      <button type="button" class="hbtn" id="bfCancel">Cancel</button>
+      <button class="talk" id="bfSend">➤ Send to agent</button>
+    </div>
+  </form>
+</div>
+
 <!-- APPROVAL REVIEW -->
 <div id="review" class="hidden">
   <div class="holo panel br rv">
@@ -416,7 +453,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
       <button class="hbtn" id="vRef">⟳ Refresh</button>
       <button class="hbtn" id="vClose">Close ✕</button>
     </div>
-    <div class="vs" id="vSessions"></div>
+    <div class="vs"><div id="vSessions"></div><div id="vFiles"></div></div>
     <div class="vl" id="vLog"><div class="empty">Select a session.</div></div>
   </div>
 </div>
@@ -504,7 +541,7 @@ function initScene(){
   addEventListener("resize",resize);resize();
   addEventListener("mousemove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1;mouse.set(mx,-my);
     document.body.style.setProperty("--mx",mx.toFixed(3));document.body.style.setProperty("--my",my.toFixed(3));});
-  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review"))return;if(S.hover)openAgent(S.hover.agent.id);});
+  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM"))return;if(S.hover)openAgent(S.hover.agent.id);});
 
   S.build=function(agents){
     while(nodes.children.length)nodes.remove(nodes.children[0]);
@@ -621,11 +658,27 @@ async function openSession(id,quiet){
   const j=DEMO?demoLog(id):await api("/api/agents?session="+encodeURIComponent(id)).catch(e=>({error:e.message}));
   if(VIEW.session!==id)return;
   if(j.error){box.innerHTML=`<div class="erl">Could not load the work log: ${esc(j.error)}</div>`;return;}
+  renderFiles(j.files||[]);
   const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;
   box.innerHTML=((j.truncated?`<div class="stl">— EARLIER EVENTS HIDDEN —</div>`:"")+(j.log||[]).map(renderEvent).join(""))||`<div class="empty">No events in this session.</div>`;
   if(!quiet||atBottom)box.scrollTop=box.scrollHeight;
   if(j.session&&j.session.status==="running")VIEW.timer=setInterval(()=>openSession(id,true),8000);
 }
+function renderFiles(files){
+  const fmtSize=b=>b==null?"":b>1e6?(b/1e6).toFixed(1)+" MB":Math.max(1,Math.round(b/1e3))+" KB";
+  const outs=files.filter(f=>!/^data\.xlsx$|^customer_data|^nora_report\.xlsx$/i.test(f.filename)||true);
+  $("vFiles").innerHTML=outs.length?`<div class="fh">FILES (${outs.length})</div>`+outs.map(f=>`<div class="fl" data-file="${esc(f.id)}" data-name="${esc(f.filename)}" title="Download">⬇ <b>${esc(f.filename)}</b><small>${esc(fmtSize(f.size))}</small></div>`).join(""):"";
+}
+$("vFiles").addEventListener("click",async e=>{
+  const f=e.target.closest(".fl");if(!f)return;
+  if(DEMO)return say("Demo mode – no real files.",false);
+  say("Downloading "+f.dataset.name+" …",false);
+  try{
+    const r=await fetch("/api/agents?download="+encodeURIComponent(f.dataset.file),{headers:{Authorization:"Bearer "+(SESSION&&SESSION.access_token)}});
+    if(!r.ok){const j=await r.json().catch(()=>({}));return say("Download failed: "+(j.error||r.status),false);}
+    const url=URL.createObjectURL(await r.blob());const a=document.createElement("a");a.href=url;a.download=f.dataset.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+  }catch(err){say("Download failed: "+err.message,false);}
+});
 function renderEvent(e){
   const tm=`<span class="tm">${esc(fmtTime(e.time))}</span>`;
   switch(e.kind){
@@ -646,7 +699,39 @@ function closeViewer(){$("viewer").classList.add("hidden");clearInterval(VIEW.ti
 $("vClose").addEventListener("click",closeViewer);
 $("vRef").addEventListener("click",()=>VIEW.session&&openSession(VIEW.session));
 $("viewer").addEventListener("click",e=>{if(e.target.id==="viewer")closeViewer();});
-addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("review").classList.contains("hidden"))closeReview();else if(!$("viewer").classList.contains("hidden"))closeViewer();else hideComms();}});
+addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("briefM").classList.contains("hidden"))closeBrief();else if(!$("review").classList.contains("hidden"))closeReview();else if(!$("viewer").classList.contains("hidden"))closeViewer();else hideComms();}});
+
+/* ================= BRIEF AN AGENT ================= */
+function openBrief(pre){
+  pre=pre||{};
+  const ags=AG?liveAgents():[];
+  if(!ags.length)return say("No agents available right now, boss.",false);
+  const want=pre.name?findAgent(pre.name):null;
+  $("bfAgent").innerHTML=ags.map(a=>`<option value="${esc(a.id)}" ${want&&want.id===a.id?"selected":""}>${esc(a.name)}</option>`).join("");
+  $("bfTitle").value=pre.title||"";$("bfTask").value=pre.task||"";$("bfErr").textContent="";
+  $("briefM").classList.remove("hidden");setTimeout(()=>($("bfTask").value?$("bfSend"):$("bfTask")).focus(),60);
+}
+function closeBrief(){$("briefM").classList.add("hidden");}
+$("briefBtn").addEventListener("click",e=>{e.stopPropagation();openBrief();});
+$("bfClose").addEventListener("click",closeBrief);$("bfCancel").addEventListener("click",closeBrief);
+$("briefM").addEventListener("click",e=>{if(e.target.id==="briefM")closeBrief();});
+$("bfForm").addEventListener("submit",async e=>{
+  e.preventDefault();$("bfErr").textContent="";
+  const agent_id=$("bfAgent").value,task=$("bfTask").value.trim(),title=$("bfTitle").value.trim();
+  if(task.length<10){$("bfErr").textContent="Describe the task a bit more.";return;}
+  const name=($("bfAgent").selectedOptions[0]||{}).textContent;
+  $("bfSend").disabled=true;$("bfSend").textContent="Starting …";
+  let j;
+  try{
+    if(DEMO){await new Promise(r=>setTimeout(r,700));j={ok:true,session:{id:"s1",agent_id}};}
+    else{const r=await fetch("/api/agents",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(SESSION&&SESSION.access_token)},body:JSON.stringify({agent_id,task,title})});
+      j=await r.json().catch(()=>({error:"HTTP "+r.status}));if(!r.ok&&!j.error)j.error="HTTP "+r.status;}
+  }catch(err){j={error:err.message};}
+  $("bfSend").disabled=false;$("bfSend").textContent="➤ Send to agent";
+  if(j.error){$("bfErr").textContent=j.error;return;}
+  closeBrief();say(`${name} is on it, boss. Opening the work log.`);
+  await loadAgents();openAgent(j.session.agent_id,j.session.id);
+});
 
 /* ================= MISSIONS (to-do) ================= */
 let MEM_ID=100,TODOS_LOADED=false;
@@ -826,6 +911,7 @@ async function runActions(acts){
       else if(a.type==="open_link"&&a.title){const q=String(a.title).toLowerCase();const l=LINKS.find(x=>x.title.toLowerCase().includes(q));
         if(l&&safeUrl(l.url)){window.open(safeUrl(l.url),/^https?:/i.test(l.url)?"_blank":"_self");CHAT.push({role:"action",content:"Opened "+l.title});}}
       else if(a.type==="refresh"){refresh();CHAT.push({role:"action",content:"Systems refreshed"});}
+      else if(a.type==="brief_agent"&&a.name&&a.task){openBrief({name:String(a.name),task:String(a.task),title:a.title?String(a.title):""});CHAT.push({role:"action",content:"Brief ready for "+a.name+" – review and hit Send"});}
     }catch(_){}
   }
 }
@@ -880,6 +966,7 @@ document.addEventListener("keydown",e=>{if(e.code==="Space"&&e.ctrlKey){e.preven
 function demoReply(t){
   const v=t.toLowerCase();
   if(/remind|add|todo|mission/.test(v))return{reply:"Say less, bro. Logged it as a mission so it doesn't slip.",actions:[{type:"add_todo",text:t.replace(/^(hey jarvis,?\s*)?(remind me to|add( a)? (mission|todo) to)?\s*/i,""),priority:"normal",due:null}]};
+  if(/isak|market/.test(v))return{reply:"Say less, boss. I drafted the brief for Isak, give it a look and hit Send when you're happy.",actions:[{type:"brief_agent",name:"Isak",title:"Nordic market analysis for Logichain",task:"Build a market analysis for Logichain (procurement analytics SaaS). Scope: Norwegian and Nordic industrial and maritime companies with 50-1000 employees and a purchasing function. Deliver: market size estimate with method, top 30 target companies with rationale, key competitors and pricing, and recommended go-to-market. Save as /mnt/session/outputs/market_analysis.xlsx plus a short Markdown summary."}]};
   if(/nora/.test(v))return{reply:"Nora's cooking right now, my guy. She's halfway through the MacGregor October file. Pulling up her work log for you.",actions:[{type:"open_agent",name:"Nora"}]};
   if(/how|what'?s up|status|today/.test(v))return{reply:"All good on deck, bro. Two agents are grinding: Nora on MacGregor and Isak on the Vestfold follow-up. You've got four open missions, and the DNS one is due today, so let's knock that out first.",actions:[]};
   return{reply:"Heard you, my guy. This is demo mode though, so I'm running on fake data. Log in for the real deal.",actions:[]};
@@ -1096,7 +1183,7 @@ function demoAgents(){const n=Date.now(),iso=x=>new Date(n-x*60e3).toISOString()
     {id:"s5",status:"idle",title:"Supplier scorecard Q3",agent_id:"a1",agent_name:"Nora",updated_at:iso(1500)},
     {id:"s6",status:"terminated",title:"Test run",agent_id:"a5",agent_name:"Report Writer",updated_at:iso(4300)}]};}
 function demoLog(id){const n=Date.now(),iso=x=>new Date(n-x*60e3).toISOString();
-  return{configured:true,session:{id,status:id==="s1"?"running":"idle"},log:[
+  return{configured:true,session:{id,status:id==="s1"?"running":"idle"},files:[{id:"file_demo1",filename:"nora_report.xlsx",size:48211},{id:"file_demo2",filename:"Nora_Procurement_Analysis_Report.md",size:9120}],log:[
     {kind:"status",time:iso(14),text:"running"},
     {kind:"user",time:iso(14),text:"New file from MacGregor: deliveries_oct.xlsx. Find late suppliers and summarise the top risks."},
     {kind:"thinking",time:iso(13),text:"I'll load the workbook, compute delivery deviation per supplier and rank by share of late lines."},
