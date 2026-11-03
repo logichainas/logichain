@@ -171,6 +171,25 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .wave i:nth-child(2){animation-delay:.1s}.wave i:nth-child(3){animation-delay:.2s}.wave i:nth-child(4){animation-delay:.3s}.wave i:nth-child(5){animation-delay:.4s}
 @keyframes wave{50%{height:20px}}
 
+/* ---------- comms (chat with Jarvis) ---------- */
+#comms{position:fixed;left:50%;bottom:208px;width:min(560px,calc(100vw - 32px));max-height:min(46vh,440px);z-index:30;transform:translateX(-50%) perspective(900px) rotateX(6deg);transform-origin:bottom;animation:commsIn .45s cubic-bezier(.2,.9,.25,1) both}
+@keyframes commsIn{from{opacity:0;transform:translateX(-50%) perspective(900px) rotateX(40deg) translateY(30px)}}
+#chat{display:flex;flex-direction:column;gap:9px;padding-right:4px}
+.bub{max-width:86%;padding:9px 13px;line-height:1.4;font-size:16px;white-space:pre-wrap;word-break:break-word;animation:fadeIn .3s both}
+.bub.me{align-self:flex-end;background:rgba(255,181,71,.09);border:1px solid rgba(255,181,71,.35);color:#fff}
+.bub.jv{align-self:flex-start;background:rgba(0,229,255,.08);border:1px solid var(--line);border-left:3px solid var(--cyan);color:#eafcff}
+.bub.jv b{display:block;font:700 9px var(--hud);letter-spacing:.24em;color:var(--cyan);margin-bottom:3px}
+.bub.act{align-self:flex-start;font:11px var(--mono);color:var(--green);border:0;padding:0 4px}
+.typing{display:inline-flex;gap:4px}.typing i{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 1s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+.mini{background:none;border:1px solid var(--line);color:var(--cyan2);font:600 10px var(--hud);letter-spacing:.14em;padding:3px 7px;cursor:pointer}
+.mini:hover{border-color:var(--cyan);color:#fff}
+.mic{width:40px;height:40px;flex:none;border-radius:50%;border:1px solid var(--line2);background:rgba(0,229,255,.06);color:#fff;font-size:17px;cursor:pointer;transition:.2s}
+.mic:hover{box-shadow:var(--glow)}
+.mic.on{background:var(--red);border-color:var(--red);box-shadow:0 0 0 0 rgba(255,77,109,.6);animation:micPulse 1.2s infinite}
+@keyframes micPulse{70%{box-shadow:0 0 0 14px rgba(255,77,109,0)}100%{box-shadow:0 0 0 0 rgba(255,77,109,0)}}
+.mic.off{opacity:.35;cursor:not-allowed}
+
 /* ---------- holo viewer (agent work) ---------- */
 #viewer{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.55);backdrop-filter:blur(3px)}
 #viewer .holo{width:min(1180px,100%);height:min(780px,100%);display:grid;grid-template-columns:300px 1fr;grid-template-rows:auto minmax(0,1fr);
@@ -217,7 +236,8 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 @media (max-width:640px){
   header{flex-wrap:wrap;padding:12px 16px}.greet{order:3;flex-basis:100%;text-align:left}
   .stage,.dock{padding-left:16px;padding-right:16px}#cmd{padding:8px 16px}
-  #viewer{padding:10px}.coreLbl .v{font-size:30px}.clock .t{font-size:18px}
+  #viewer{padding:10px}.coreLbl .v{font-size:30px}
+  #comms{bottom:150px;transform:translateX(-50%)}.clock .t{font-size:18px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
@@ -300,11 +320,18 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
       <div id="log">&gt; Ready. Type “help” for commands.</div>
       <form id="cForm" autocomplete="off">
         <label for="cIn">J.A.R.V.I.S. &gt;</label>
-        <input id="cIn" placeholder="status · agents · add &lt;mission&gt; · open &lt;agent&gt; · help">
+        <input id="cIn" placeholder="Talk to Jarvis … (or: add &lt;mission&gt; · open &lt;agent&gt; · help)">
+        <button type="button" class="mic" id="micBtn" title="Hold to talk (or Ctrl+Space)">🎙</button>
         <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i></div>
       </form>
     </div>
   </div>
+</div>
+
+<!-- COMMS: conversation with Jarvis -->
+<div id="comms" class="panel br hidden">
+  <div class="ph"><h2>COMMS · JARVIS</h2><span><button class="mini" id="cClear" title="New conversation">NEW</button> <button class="mini" id="cHide">HIDE</button></span></div>
+  <div class="scroll" id="chat"></div>
 </div>
 
 <div class="coreLbl hidden" id="coreLbl"><div class="k">AGENTS ONLINE</div><div class="v" id="coreV">—</div><div class="s" id="coreS"></div></div>
@@ -582,11 +609,11 @@ async function addTodo(text,high,due){
   if(r.error)return say("Could not save mission: "+r.error.message,false);
   TODOS.unshift(r.data);renderTodos();
 }
-async function toggleTodo(id){
+async function toggleTodo(id,quiet){
   const t=TODOS.find(x=>x.id==id);if(!t)return;
   const upd={done:!t.done,done_at:!t.done?new Date().toISOString():null};Object.assign(t,upd);renderTodos();
   if(!DEMO){const r=await sb.from("admin_todos").update(upd).eq("id",id);if(r.error){say("Sync failed: "+r.error.message,false);loadTodos();}}
-  if(upd.done)say("Mission complete. Nicely done.");
+  if(upd.done&&!quiet)say("Mission complete. Let's go!");
 }
 async function delTodo(id){
   TODOS=TODOS.filter(x=>x.id!=id);renderTodos();
@@ -652,13 +679,14 @@ let VOICES=[];function loadVoices(){try{VOICES=speechSynthesis.getVoices();}catc
 if("speechSynthesis" in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices;}
 function jarvisVoice(){
   const en=VOICES.filter(v=>/^en/i.test(v.lang));
-  const rank=v=>(/en-GB/i.test(v.lang)?0:4)+(/natural|online|neural/i.test(v.name)?0:2)+(/ryan|thomas|george|daniel|arthur|oliver|guy|davis|mark|david|christopher|eric|male/i.test(v.name)?0:1);
+  // bro vibe: relaxed US male natural voices first (Edge: Andrew, Brian, Guy …), then UK, then anything English
+  const rank=v=>(/natural|online|neural/i.test(v.name)?0:4)+(/andrew|brian|guy|christopher|eric|davis|steffan|roger|ryan|mark|david|male/i.test(v.name)?0:2)+(/en-US/i.test(v.lang)?0:1);
   return en.sort((a,b)=>rank(a)-rank(b))[0]||null;
 }
-function speak(text){
-  if(!VOICE||!("speechSynthesis" in window))return;
+function speak(text,force){
+  if((!VOICE&&!force)||!("speechSynthesis" in window))return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=jarvisVoice();
-    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-GB";u.rate=1;u.pitch=.85;
+    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-GB";u.rate=1.06;u.pitch=.95;
     u.onstart=()=>$("wave").classList.add("on");u.onend=u.onerror=()=>$("wave").classList.remove("on");
     speechSynthesis.speak(u);}catch(_){}
 }
@@ -668,7 +696,7 @@ function say(text,talk){const el=$("log");clearInterval(typeT);let i=0;
   if(talk!==false)speak(text);}
 function findAgent(q){q=q.toLowerCase();return liveAgents().find(a=>a.name.toLowerCase()===q)||liveAgents().find(a=>a.name.toLowerCase().includes(q));}
 const CMDS={
-  help:()=>say("Commands: status · agents · open <agent> · add <mission> (end with ! for high priority) · done <number> · missions · link <name> · refresh · voice · sign out",false),
+  help:()=>say("Just talk to me, bro. Shortcuts: status · agents · open <agent> · add <mission> (end with ! for high priority) · done <number> · missions · link <name> · refresh · voice · sign out",false),
   status:()=>say(statusReport()),
   agents:()=>{if(!AG)return say("The agent network is offline.");const a=liveAgents();say(a.length?a.map(x=>x.name+" ("+STX[agentState(x).st][1].toLowerCase()+")").join(", ")+".":"No agents registered.");},
   missions:()=>{const o=TODOS.filter(t=>!t.done);say(o.length?o.slice(0,6).map((t,i)=>(i+1)+". "+t.text).join("   "):"No open missions.");},
@@ -683,12 +711,105 @@ $("cForm").addEventListener("submit",e=>{e.preventDefault();const raw=$("cIn").v
   if((m=raw.match(/^(link|go to|goto)\s+(.+)/i))){const q=m[2].toLowerCase();const l=LINKS.find(x=>x.title.toLowerCase().includes(q));
     if(!l||!safeUrl(l.url))return say("No link matching "+m[2]+".",false);say("Opening "+l.title+".");return window.open(safeUrl(l.url),/^https?:/i.test(l.url)?"_blank":"_self");}
   const alias={"?":"help",report:"status",hello:"status",hi:"status",agent:"agents",todo:"missions",todos:"missions",tasks:"missions",logout:"sign out","log out":"sign out",reload:"refresh"};
-  const key=CMDS[v]?v:alias[v];if(key)return CMDS[key]();
-  const a=findAgent(v);if(a)return openAgent(a.id);
-  say(`I didn't catch “${raw}”. Type “help”.`,false);
+  const key=CMDS[v]?v:alias[v];if(key&&key!=="status")return CMDS[key]();
+  const a=findAgent(v);if(a&&v.split(/\s+/).length<=2)return openAgent(a.id);
+  askJarvis(raw,false);
 });
+/* ================= JARVIS CONVERSATION ================= */
+let CHAT=[],BUSY=false,LAST_VOICE_INPUT=false;
+try{CHAT=JSON.parse(sessionStorage.getItem("jv_chat")||"[]");}catch(_){CHAT=[];}
+function saveChat(){try{sessionStorage.setItem("jv_chat",JSON.stringify(CHAT.slice(-30)));}catch(_){}}
+function showComms(){$("comms").classList.remove("hidden");}
+function renderChat(pending){
+  const box=$("chat");
+  box.innerHTML=CHAT.slice(-20).map(m=>m.role==="user"?`<div class="bub me">${esc(m.content)}</div>`
+    :m.role==="action"?`<div class="bub act">✓ ${esc(m.content)}</div>`
+    :`<div class="bub jv"><b>JARVIS</b>${esc(m.content)}</div>`).join("")+
+    (pending?`<div class="bub jv"><b>JARVIS</b><span class="typing"><i></i><i></i><i></i></span></div>`:"");
+  box.scrollTop=box.scrollHeight;
+}
+function jarvisContext(){
+  const today=new Date();
+  return{
+    now:today.toLocaleString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit"}),
+    today:today.toISOString().slice(0,10),
+    user:NAME,
+    missions_open:TODOS.filter(t=>!t.done).map(t=>({id:t.id,text:t.text,priority:t.priority,due:t.due})),
+    missions_done_recently:TODOS.filter(t=>t.done).slice(0,5).map(t=>({id:t.id,text:t.text,completed:t.done_at})),
+    agent_network:AG?"online":"offline",
+    agents:(AG?liveAgents():[]).map(a=>{const{st,mine}=agentState(a);return{name:a.name,model:a.model,description:a.description,state:st,
+      sessions:mine.slice(0,4).map(s=>({title:s.title,status:s.status,last_activity:s.updated_at||s.created_at}))};}),
+    quick_links:LINKS.map(l=>l.title)
+  };
+}
+async function runActions(acts){
+  for(const a of acts||[]){
+    try{
+      if(a.type==="add_todo"&&a.text){await addTodo(String(a.text),a.priority==="high",/^\d{4}-\d{2}-\d{2}$/.test(a.due||"")?a.due:"");CHAT.push({role:"action",content:"Mission added: "+a.text});}
+      else if(a.type==="complete_todo"){const t=TODOS.find(x=>String(x.id)===String(a.id));if(t&&!t.done){await toggleTodo(t.id,true);CHAT.push({role:"action",content:"Completed: "+t.text});}}
+      else if(a.type==="open_agent"&&a.name){const ag=findAgent(String(a.name));if(ag){openAgent(ag.id);CHAT.push({role:"action",content:"Opened "+ag.name});}}
+      else if(a.type==="open_link"&&a.title){const q=String(a.title).toLowerCase();const l=LINKS.find(x=>x.title.toLowerCase().includes(q));
+        if(l&&safeUrl(l.url)){window.open(safeUrl(l.url),/^https?:/i.test(l.url)?"_blank":"_self");CHAT.push({role:"action",content:"Opened "+l.title});}}
+      else if(a.type==="refresh"){refresh();CHAT.push({role:"action",content:"Systems refreshed"});}
+    }catch(_){}
+  }
+}
+async function askJarvis(text,fromVoice){
+  if(BUSY)return;BUSY=true;LAST_VOICE_INPUT=!!fromVoice;
+  showComms();
+  const history=CHAT.filter(m=>m.role==="user"||m.role==="assistant").slice(-14);
+  CHAT.push({role:"user",content:text});renderChat(true);
+  say("Thinking …",false);
+  let j;
+  try{
+    if(DEMO){await new Promise(r=>setTimeout(r,700));j=demoReply(text);}
+    else{
+      const r=await fetch("/api/jarvis",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(SESSION&&SESSION.access_token)},
+        body:JSON.stringify({message:text,history,context:jarvisContext()})});
+      j=await r.json().catch(()=>({error:"Jarvis is not responding (HTTP "+r.status+")"}));
+      if(r.status===404)j={error:"Jarvis brain not deployed yet (/api/jarvis)."};
+    }
+  }catch(e){j={error:e.message||String(e)};}
+  BUSY=false;
+  if(j.error){CHAT.push({role:"assistant",content:"Bro, something's off on my end: "+j.error});renderChat();saveChat();return say(j.error,false);}
+  CHAT.push({role:"assistant",content:j.reply||"…"});
+  await runActions(j.actions);
+  renderChat();saveChat();
+  say(j.reply||"",false);speak(j.reply||"",LAST_VOICE_INPUT);
+}
+$("cHide").addEventListener("click",()=>$("comms").classList.add("hidden"));
+$("cClear").addEventListener("click",()=>{CHAT=[];saveChat();renderChat();say("Fresh start. What's up?",false);});
+
+/* ---- microphone (speech-to-text) ---- */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let REC=null,LISTEN=false;
+if(!SR){$("micBtn").classList.add("off");$("micBtn").title="Voice input isn't supported in this browser – use Chrome or Edge";}
+function startListening(){
+  if(!SR||LISTEN)return;
+  try{speechSynthesis.cancel();}catch(_){}
+  REC=new SR();REC.lang="en-US";REC.interimResults=true;REC.maxAlternatives=1;REC.continuous=false;
+  let finalText="";
+  REC.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=t;else interim+=t;}
+    $("cIn").value=(finalText+interim).trim();};
+  REC.onerror=e=>{say(e.error==="not-allowed"?"Mic access is blocked – allow the microphone for this site.":"Didn't catch that ("+e.error+").",false);};
+  REC.onend=()=>{LISTEN=false;$("micBtn").classList.remove("on");$("wave").classList.remove("on");
+    const t=$("cIn").value.trim();if(t){$("cIn").value="";askJarvis(t,true);}};
+  LISTEN=true;$("micBtn").classList.add("on");$("wave").classList.add("on");say("Listening …",false);
+  try{REC.start();}catch(_){LISTEN=false;$("micBtn").classList.remove("on");}
+}
+function stopListening(){if(REC&&LISTEN)try{REC.stop();}catch(_){}}
+$("micBtn").addEventListener("click",()=>LISTEN?stopListening():startListening());
+document.addEventListener("keydown",e=>{if(e.code==="Space"&&e.ctrlKey){e.preventDefault();LISTEN?stopListening():startListening();}});
+
+function demoReply(t){
+  const v=t.toLowerCase();
+  if(/remind|add|todo|mission/.test(v))return{reply:"Say less, bro. Logged it as a mission so it doesn't slip.",actions:[{type:"add_todo",text:t.replace(/^(hey jarvis,?\s*)?(remind me to|add( a)? (mission|todo) to)?\s*/i,""),priority:"normal",due:null}]};
+  if(/nora/.test(v))return{reply:"Nora's cooking right now, my guy. She's halfway through the MacGregor October file. Pulling up her work log for you.",actions:[{type:"open_agent",name:"Nora"}]};
+  if(/how|what'?s up|status|today/.test(v))return{reply:"All good on deck, bro. Two agents are grinding: Nora on MacGregor and Isak on the Vestfold follow-up. You've got four open missions, and the DNS one is due today, so let's knock that out first.",actions:[]};
+  return{reply:"Heard you, my guy. This is demo mode though, so I'm running on fake data. Log in for the real deal.",actions:[]};
+}
+
 function toggleVoice(){VOICE=!VOICE;$("voiceBtn").classList.toggle("on",VOICE);try{localStorage.setItem("lc_voice",VOICE?"1":"0");}catch(_){}
-  if(VOICE)say(statusReport());else{try{speechSynthesis.cancel();}catch(_){}say("Voice disabled.",false);}}
+  if(VOICE)askJarvis("Give me a quick status rundown.",true);else{try{speechSynthesis.cancel();}catch(_){}say("Voice disabled.",false);}}
 $("voiceBtn").addEventListener("click",toggleVoice);
 $("refBtn").addEventListener("click",()=>CMDS.refresh());
 async function logout(){try{localStorage.removeItem("logichain_session");if(sb)await sb.auth.signOut();}catch(_){}location.href="index-en.html";}
@@ -701,7 +822,8 @@ function start(){
   $("gate").classList.add("hidden");$("app").classList.remove("hidden");$("coreLbl").classList.remove("hidden");
   $("hello").textContent=(greeting()+", "+NAME).toUpperCase();
   tick();setInterval(tick,1000);refresh();setInterval(loadAgents,25000);
-  setTimeout(()=>say(greeting()+", "+NAME+". Command center online.",false),900);
+  setTimeout(()=>{const g=greeting()+", "+NAME+". Command center's online, bro. Hit the mic or just type to talk to me.";say(g,false);if(VOICE)speak(g);},900);
+  if(CHAT.length)renderChat();
 }
 async function verify(){
   if(DEMO){$("demoTag").classList.remove("hidden");return start();}
