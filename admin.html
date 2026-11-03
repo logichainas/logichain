@@ -160,11 +160,14 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .lform .field{width:150px;padding:8px 10px;font-size:14px}
 
 /* command bar */
-#cmd{border-top:1px solid var(--line2);background:linear-gradient(0deg,rgba(0,14,24,.97),rgba(0,22,38,.88));backdrop-filter:blur(10px);padding:8px 24px 10px}
-#log{font:13px var(--mono);color:var(--cyan2);min-height:18px;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#cmd form{display:flex;align-items:center;gap:10px}
-#cmd label{font:700 14px var(--hud);color:var(--cyan);text-shadow:var(--glow);white-space:nowrap}
-#cIn{flex:1;background:transparent;border:0;border-bottom:1px solid var(--line);color:#fff;font:15px var(--mono);padding:7px 2px;outline:none;min-width:0}
+#cmd{display:flex;align-items:center;justify-content:center;gap:12px;padding:6px 24px 14px}
+.talk{background:linear-gradient(180deg,rgba(0,229,255,.16),rgba(0,229,255,.05));border:1px solid var(--line2);color:#fff;font:700 13px var(--hud);letter-spacing:.18em;text-transform:uppercase;padding:12px 22px;cursor:pointer;transition:.2s;box-shadow:inset 0 0 18px rgba(0,229,255,.12)}
+.talk:hover,.talk.on{box-shadow:var(--glow),inset 0 0 18px rgba(0,229,255,.2);border-color:var(--cyan)}
+#cForm{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+#cIn{flex:1;background:rgba(0,0,0,.35);border:1px solid var(--line);color:#fff;font:600 16px var(--ui);padding:9px 11px;outline:none;min-width:0}
+.mic.sm{width:36px;height:36px;font-size:15px}
+#toast{position:fixed;left:50%;top:86px;transform:translateX(-50%);z-index:35;font:13px var(--mono);color:var(--cyan2);background:rgba(0,16,28,.92);border:1px solid var(--line);padding:7px 14px;max-width:min(560px,90vw);opacity:0;pointer-events:none;transition:opacity .3s}
+#toast.on{opacity:1}
 #cIn:focus{border-color:var(--cyan)}
 .wave{display:flex;gap:3px;align-items:center;height:22px}
 .wave i{width:3px;background:var(--cyan);box-shadow:0 0 6px var(--cyan);height:4px}
@@ -173,7 +176,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 @keyframes wave{50%{height:20px}}
 
 /* ---------- comms (chat with Jarvis) ---------- */
-#comms{position:fixed;left:50%;bottom:208px;width:min(560px,calc(100vw - 32px));max-height:min(46vh,440px);z-index:30;transform:translateX(-50%) perspective(900px) rotateX(6deg);transform-origin:bottom;animation:commsIn .45s cubic-bezier(.2,.9,.25,1) both}
+#comms{position:fixed;left:50%;bottom:190px;width:min(580px,calc(100vw - 32px));max-height:min(56vh,520px);z-index:30;transform:translateX(-50%) perspective(900px) rotateX(6deg);transform-origin:bottom;animation:commsIn .45s cubic-bezier(.2,.9,.25,1) both}
 @keyframes commsIn{from{opacity:0;transform:translateX(-50%) perspective(900px) rotateX(40deg) translateY(30px)}}
 #chat{display:flex;flex-direction:column;gap:9px;padding-right:4px}
 .bub{max-width:86%;padding:9px 13px;line-height:1.4;font-size:16px;white-space:pre-wrap;word-break:break-word;animation:fadeIn .3s both}
@@ -227,8 +230,8 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
   header{padding:8px 24px}.clock .t{font-size:18px}
   .tile{height:58px;padding:7px 9px;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px}
   .tile .tg{display:none}.dockin{padding:10px 4px 6px;gap:8px}
-  #cmd{padding:6px 24px 7px}#log{margin-bottom:2px}
-  #comms{bottom:150px}
+  #cmd{padding:4px 24px 10px}.talk{padding:9px 18px}
+  #comms{bottom:140px}
 }
 @media (max-width:1100px){
   body{overflow:auto}
@@ -244,7 +247,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 }
 @media (max-width:640px){
   header{flex-wrap:wrap;padding:12px 16px}.greet{order:3;flex-basis:100%;text-align:left}
-  .stage,.dock{padding-left:16px;padding-right:16px}#cmd{padding:8px 16px}
+  .stage,.dock{padding-left:16px;padding-right:16px}#cmd{padding:8px 16px;background:rgba(1,5,9,.92)}
   #viewer{padding:10px}.coreLbl .v{font-size:30px}
   #comms{bottom:150px;transform:translateX(-50%)}.clock .t{font-size:18px}
 }
@@ -326,13 +329,9 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
   <div>
     <div class="dock"><div class="dockin" id="links"></div></div>
     <div id="cmd">
-      <div id="log">&gt; Ready. Type “help” for commands.</div>
-      <form id="cForm" autocomplete="off">
-        <label for="cIn">J.A.R.V.I.S. &gt;</label>
-        <input id="cIn" placeholder="Talk to Jarvis … (or: add &lt;mission&gt; · open &lt;agent&gt; · help)">
-        <button type="button" class="mic" id="micBtn" title="Hold to talk (or Ctrl+Space)">🎙</button>
-        <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i></div>
-      </form>
+      <button type="button" class="talk" id="talkBtn" title="Open chat with Jarvis (/)">💬 Talk to Jarvis</button>
+      <button type="button" class="mic" id="micBtn" title="Speak to Jarvis (Ctrl+Space)">🎙</button>
+      <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i></div>
     </div>
   </div>
 </div>
@@ -341,7 +340,13 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 <div id="comms" class="panel br hidden">
   <div class="ph"><h2>COMMS · JARVIS</h2><span><button class="mini" id="cClear" title="New conversation">NEW</button> <button class="mini" id="cHide">HIDE</button></span></div>
   <div class="scroll" id="chat"></div>
+  <form id="cForm" autocomplete="off">
+    <input id="cIn" placeholder="Talk to Jarvis …" maxlength="2000">
+    <button type="button" class="mic sm" id="micBtn2" title="Speak (Ctrl+Space)">🎙</button>
+    <button class="hbtn" type="submit">Send</button>
+  </form>
 </div>
+<div id="toast"></div>
 
 <div class="coreLbl hidden" id="coreLbl"><div class="k">AGENTS ONLINE</div><div class="v" id="coreV">—</div><div class="s" id="coreS"></div></div>
 
@@ -443,7 +448,7 @@ function initScene(){
   addEventListener("resize",resize);resize();
   addEventListener("mousemove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1;mouse.set(mx,-my);
     document.body.style.setProperty("--mx",mx.toFixed(3));document.body.style.setProperty("--my",my.toFixed(3));});
-  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate"))return;if(S.hover)openAgent(S.hover.agent.id);});
+  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms"))return;if(S.hover)openAgent(S.hover.agent.id);});
 
   S.build=function(agents){
     while(nodes.children.length)nodes.remove(nodes.children[0]);
@@ -585,13 +590,14 @@ function closeViewer(){$("viewer").classList.add("hidden");clearInterval(VIEW.ti
 $("vClose").addEventListener("click",closeViewer);
 $("vRef").addEventListener("click",()=>VIEW.session&&openSession(VIEW.session));
 $("viewer").addEventListener("click",e=>{if(e.target.id==="viewer")closeViewer();});
-addEventListener("keydown",e=>{if(e.key==="Escape")closeViewer();});
+addEventListener("keydown",e=>{if(e.key==="Escape"){if(!$("viewer").classList.contains("hidden"))closeViewer();else hideComms();}});
 
 /* ================= MISSIONS (to-do) ================= */
-let MEM_ID=100;
+let MEM_ID=100,TODOS_LOADED=false;
 async function loadTodos(){
-  if(DEMO){if(!TODOS.length)TODOS=demoTodos();return renderTodos();}
+  if(DEMO){if(!TODOS.length)TODOS=demoTodos();TODOS_LOADED=true;return renderTodos();}
   const r=await sb.from("admin_todos").select("*").order("created_at",{ascending:false});
+  TODOS_LOADED=true;
   if(r.error){$("todos").innerHTML=`<div class="empty">Mission storage not ready. Run <code>supabase/admin-workspace.sql</code> in Supabase.<br><small>${esc(r.error.message)}</small></div>`;return;}
   TODOS=r.data||[];renderTodos();
 }
@@ -700,8 +706,8 @@ function speak(text,force){
     speechSynthesis.speak(u);}catch(_){}
 }
 let typeT=null;
-function say(text,talk){const el=$("log");clearInterval(typeT);let i=0;
-  typeT=setInterval(()=>{el.textContent="> "+text.slice(0,++i);if(i>=text.length)clearInterval(typeT);},12);
+function say(text,talk){const el=$("toast");clearTimeout(typeT);
+  if(text){el.textContent=text;el.classList.add("on");typeT=setTimeout(()=>el.classList.remove("on"),4200);}
   if(talk!==false)speak(text);}
 function findAgent(q){q=q.toLowerCase();return liveAgents().find(a=>a.name.toLowerCase()===q)||liveAgents().find(a=>a.name.toLowerCase().includes(q));}
 const CMDS={
@@ -728,7 +734,7 @@ $("cForm").addEventListener("submit",e=>{e.preventDefault();const raw=$("cIn").v
 let CHAT=[],BUSY=false,LAST_VOICE_INPUT=false;
 try{CHAT=JSON.parse(sessionStorage.getItem("jv_chat")||"[]");}catch(_){CHAT=[];}
 function saveChat(){try{sessionStorage.setItem("jv_chat",JSON.stringify(CHAT.slice(-30)));}catch(_){}}
-function showComms(){$("comms").classList.remove("hidden");}
+function showComms(){$("comms").classList.remove("hidden");$("talkBtn").classList.add("on");}
 function renderChat(pending){
   const box=$("chat");
   box.innerHTML=CHAT.slice(-20).map(m=>m.role==="user"?`<div class="bub me">${esc(m.content)}</div>`
@@ -739,15 +745,17 @@ function renderChat(pending){
 }
 function jarvisContext(){
   const today=new Date();
+  const loc=t=>t?new Date(t).toLocaleString("en-GB",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})+" ("+ago(t)+")":null;
   return{
+    note:"All times are already in Einar's local time zone ("+(Intl.DateTimeFormat().resolvedOptions().timeZone||"local")+").",
     now:today.toLocaleString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric",hour:"2-digit",minute:"2-digit"}),
     today:today.toISOString().slice(0,10),
     user:NAME,
     missions_open:TODOS.filter(t=>!t.done).map(t=>({id:t.id,text:t.text,priority:t.priority,due:t.due})),
-    missions_done_recently:TODOS.filter(t=>t.done).slice(0,5).map(t=>({id:t.id,text:t.text,completed:t.done_at})),
+    missions_done_recently:TODOS.filter(t=>t.done).slice(0,5).map(t=>({id:t.id,text:t.text,completed:loc(t.done_at)})),
     agent_network:AG?"online":"offline",
     agents:(AG?liveAgents():[]).map(a=>{const{st,mine}=agentState(a);return{name:a.name,model:a.model,description:a.description,state:st,
-      sessions:mine.slice(0,4).map(s=>({title:s.title,status:s.status,last_activity:s.updated_at||s.created_at}))};}),
+      sessions:mine.slice(0,4).map(s=>({title:s.title,status:s.status,last_activity:loc(s.updated_at||s.created_at)}))};}),
     quick_links:LINKS.map(l=>l.title)
   };
 }
@@ -768,7 +776,6 @@ async function askJarvis(text,fromVoice){
   showComms();
   const history=CHAT.filter(m=>m.role==="user"||m.role==="assistant").slice(-14);
   CHAT.push({role:"user",content:text});renderChat(true);
-  say("Thinking …",false);
   let j;
   try{
     if(DEMO){await new Promise(r=>setTimeout(r,700));j=demoReply(text);}
@@ -780,18 +787,21 @@ async function askJarvis(text,fromVoice){
     }
   }catch(e){j={error:e.message||String(e)};}
   BUSY=false;
-  if(j.error){CHAT.push({role:"assistant",content:"Bro, something's off on my end: "+j.error});renderChat();saveChat();return say(j.error,false);}
+  if(j.error){CHAT.push({role:"assistant",content:"Bro, something's off on my end: "+j.error});renderChat();saveChat();return;}
   CHAT.push({role:"assistant",content:j.reply||"…"});
   await runActions(j.actions);
   renderChat();saveChat();
-  say(j.reply||"",false);speak(j.reply||"",LAST_VOICE_INPUT);
+  speak(j.reply||"",LAST_VOICE_INPUT);
 }
-$("cHide").addEventListener("click",()=>$("comms").classList.add("hidden"));
-$("cClear").addEventListener("click",()=>{CHAT=[];saveChat();renderChat();say("Fresh start. What's up?",false);});
+function showCommsFocus(){showComms();renderChat();setTimeout(()=>$("cIn").focus(),50);$("talkBtn").classList.add("on");}
+function hideComms(){$("comms").classList.add("hidden");$("talkBtn").classList.remove("on");}
+$("cHide").addEventListener("click",hideComms);
+$("talkBtn").addEventListener("click",()=>$("comms").classList.contains("hidden")?showCommsFocus():hideComms());
+$("cClear").addEventListener("click",()=>{CHAT=[];saveChat();renderChat();say("Fresh start. What's up, boss?",false);});
 
 /* ---- microphone (speech-to-text) ---- */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let REC=null,LISTEN=false;
-if(!SR){$("micBtn").classList.add("off");$("micBtn").title="Voice input isn't supported in this browser – use Chrome or Edge";}
+if(!SR)["micBtn","micBtn2"].forEach(id=>{$(id).classList.add("off");$(id).title="Voice input isn't supported in this browser – use Chrome or Edge";});
 function startListening(){
   if(!SR||LISTEN)return;
   try{speechSynthesis.cancel();}catch(_){}
@@ -800,13 +810,13 @@ function startListening(){
   REC.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=t;else interim+=t;}
     $("cIn").value=(finalText+interim).trim();};
   REC.onerror=e=>{say(e.error==="not-allowed"?"Mic access is blocked – allow the microphone for this site.":"Didn't catch that ("+e.error+").",false);};
-  REC.onend=()=>{LISTEN=false;$("micBtn").classList.remove("on");$("wave").classList.remove("on");
+  REC.onend=()=>{LISTEN=false;$("micBtn").classList.remove("on");$("micBtn2").classList.remove("on");$("wave").classList.remove("on");$("cIn").placeholder="Talk to Jarvis …";
     const t=$("cIn").value.trim();if(t){$("cIn").value="";askJarvis(t,true);}};
-  LISTEN=true;$("micBtn").classList.add("on");$("wave").classList.add("on");say("Listening …",false);
+  showComms();LISTEN=true;$("micBtn").classList.add("on");$("micBtn2").classList.add("on");$("wave").classList.add("on");$("cIn").placeholder="Listening …";
   try{REC.start();}catch(_){LISTEN=false;$("micBtn").classList.remove("on");}
 }
 function stopListening(){if(REC&&LISTEN)try{REC.stop();}catch(_){}}
-$("micBtn").addEventListener("click",()=>LISTEN?stopListening():startListening());
+["micBtn","micBtn2"].forEach(id=>$(id).addEventListener("click",()=>LISTEN?stopListening():startListening()));
 document.addEventListener("keydown",e=>{if(e.code==="Space"&&e.ctrlKey){e.preventDefault();LISTEN?stopListening():startListening();}});
 
 function demoReply(t){
@@ -823,16 +833,72 @@ $("voiceBtn").addEventListener("click",toggleVoice);
 $("refBtn").addEventListener("click",()=>CMDS.refresh());
 async function logout(){try{localStorage.removeItem("logichain_session");if(sb)await sb.auth.signOut();}catch(_){}location.href="index-en.html";}
 $("outBtn").addEventListener("click",logout);
-document.addEventListener("keydown",e=>{if(e.key==="/"&&!/input|textarea/i.test(document.activeElement.tagName)){e.preventDefault();$("cIn").focus();}});
+document.addEventListener("keydown",e=>{if(e.key==="/"&&!/input|textarea/i.test(document.activeElement.tagName)){e.preventDefault();showCommsFocus();}});
+
+/* ================= BRO GREETING (spoken on every login) ================= */
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+function broGreeting(){
+  const h=new Date().getHours();
+  const open=TODOS.filter(t=>!t.done),hi=open.filter(t=>t.priority==="high");
+  const today=new Date().toISOString().slice(0,10),due=open.filter(t=>t.due&&t.due<=today);
+  const ags=AG?liveAgents():[],w=ags.filter(a=>agentState(a).st==="running");
+  const hello=h<5?pick(["Yo boss, burning the midnight oil?","Late night grind, boss? Respect."])
+    :h<12?pick(["Morning, boss! Let's get this bread.","Rise and grind, boss.","Yo, good morning boss!"])
+    :h<18?pick(["What's good, boss!","Yo boss, welcome back.","There he is! What's up, boss."])
+    :pick(["Evening, boss! Good to see you.","Yo boss, what's good tonight?","Welcome back, boss. Let's cook."]);
+  let crew;
+  if(!AG)crew="The agent network's offline right now, so I'll keep an eye on it.";
+  else if(w.length)crew=w.length===1?`${w[0].name} is grinding as we speak.`:`${w.length} agents are grinding right now: ${w.map(a=>a.name).join(" and ")}.`;
+  else crew=ags.length?`All ${ags.length} agents are chilling on standby.`:"No agents online yet.";
+  let ms;
+  if(!open.length)ms="Mission board's clean. Nothing on your plate.";
+  else ms=`You've got ${open.length} mission${open.length==1?"":"s"} on deck`+(due.length?`, and ${due.length} ${due.length==1?"is":"are"} due today, so let's knock ${due.length==1?"that":"those"} out first.`:hi.length?`, ${hi.length} marked high priority.`:".");
+  return `${hello} ${crew} ${ms} ${pick(["Let's get it.","I got you.","Say the word.","We're cooking."])}`;
+}
+let GREETED=false;
+function greetOnLogin(){
+  // wait until agents + missions are loaded (max 6 s), then greet out loud
+  const t0=Date.now();
+  (function wait(){
+    if((AG===undefined||!TODOS_LOADED)&&Date.now()-t0<6000)return setTimeout(wait,250);
+    if(GREETED)return;GREETED=true;
+    const g=broGreeting();
+    CHAT.push({role:"assistant",content:g});saveChat();renderChat();
+    say(g,false);speakGreeting(g);
+  })();
+}
+// Browsers only allow speech after the user has interacted with the page.
+function speakGreeting(g){
+  const can=!navigator.userActivation||navigator.userActivation.hasBeenActive;
+  if(can){speakNow(g,()=>armGreeting(g));return;}
+  armGreeting(g);
+}
+function armGreeting(g){
+  say("👋 Click anywhere to hear Jarvis",false);
+  const go=()=>{removeEventListener("pointerdown",go,true);removeEventListener("keydown",go,true);speakNow(g);};
+  addEventListener("pointerdown",go,true);addEventListener("keydown",go,true);
+}
+function speakNow(text,onBlocked){
+  if(!("speechSynthesis" in window))return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=jarvisVoice();
+    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-US";u.rate=1.06;u.pitch=.95;
+    u.onstart=()=>$("wave").classList.add("on");
+    u.onend=()=>$("wave").classList.remove("on");
+    u.onerror=e=>{$("wave").classList.remove("on");if(onBlocked&&/not-allowed/.test(e.error||""))onBlocked();};
+    // voices may load late on first visit
+    if(!VOICES.length){loadVoices();setTimeout(()=>{const vv=jarvisVoice();if(vv){u.voice=vv;u.lang=vv.lang;}speechSynthesis.speak(u);},400);}
+    else speechSynthesis.speak(u);}catch(_){}
+}
 
 /* ================= AUTH + START ================= */
 function refresh(){loadAgents();loadTodos();loadLinks();}
 function start(){
   $("gate").classList.add("hidden");$("app").classList.remove("hidden");$("coreLbl").classList.remove("hidden");
-  $("hello").textContent=(greeting()+", "+NAME).toUpperCase();
+  $("hello").textContent=(greeting()+", boss").toUpperCase();
   tick();setInterval(tick,1000);refresh();setInterval(loadAgents,25000);
-  setTimeout(()=>{const g=greeting()+", "+NAME+". Command center's online, bro. Hit the mic or just type to talk to me.";say(g,false);if(VOICE)speak(g);},900);
-  if(CHAT.length)renderChat();
+  CHAT=[];saveChat();
+  greetOnLogin();
+
 }
 async function verify(){
   if(DEMO){$("demoTag").classList.remove("hidden");return start();}
