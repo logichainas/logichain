@@ -77,18 +77,38 @@ const SUPABASE={url:"https://iksnoymoqvweudilfuzy.supabase.co",anonKey:"sb_publi
 const sb=supabase.createClient(SUPABASE.url,SUPABASE.anonKey);
 let KID=null,FIRMA=null,PROFILE=null,PENDING=null;
 function gErr(m){const e=document.getElementById("gErr");e.textContent=m;e.style.display="block";}
+async function enter(user){
+  const p=await sb.from("kunder").select("id,firma,seed,admin").eq("user_id",user.id).maybeSingle();
+  if(!p.data){gErr("Ingen kundeprofil for denne brukeren.");return;}
+  KID=p.data.id;FIRMA=p.data.firma;PROFILE=p.data;
+  document.getElementById("gate").style.display="none";
+  document.getElementById("app").style.display="block";
+  const tgt=document.getElementById("target");
+  if(p.data.admin){
+    // admin velger hvilken kunde dataene skal importeres til
+    const all=await sb.from("kunder").select("id,firma,seed,portal").order("firma");
+    const list=(all.data||[]).filter(k=>k.portal!=="admin.html");
+    if(list.length){
+      const want=new URLSearchParams(location.search).get("kunde");
+      const pick=list.find(k=>k.id===want)||list.find(k=>k.portal==="macgregor-dashboard.html")||list[0];
+      KID=pick.id;FIRMA=pick.firma;
+      tgt.innerHTML="Importer til: <select id='kSel' style='width:auto;display:inline-block;margin-left:6px'>"+
+        list.map(k=>"<option value='"+k.id+"'"+(k.id===KID?" selected":"")+">"+k.firma.replace(/</g,"&lt;")+"</option>").join("")+"</select>";
+      document.getElementById("kSel").addEventListener("change",e=>{KID=e.target.value;FIRMA=list.find(k=>k.id===KID).firma;});
+      return;
+    }
+  }
+  tgt.innerHTML="<b style='color:#fff'>"+FIRMA+"</b> · seed "+p.data.seed;
+}
 document.getElementById("gForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const em=document.getElementById("gMail").value.trim(),pw=document.getElementById("gPass").value;
   const r=await sb.auth.signInWithPassword({email:em,password:pw});
   if(r.error){gErr(r.error.message);return;}
-  const p=await sb.from("kunder").select("id,firma,seed").eq("user_id",r.data.user.id).maybeSingle();
-  if(!p.data){gErr("Ingen kundeprofil for denne brukeren.");return;}
-  KID=p.data.id;FIRMA=p.data.firma;PROFILE=p.data;
-  document.getElementById("gate").style.display="none";
-  document.getElementById("app").style.display="block";
-  document.getElementById("target").innerHTML="<b style='color:#fff'>"+FIRMA+"</b> · seed "+p.data.seed;
+  await enter(r.data.user);
 });
+// allerede innlogget (f.eks. fra admin-dashboardet)? hopp over innloggingen
+sb.auth.getSession().then(r=>{const u=r&&r.data&&r.data.session&&r.data.session.user;if(u)enter(u);});
 document.getElementById("sample").addEventListener("click",e=>{
   e.preventDefault();
   const head=["PO-nummer","Linjenr","Leverandørnavn","Leverandørnr","Materialnummer","Materialebeskrivelse","Kategori","Prosjektnr","Antall","Enhet","Enhetspris (NOK)","Linjeverdi (NOK)","Bestillingsdato","Love-dato","Faktisk leveringsdato","Leveringsstatus","Kommentar"];

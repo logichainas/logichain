@@ -6,14 +6,17 @@
 
 -- 1) Fjern skriverettigheter fra kunder på dashboard-data
 drop policy if exists "lev_own" on leverandorer;
+drop policy if exists "lev_read" on leverandorer;
 create policy "lev_read" on leverandorer for select
   using (kunde_id in (select id from kunder where user_id = auth.uid()));
 
 drop policy if exists "mat_own" on materialer;
+drop policy if exists "mat_read" on materialer;
 create policy "mat_read" on materialer for select
   using (kunde_id in (select id from kunder where user_id = auth.uid()));
 
 drop policy if exists "po_own" on po_linjer;
+drop policy if exists "po_read" on po_linjer;
 create policy "po_read" on po_linjer for select
   using (kunde_id in (select id from kunder where user_id = auth.uid()));
 

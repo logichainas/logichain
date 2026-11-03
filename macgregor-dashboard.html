@@ -44,9 +44,9 @@ window.__ERRS.push("PROMISE-FEIL: "+(r&&r.message?r.message:String(r))+s);__show
   async function verify(){
     var r=await sb.auth.getSession();var s=r&&r.data&&r.data.session;
     if(!s){loginCard("");return;}
-    var p=await sb.from("kunder").select("firma,seed").eq("user_id",s.user.id).maybeSingle();
+    var p=await sb.from("kunder").select("firma,seed,admin").eq("user_id",s.user.id).maybeSingle();
     var row=p&&p.data;
-    if(!row||(row.seed+"")!=="4211"){await sb.auth.signOut();loginCard("Ingen tilgang for denne brukeren.");return;}
+    if(!row||((row.seed+"")!=="4211"&&!row.admin)){await sb.auth.signOut();loginCard("Ingen tilgang for denne brukeren.");return;}
     try{localStorage.setItem("logichain_session",JSON.stringify({id:s.user.id,firma:row.firma,seed:4211,src:"supabase"}));}catch(e){}
     var ub=document.getElementById("upBtn");if(ub)ub.style.display="inline-block";
     reveal();
@@ -568,7 +568,12 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
       const prof=await sb.from("kunder").select("id,firma,seed,admin").eq("user_id",sess.user.id).maybeSingle();
       DIAG+="profil="+(prof&&prof.data?("ja (seed "+prof.data.seed+", admin "+prof.data.admin+")"):"MANGLER")+" | ";
       if(prof&&prof.data){
-        const kid=prof.data.id;
+        let kid=prof.data.id;
+        // admin (Logichain) ser MacGregor sine data
+        if(prof.data.admin&&(prof.data.seed+"")!=="4211"){
+          const mg=await sb.from("kunder").select("id").eq("seed",4211).limit(1).maybeSingle();
+          if(mg&&mg.data)kid=mg.data.id;
+        }
         const fetchAll=async function(tbl,ord){
           var out=[],from=0,done=false;
           while(!done){

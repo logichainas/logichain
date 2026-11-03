@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Logichain · Kommandosentral</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#02070f;--bg2:#061424;--panel:rgba(8,32,52,.55);--panel2:rgba(0,229,255,.05);
+  --line:rgba(0,229,255,.22);--line2:rgba(0,229,255,.5);
+  --cyan:#00e5ff;--cyan2:#7df3ff;--glow:0 0 12px rgba(0,229,255,.55),0 0 28px rgba(0,229,255,.25);
+  --amber:#ffb547;--red:#ff4d6d;--green:#3dffb0;--violet:#b48cff;
+  --text:#d6f6ff;--muted:#6f97b2;--dim:#3f6782;
+  --hud:"Orbitron",system-ui,sans-serif;--ui:"Rajdhani",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--text);font-family:var(--ui);font-size:16px;overflow-x:hidden;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% 35%,rgba(0,120,170,.22),transparent 70%),
+    radial-gradient(ellipse 50% 40% at 85% 100%,rgba(0,229,255,.08),transparent 70%),
+    linear-gradient(rgba(0,229,255,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,229,255,.035) 1px,transparent 1px);
+  background-size:auto,auto,44px 44px,44px 44px;background-attachment:fixed}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
+.scan{position:fixed;left:0;right:0;height:140px;top:-140px;pointer-events:none;z-index:49;
+  background:linear-gradient(180deg,transparent,rgba(0,229,255,.06),transparent);animation:scan 7s linear infinite}
+@keyframes scan{to{top:100%}}
+a{color:var(--cyan)}
+button{font-family:var(--ui)}
+.hidden{display:none!important}
+
+/* ---------- boot ---------- */
+#boot{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:26px;transition:opacity .7s}
+#boot.off{opacity:0;pointer-events:none}
+#boot .mark{width:120px;height:120px}
+#boot pre{font-family:var(--mono);font-size:13px;color:var(--cyan2);min-height:150px;width:min(520px,90vw);white-space:pre-wrap;text-shadow:0 0 8px rgba(0,229,255,.5)}
+.spin{transform-origin:50% 50%;animation:spin 6s linear infinite}
+.spin.r{animation-direction:reverse;animation-duration:9s}
+.spin.s{animation-duration:22s}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- gate ---------- */
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.gatebox{width:min(400px,100%);border:1px solid var(--line2);background:var(--panel);padding:30px 26px;position:relative;backdrop-filter:blur(6px)}
+.gatebox h1{font-family:var(--hud);font-size:18px;letter-spacing:.2em;color:var(--cyan);text-shadow:var(--glow);margin-bottom:6px}
+.gatebox p{color:var(--muted);margin-bottom:20px}
+.gatebox input{width:100%;background:rgba(0,0,0,.35);border:1px solid var(--line);color:var(--text);font:600 16px var(--ui);padding:12px 14px;margin-bottom:12px;outline:none}
+.gatebox input:focus{border-color:var(--cyan);box-shadow:var(--glow)}
+.err{color:var(--red);font-size:14px;min-height:20px;margin-bottom:8px}
+
+/* ---------- corner brackets ---------- */
+.br{position:relative}
+.br::before,.br::after{content:"";position:absolute;width:14px;height:14px;border:2px solid var(--cyan);pointer-events:none;filter:drop-shadow(0 0 4px var(--cyan))}
+.br::before{top:-1px;left:-1px;border-right:0;border-bottom:0}
+.br::after{bottom:-1px;right:-1px;border-left:0;border-top:0}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;gap:18px;padding:14px 22px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(0,40,64,.55),rgba(0,20,34,.2));position:sticky;top:0;z-index:20;backdrop-filter:blur(8px)}
+.brand{font-family:var(--hud);font-weight:900;letter-spacing:.24em;font-size:15px;color:var(--cyan);text-shadow:var(--glow);white-space:nowrap}
+.brand small{display:block;font-weight:500;font-size:9px;letter-spacing:.42em;color:var(--muted);text-shadow:none;margin-top:3px}
+.greet{flex:1;min-width:0}
+.greet b{font-family:var(--hud);font-size:14px;letter-spacing:.12em;color:var(--text)}
+.greet div{color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clock{font-family:var(--hud);text-align:right;line-height:1.1}
+.clock .t{font-size:22px;color:var(--cyan);text-shadow:var(--glow);letter-spacing:.08em}
+.clock .d{font-size:10px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase}
+.hbtn{background:transparent;border:1px solid var(--line);color:var(--cyan2);font:600 13px var(--ui);letter-spacing:.14em;text-transform:uppercase;padding:8px 12px;cursor:pointer;transition:.2s}
+.hbtn:hover,.hbtn.on{border-color:var(--cyan);box-shadow:var(--glow);color:#fff;background:rgba(0,229,255,.08)}
+.hbtns{display:flex;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:7px;font:600 11px var(--hud);letter-spacing:.16em;color:var(--green);border:1px solid rgba(61,255,176,.35);padding:5px 10px;margin-left:10px;vertical-align:middle}
+.chip.warn{color:var(--amber);border-color:rgba(255,181,71,.4)}
+.dot{width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+.demo{font:700 11px var(--hud);letter-spacing:.2em;color:var(--bg);background:var(--amber);padding:4px 8px}
+
+/* ---------- layout ---------- */
+main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);gap:18px;padding:18px 22px 110px;max-width:1700px;margin:0 auto}
+.col{display:flex;flex-direction:column;gap:18px;min-width:0}
+.panel{border:1px solid var(--line);background:var(--panel);backdrop-filter:blur(6px);padding:16px 16px 14px;min-width:0;animation:rise .6s both}
+.col .panel:nth-child(2){animation-delay:.1s}.col .panel:nth-child(3){animation-delay:.2s}.col .panel:nth-child(4){animation-delay:.3s}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.ph{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.ph h2{font-family:var(--hud);font-size:12px;font-weight:700;letter-spacing:.26em;color:var(--cyan);text-shadow:0 0 8px rgba(0,229,255,.5)}
+.ph span{font:12px var(--mono);color:var(--muted)}
+.empty{color:var(--muted);font-size:14px;padding:6px 0}
+
+/* ---------- reactor ---------- */
+.reactor{position:relative;width:min(100%,460px);aspect-ratio:1;margin:0 auto}
+.reactor svg{width:100%;height:100%;overflow:visible}
+.rc{position:absolute;inset:24%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.rc .lbl{font:600 11px var(--hud);letter-spacing:.34em;color:var(--muted)}
+.rc .big{font:900 clamp(30px,5vw,46px) var(--hud);color:#fff;text-shadow:var(--glow);margin:6px 0 2px}
+.rc .sub{font:13px var(--mono);color:var(--cyan2)}
+.gauges{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}
+.g{text-align:center}
+.g svg{width:100%;max-width:110px;aspect-ratio:1;display:block;margin:0 auto}
+.g .gv{font:700 18px var(--hud);fill:#fff}
+.g .gl{font:600 11px var(--hud);letter-spacing:.2em;color:var(--muted);margin-top:4px;text-transform:uppercase}
+
+/* ---------- lists ---------- */
+.kunde{border:1px solid var(--line);background:var(--panel2);padding:12px;margin-bottom:10px;cursor:default;transition:.2s}
+.kunde:hover{border-color:var(--line2);box-shadow:inset 0 0 22px rgba(0,229,255,.08)}
+.kunde .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.kunde .nm{font-weight:700;font-size:18px;color:#fff}
+.kunde .sp{font:600 14px var(--mono);color:var(--cyan)}
+.kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0 8px}
+.kgrid div{font-size:12px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.kgrid b{display:block;font:600 15px var(--mono);color:var(--text);text-transform:none;letter-spacing:0}
+.bar{height:4px;background:rgba(0,229,255,.1);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--cyan),var(--cyan2));box-shadow:0 0 10px var(--cyan)}
+.kfoot{display:flex;justify-content:space-between;align-items:center;margin-top:9px;font-size:13px;color:var(--muted)}
+.lnk{font:600 12px var(--ui);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);text-decoration:none;border:1px solid var(--line);padding:4px 9px}
+.lnk:hover{border-color:var(--cyan);box-shadow:var(--glow)}
+.row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed rgba(0,229,255,.13);font-size:14px}
+.row:last-child{border-bottom:0}
+.row .m{flex:1;min-width:0}
+.row .m b{display:block;color:#fff;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .m small{color:var(--muted);font:12px var(--mono)}
+.pill{font:700 10px var(--hud);letter-spacing:.14em;padding:4px 7px;border:1px solid currentColor;white-space:nowrap;text-transform:uppercase}
+.p-run{color:var(--green)}.p-idle{color:var(--cyan2)}.p-res{color:var(--amber)}.p-term{color:var(--dim)}.p-ny{color:var(--amber)}.p-ok{color:var(--green)}
+.mini{background:transparent;border:1px solid var(--line);color:var(--cyan2);font:600 11px var(--ui);letter-spacing:.12em;text-transform:uppercase;padding:4px 8px;cursor:pointer}
+.mini:hover{border-color:var(--cyan);color:#fff}
+
+/* agents */
+.agents{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.agent{border:1px solid var(--line);padding:12px 10px;background:var(--panel2);position:relative;overflow:hidden}
+.agent::after{content:"";position:absolute;inset:auto -30% -60% -30%;height:80%;background:radial-gradient(closest-side,rgba(0,229,255,.18),transparent);opacity:0;transition:.3s}
+.agent.live::after{opacity:1;animation:pulse 2.4s ease-in-out infinite}
+.agent .an{font-weight:700;color:#fff;font-size:15px;line-height:1.15;margin:8px 0 4px;word-break:break-word}
+.agent .am{font:11px var(--mono);color:var(--muted)}
+.agent .as{display:flex;align-items:center;gap:6px;font:700 10px var(--hud);letter-spacing:.16em}
+.cfg{font-size:14px;color:var(--muted);line-height:1.5}
+.cfg ol{margin:8px 0 0 18px}.cfg code{font-family:var(--mono);color:var(--cyan2);font-size:13px}
+
+/* chart */
+.chart svg{width:100%;height:190px;display:block}
+.chart .ax{font:10px var(--mono);fill:var(--muted)}
+.chart .bv{font:10px var(--mono);fill:var(--cyan2)}
+
+/* system */
+.sys{display:grid;grid-template-columns:1fr auto;gap:8px 12px;font-size:14px;align-items:center}
+.sys span:nth-child(odd){color:var(--muted);letter-spacing:.06em}
+.sys span:nth-child(even){font:600 13px var(--mono);display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.ok{color:var(--green)}.bad{color:var(--red)}.wrn{color:var(--amber)}
+
+/* command bar */
+#cmd{position:fixed;left:0;right:0;bottom:0;z-index:30;border-top:1px solid var(--line2);background:linear-gradient(0deg,rgba(0,18,30,.97),rgba(0,22,38,.9));backdrop-filter:blur(8px);padding:10px 22px 12px}
+#log{font:13px var(--mono);color:var(--cyan2);min-height:20px;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:1700px;margin-left:auto;margin-right:auto}
+#cmd form{display:flex;align-items:center;gap:10px;max-width:1700px;margin:0 auto}
+#cmd label{font:700 14px var(--hud);color:var(--cyan);text-shadow:var(--glow)}
+#cmd input{flex:1;background:transparent;border:0;border-bottom:1px solid var(--line);color:#fff;font:15px var(--mono);padding:8px 2px;outline:none;min-width:0}
+#cmd input:focus{border-color:var(--cyan)}
+.wave{display:flex;gap:3px;align-items:center;height:22px}
+.wave i{width:3px;background:var(--cyan);box-shadow:0 0 6px var(--cyan);height:4px;transition:height .1s}
+.wave.on i{animation:wave .9s ease-in-out infinite}
+.wave i:nth-child(2){animation-delay:.1s}.wave i:nth-child(3){animation-delay:.2s}.wave i:nth-child(4){animation-delay:.3s}.wave i:nth-child(5){animation-delay:.4s}
+@keyframes wave{50%{height:20px}}
+
+@media (max-width:1180px){main{grid-template-columns:1fr 1fr}.center{grid-column:1/-1;order:-1}}
+@media (max-width:760px){
+  main{grid-template-columns:1fr;padding:14px 16px 120px}
+  header{flex-wrap:wrap;padding:12px 16px;position:static}.greet{order:3;flex-basis:100%}.chip{display:none}
+  .gauges{grid-template-columns:repeat(2,1fr)}.clock .t{font-size:18px}
+  #cmd{padding:8px 16px 10px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.scan{display:none}}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+
+<!-- ============ BOOT ============ -->
+<div id="boot">
+  <svg class="mark" viewBox="0 0 120 120" aria-hidden="true">
+    <circle cx="60" cy="60" r="54" fill="none" stroke="rgba(0,229,255,.25)" stroke-width="1"/>
+    <g class="spin"><circle cx="60" cy="60" r="46" fill="none" stroke="#00e5ff" stroke-width="3" stroke-dasharray="60 30 10 30" style="filter:drop-shadow(0 0 6px #00e5ff)"/></g>
+    <g class="spin r"><circle cx="60" cy="60" r="34" fill="none" stroke="#7df3ff" stroke-width="2" stroke-dasharray="4 8"/></g>
+    <circle cx="60" cy="60" r="16" fill="rgba(0,229,255,.25)" stroke="#00e5ff" stroke-width="2" style="filter:drop-shadow(0 0 10px #00e5ff)"/>
+  </svg>
+  <pre id="bootlog"></pre>
+</div>
+
+<!-- ============ LOGIN ============ -->
+<div id="gate" class="hidden">
+  <form class="gatebox br" id="gForm">
+    <h1>LOGICHAIN // ADMIN</h1>
+    <p>Identifiser deg for å åpne kommandosentralen.</p>
+    <input type="email" id="gMail" placeholder="E-post" autocomplete="username" required>
+    <input type="password" id="gPass" placeholder="Passord" autocomplete="current-password" required>
+    <div class="err" id="gErr"></div>
+    <button class="hbtn" style="width:100%;padding:12px" type="submit">Autentiser</button>
+    <p style="margin:16px 0 0;font-size:13px"><a href="index.html">← Tilbake til logichain.no</a></p>
+  </form>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hidden">
+  <header>
+    <div class="brand">LOGICHAIN<small>KOMMANDOSENTRAL</small></div>
+    <div class="greet">
+      <b id="hello">GOD KVELD, EINAR</b><span class="chip" id="sysChip"><i class="dot"></i><span>ALLE SYSTEMER OPERATIVE</span></span>
+      <div id="brief">Kobler til datakilder …</div>
+    </div>
+    <span class="demo hidden" id="demoTag">DEMODATA</span>
+    <div class="clock"><div class="t" id="clk">--:--:--</div><div class="d" id="dte"></div></div>
+    <div class="hbtns">
+      <button class="hbtn" id="voiceBtn" title="Les opp statusrapport">🔊 Stemme</button>
+      <button class="hbtn" id="refBtn" title="Oppdater nå">⟳</button>
+      <button class="hbtn" id="outBtn">Logg ut</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- LEFT -->
+    <section class="col">
+      <div class="panel br">
+        <div class="ph"><h2>KUNDER</h2><span id="kCount"></span></div>
+        <div id="kunder"><div class="empty">Laster …</div></div>
+      </div>
+      <div class="panel br">
+        <div class="ph"><h2>INNLEVERINGER</h2><span id="iCount"></span></div>
+        <div id="inn"><div class="empty">Laster …</div></div>
+      </div>
+    </section>
+
+    <!-- CENTER -->
+    <section class="col center">
+      <div class="panel br" style="padding-top:20px">
+        <div class="reactor">
+          <svg viewBox="0 0 400 400" aria-hidden="true">
+            <defs>
+              <radialGradient id="core" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#e9fdff" stop-opacity=".95"/>
+                <stop offset="35%" stop-color="#00e5ff" stop-opacity=".55"/>
+                <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+              </radialGradient>
+              <filter id="gl"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            </defs>
+            <circle cx="200" cy="200" r="196" fill="none" stroke="rgba(0,229,255,.12)"/>
+            <g class="spin s"><circle cx="200" cy="200" r="186" fill="none" stroke="rgba(0,229,255,.45)" stroke-width="1" stroke-dasharray="2 6"/></g>
+            <g id="ticks"></g>
+            <!-- OTD-ring -->
+            <circle cx="200" cy="200" r="160" fill="none" stroke="rgba(0,229,255,.1)" stroke-width="10"/>
+            <circle id="otdRing" cx="200" cy="200" r="160" fill="none" stroke="#00e5ff" stroke-width="10" stroke-linecap="butt"
+              stroke-dasharray="0 1006" transform="rotate(-90 200 200)" filter="url(#gl)" style="transition:stroke-dasharray 1.6s cubic-bezier(.2,.8,.2,1)"/>
+            <g class="spin r"><circle cx="200" cy="200" r="140" fill="none" stroke="#7df3ff" stroke-width="2" stroke-dasharray="90 20 30 20" opacity=".7"/></g>
+            <g class="spin"><circle cx="200" cy="200" r="124" fill="none" stroke="#00e5ff" stroke-width="1.5" stroke-dasharray="6 10" opacity=".8"/></g>
+            <g class="spin s" style="animation-duration:14s">
+              <path d="M200 92 A108 108 0 0 1 308 200" fill="none" stroke="#00e5ff" stroke-width="3" filter="url(#gl)"/>
+              <path d="M200 308 A108 108 0 0 1 92 200" fill="none" stroke="#00e5ff" stroke-width="3" filter="url(#gl)"/>
+            </g>
+            <circle cx="200" cy="200" r="96" fill="url(#core)" opacity=".35"/>
+            <circle cx="200" cy="200" r="92" fill="rgba(2,10,18,.75)" stroke="rgba(0,229,255,.5)" stroke-width="1"/>
+            <text x="200" y="30" text-anchor="middle" style="font:600 10px Orbitron;letter-spacing:.3em;fill:#6f97b2">LEVERINGSPRESISJON ±5 D</text>
+          </svg>
+          <div class="rc">
+            <div class="lbl">TOTAL SPEND</div>
+            <div class="big" id="spendBig">—</div>
+            <div class="sub" id="spendSub">—</div>
+            <div class="sub" style="margin-top:8px;color:#fff;font-weight:600" id="otdTxt"></div>
+          </div>
+        </div>
+        <div class="gauges" id="gauges"></div>
+      </div>
+      <div class="panel br chart">
+        <div class="ph"><h2>SPEND PER MÅNED</h2><span id="chSub"></span></div>
+        <div id="chart"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT -->
+    <section class="col">
+      <div class="panel br">
+        <div class="ph"><h2>AI-AGENTER</h2><span id="aCount"></span></div>
+        <div id="agents"><div class="empty">Laster …</div></div>
+      </div>
+      <div class="panel br">
+        <div class="ph"><h2>SISTE ØKTER</h2><span id="sCount"></span></div>
+        <div id="sessions"><div class="empty">—</div></div>
+      </div>
+      <div class="panel br">
+        <div class="ph"><h2>SENE LEVERANDØRER</h2><span>&gt;5 dager</span></div>
+        <div id="late"><div class="empty">—</div></div>
+      </div>
+      <div class="panel br">
+        <div class="ph"><h2>SYSTEMSTATUS</h2><span id="sysTime"></span></div>
+        <div class="sys" id="sys"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="cmd">
+    <div id="log">&gt; Klar. Skriv «hjelp» for kommandoer.</div>
+    <form id="cForm" autocomplete="off">
+      <label for="cIn">J.A.R.V.I.S. &gt;</label>
+      <input id="cIn" placeholder="status · kunder · agenter · macgregor · importer · oppdater · hjelp">
+      <div class="wave" id="wave"><i></i><i></i><i></i><i></i><i></i></div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+(function(){
+"use strict";
+const SUPABASE={url:"https://iksnoymoqvweudilfuzy.supabase.co",anonKey:"sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH"};
+const DEMO=new URLSearchParams(location.search).has("demo");
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nf=new Intl.NumberFormat("nb-NO");
+const fmt=n=>nf.format(Math.round(n||0));
+const mill=n=>n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" M":n>=1e3?Math.round(n/1e3)+" k":fmt(n);
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+function ago(t){if(!t)return"aldri";const s=(Date.now()-new Date(t))/1000;
+  if(s<60)return"nå nettopp";if(s<3600)return Math.floor(s/60)+" min siden";if(s<86400)return Math.floor(s/3600)+" t siden";
+  const d=Math.floor(s/86400);return d===1?"i går":d+" dager siden";}
+let sb=null,SESSION=null,NAME="Einar",DATA=null,AG=null,VOICE=false,TIMERS=[];
+try{if(window.supabase)sb=window.supabase.createClient(SUPABASE.url,SUPABASE.anonKey);}catch(e){}
+
+/* ---------------- boot ---------------- */
+const BOOT=["> LOGICHAIN KOMMANDOSENTRAL v1.0","> initialiserer HUD …","> kobler til Supabase · eu-central","> autentiserer admin-protokoll","> laster agent-nettverk (Claude)","> kalibrerer reaktor …","> ALLE SYSTEMER KLARE"];
+function boot(){return new Promise(res=>{
+  const el=$("bootlog");let i=0;
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches){el.textContent=BOOT.join("\n");return setTimeout(res,300);}
+  (function next(){if(i>=BOOT.length)return setTimeout(res,350);el.textContent+=(i?"\n":"")+BOOT[i++];setTimeout(next,170+Math.random()*120);})();
+});}
+function endBoot(){$("boot").classList.add("off");setTimeout(()=>$("boot").remove(),800);}
+
+/* ---------------- clock ---------------- */
+function tick(){const d=new Date();
+  $("clk").textContent=d.toLocaleTimeString("nb-NO",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+  $("dte").textContent=d.toLocaleDateString("nb-NO",{weekday:"long",day:"numeric",month:"long"});}
+function greeting(){const h=new Date().getHours();return h<5?"God natt":h<10?"God morgen":h<18?"God dag":"God kveld";}
+
+/* ---------------- reactor ticks ---------------- */
+(function(){let s="";for(let i=0;i<72;i++){const a=i*5*Math.PI/180,r1=172,r2=i%6===0?182:177;
+  s+=`<line x1="${200+r1*Math.sin(a)}" y1="${200-r1*Math.cos(a)}" x2="${200+r2*Math.sin(a)}" y2="${200-r2*Math.cos(a)}" stroke="rgba(0,229,255,${i%6===0?.8:.3})" stroke-width="${i%6===0?2:1}"/>`;}
+  document.getElementById("ticks").innerHTML=s;})();
+
+function gauge(label,val,max,txt,color){
+  const r=42,c=2*Math.PI*r,f=Math.max(0,Math.min(1,max?val/max:0));
+  return `<div class="g"><svg viewBox="0 0 110 110"><circle cx="55" cy="55" r="${r}" fill="none" stroke="rgba(0,229,255,.12)" stroke-width="7"/>
+  <circle cx="55" cy="55" r="${r}" fill="none" stroke="${color||"#00e5ff"}" stroke-width="7" stroke-dasharray="${c*f} ${c}" transform="rotate(-90 55 55)" style="filter:drop-shadow(0 0 5px ${color||"#00e5ff"});transition:stroke-dasharray 1.2s"/>
+  <circle cx="55" cy="55" r="31" fill="none" stroke="rgba(0,229,255,.25)" stroke-dasharray="2 4"/>
+  <text x="55" y="61" text-anchor="middle" class="gv">${esc(txt)}</text></svg><div class="gl">${esc(label)}</div></div>`;
+}
+
+/* ---------------- render: overview ---------------- */
+function renderOverview(d){
+  DATA=d;const t=d.totalt||{};
+  const otd=pct(t.i_tide,t.levert);
+  $("spendBig").textContent=mill(t.spend)+" kr";
+  $("spendSub").textContent=fmt(t.po_linjer)+" PO-linjer";
+  $("otdTxt").textContent="OTD "+otd+" % · "+fmt(t.apne)+" åpne";
+  $("otdRing").setAttribute("stroke-dasharray",(1005.3*otd/100)+" 1006");
+  $("otdRing").setAttribute("stroke",otd>=80?"#3dffb0":otd>=60?"#00e5ff":"#ffb547");
+  const agRun=AG&&AG.sessions?AG.sessions.filter(s=>s.status==="running").length:0;
+  $("gauges").innerHTML=
+    gauge("Kunder",t.kunder,Math.max(5,t.kunder),fmt(t.kunder))+
+    gauge("OTD",otd,100,otd+"%",otd>=80?"#3dffb0":otd>=60?"#00e5ff":"#ffb547")+
+    gauge("Innlogget 7d",t.innlogget_7d,Math.max(1,t.brukere),t.innlogget_7d+"/"+t.brukere,"#7df3ff")+
+    gauge("Nye filer",t.nye_innleveringer,Math.max(3,t.nye_innleveringer),fmt(t.nye_innleveringer),t.nye_innleveringer?"#ffb547":"#00e5ff");
+
+  // kunder
+  const ks=(d.kunder||[]).filter(k=>k.portal!=="admin.html");
+  $("kCount").textContent=ks.length+" aktive";
+  $("kunder").innerHTML=ks.length?ks.map(k=>{const o=pct(k.i_tide,k.levert);
+    return `<div class="kunde"><div class="top"><span class="nm">${esc(k.firma)}</span><span class="sp">${mill(k.spend)} kr</span></div>
+    <div class="kgrid"><div>PO-linjer<b>${fmt(k.po_linjer)}</b></div><div>OTD ±5d<b class="${o>=80?"ok":o>=60?"":"wrn"}">${k.levert?o+" %":"–"}</b></div><div>Åpne<b>${fmt(k.apne)}</b></div></div>
+    <div class="bar"><i style="width:${k.levert?o:0}%"></i></div>
+    <div class="kfoot"><span>Sist innlogget: ${esc(ago(k.sist_innlogget))}</span>
+    ${k.portal?`<a class="lnk" href="${esc(k.portal)}">Åpne portal →</a>`:""}</div></div>`;}).join(""):`<div class="empty">Ingen kunder ennå.</div>`;
+
+  // innleveringer
+  const inn=d.innleveringer||[];const ny=inn.filter(i=>i.status==="ny").length;
+  $("iCount").textContent=ny?ny+" venter":"alt behandlet";
+  $("inn").innerHTML=inn.length?inn.slice(0,8).map(i=>{const fil=(i.fil||"").split("/").pop().replace(/^\d+_/,"");
+    return `<div class="row"><div class="m"><b>${esc(fil)}</b><small>${esc(i.firma)} · ${i.rader!=null?fmt(i.rader)+" rader · ":""}${i.spend!=null?mill(i.spend)+" kr · ":""}${esc(ago(i.mottatt))}</small></div>
+    <span class="pill ${i.status==="ny"?"p-ny":"p-ok"}">${esc(i.status)}</span>
+    <button class="mini" data-dl="${esc(i.fil)}">Last ned</button>
+    ${i.status==="ny"?`<button class="mini" data-done="${esc(i.id)}">Ferdig</button>`:""}</div>`;}).join(""):`<div class="empty">Ingen innleveringer.</div>`;
+
+  // sene leverandører
+  const late=d.forsinket_lev||[];
+  $("late").innerHTML=late.length?late.map(l=>`<div class="row"><div class="m"><b>${esc(l.navn)}</b><small>${esc(l.firma)}</small></div>
+    <span class="pill p-res">${fmt(l.sene)} sene</span><span style="font:600 13px var(--mono);color:var(--amber);min-width:60px;text-align:right">+${esc(l.snitt_dager)} d</span></div>`).join(""):`<div class="empty">Ingen leverandører over grensen. 👌</div>`;
+
+  renderChart(d.spend_mnd||[]);
+  renderBrief();
+}
+
+function renderChart(rows){
+  rows=rows.slice(-12);
+  if(!rows.length){$("chart").innerHTML=`<div class="empty">Ingen data.</div>`;return;}
+  const W=600,H=190,P=26,max=Math.max(...rows.map(r=>+r.spend))||1,bw=(W-P*2)/rows.length;
+  const MN=["jan","feb","mar","apr","mai","jun","jul","aug","sep","okt","nov","des"];
+  let s=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">`;
+  for(let i=1;i<=3;i++){const y=H-P-(H-P*2)*i/3;s+=`<line x1="${P}" x2="${W-P}" y1="${y}" y2="${y}" stroke="rgba(0,229,255,.08)"/>`;}
+  rows.forEach((r,i)=>{const h=(H-P*2)*(+r.spend)/max,x=P+i*bw+bw*.18,w=bw*.64,y=H-P-h;
+    s+=`<rect x="${x}" y="${H-P}" width="${w}" height="0" fill="url(#bg)" style="filter:drop-shadow(0 0 4px rgba(0,229,255,.6))"><animate attributeName="y" from="${H-P}" to="${y}" dur=".9s" begin="${i*.05}s" fill="freeze"/><animate attributeName="height" from="0" to="${h}" dur=".9s" begin="${i*.05}s" fill="freeze"/><title>${esc(r.mnd)}: ${fmt(r.spend)} kr · ${fmt(r.linjer)} linjer</title></rect>`;
+    s+=`<text x="${x+w/2}" y="${H-8}" text-anchor="middle" class="ax">${MN[+r.mnd.slice(5)-1]||r.mnd}</text>`;
+    if(rows.length<=12)s+=`<text x="${x+w/2}" y="${y-5}" text-anchor="middle" class="bv">${mill(+r.spend)}</text>`;});
+  s+=`<defs><linearGradient id="bg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#7df3ff"/><stop offset="1" stop-color="#00e5ff" stop-opacity=".25"/></linearGradient></defs></svg>`;
+  $("chart").innerHTML=s;
+  const tot=rows.reduce((a,r)=>a+(+r.spend),0);
+  $("chSub").textContent="snitt "+mill(tot/rows.length)+" kr/mnd";
+}
+
+/* ---------------- render: agents ---------------- */
+const ST={running:["p-run","KJØRER"],idle:["p-idle","KLAR"],rescheduling:["p-res","PRØVER IGJEN"],terminated:["p-term","AVSLUTTET"]};
+function renderAgents(a){
+  AG=a;
+  if(!a||a.error&&!a.agents){
+    $("aCount").textContent="";
+    $("agents").innerHTML=`<div class="cfg"><b class="bad">Kunne ikke hente agentene.</b><br><small style="font-family:var(--mono)">${esc(a&&a.error||"ukjent feil")}</small></div>`;
+    $("sessions").innerHTML=`<div class="empty">—</div>`;return;}
+  if(a.configured===false){
+    $("aCount").textContent="ikke koblet";
+    $("agents").innerHTML=`<div class="cfg">Agent-nettverket er ikke koblet til ennå. Slik gjør du det:<ol>
+      <li>Claude Console → <b>API keys</b> → lag en nøkkel</li>
+      <li>Cloudflare → Workers &amp; Pages → <b>logichain</b> → Settings → <b>Variables and Secrets</b></li>
+      <li>Legg til <b>Secret</b> <code>ANTHROPIC_API_KEY</code> med nøkkelen</li>
+      <li>Deploy på nytt – så dukker agentene opp her</li></ol></div>`;
+    $("sessions").innerHTML=`<div class="empty">—</div>`;return;}
+  const ag=(a.agents||[]).filter(x=>!x.archived),ss=a.sessions||[];
+  const byAgent={};ss.forEach(s=>{(byAgent[s.agent_id]=byAgent[s.agent_id]||[]).push(s);});
+  const run=ss.filter(s=>s.status==="running").length;
+  $("aCount").textContent=ag.length+" agenter · "+run+" aktive";
+  $("agents").innerHTML=ag.length?`<div class="agents">`+ag.map(x=>{const mine=byAgent[x.id]||[];
+    const live=mine.some(s=>s.status==="running"),last=mine[0];
+    const st=live?ST.running:last?(ST[last.status]||["p-idle",last.status.toUpperCase()]):["p-term","INGEN ØKTER"];
+    return `<div class="agent ${live?"live":""}"><div class="as ${st[0]}"><i class="dot"></i>${st[1]}</div>
+      <div class="an">${esc(x.name)}</div><div class="am">${esc(x.model||"")}${x.version!=null?" · v"+esc(x.version):""}</div>
+      <div class="am" style="margin-top:6px">${mine.length} økter · ${last?esc(ago(last.updated_at||last.created_at)):"–"}</div></div>`;}).join("")+`</div>`
+    :`<div class="empty">Ingen agenter funnet i Claude Console.</div>`;
+  $("sCount").textContent=ss.length?ss.length+" siste":"";
+  $("sessions").innerHTML=ss.length?ss.slice(0,7).map(s=>{const st=ST[s.status]||["p-idle",s.status];
+    return `<div class="row"><div class="m"><b>${esc(s.title||s.agent_name||s.id)}</b><small>${esc(s.agent_name||"")} · ${esc(ago(s.updated_at||s.created_at))}</small></div><span class="pill ${st[0]}">${st[1]}</span></div>`;}).join("")
+    :`<div class="empty">Ingen økter ennå.</div>`;
+  if(DATA)renderOverview(DATA);
+}
+
+/* ---------------- system status ---------------- */
+const SYS={};
+function renderSys(){
+  const line=(k,v)=>`<span>${k}</span><span>${v}</span>`;
+  const st=(o)=>o==null?`<i class="dot wrn"></i><b class="wrn">…</b>`:o.ok?`<i class="dot ok"></i><b class="ok">${o.ms!=null?o.ms+" ms":"OK"}</b>`:`<i class="dot bad"></i><b class="bad">${esc(o.msg||"FEIL")}</b>`;
+  $("sys").innerHTML=line("Database (Supabase)",st(SYS.db))+line("Agent-API (Claude)",st(SYS.ag))+line("Nettside",st(SYS.web))+
+    line("Innlogget som",`<b>${esc(SESSION&&SESSION.user&&SESSION.user.email||"demo")}</b>`);
+  $("sysTime").textContent=new Date().toLocaleTimeString("nb-NO",{hour:"2-digit",minute:"2-digit"});
+  const bad=[SYS.db,SYS.ag,SYS.web].some(o=>o&&!o.ok);
+  $("sysChip").className="chip"+(bad?" warn":"");$("sysChip").lastElementChild.textContent=bad?"AVVIK OPPDAGET":"ALLE SYSTEMER OPERATIVE";
+}
+
+function renderBrief(){
+  if(!DATA)return;const t=DATA.totalt||{};
+  const run=AG&&AG.sessions?AG.sessions.filter(s=>s.status==="running").length:null;
+  const parts=[fmt(t.kunder)+(t.kunder==1?" kunde":" kunder"),fmt(t.po_linjer)+" PO-linjer overvåkes"];
+  if(t.nye_innleveringer)parts.push(t.nye_innleveringer+" ny"+(t.nye_innleveringer>1?"e":"")+" innlevering"+(t.nye_innleveringer>1?"er":"")+" venter");
+  if(run!=null)parts.push(run+" agent"+(run==1?"":"er")+" aktiv"+(run==1?"":"e"));
+  $("brief").textContent=parts.join(" · ");
+}
+
+/* ---------------- data ---------------- */
+async function timed(fn){const t=performance.now();const r=await fn();return[r,Math.round(performance.now()-t)];}
+async function loadOverview(){
+  if(DEMO){SYS.db={ok:true,ms:42};renderOverview(demoData());return;}
+  try{const[r,ms]=await timed(()=>sb.rpc("admin_overview"));
+    if(r.error)throw r.error;SYS.db={ok:true,ms};renderOverview(r.data);}
+  catch(e){SYS.db={ok:false,msg:"FEIL"};say("Feil fra databasen: "+(e.message||e),false);
+    if(/admin_overview|function/i.test(e.message||""))$("kunder").innerHTML=`<div class="empty">Kjør <b>supabase/admin-dashboard.sql</b> i Supabase for å aktivere admin-tallene.</div>`;}
+  renderSys();
+}
+async function loadAgents(){
+  if(DEMO){SYS.ag={ok:true,ms:180};renderAgents(demoAgents());renderSys();return;}
+  try{const tok=SESSION&&SESSION.access_token;
+    const[r,ms]=await timed(()=>fetch("/api/agents",{headers:{Authorization:"Bearer "+tok},cache:"no-store"}));
+    let j=null;try{j=await r.json();}catch(_){j={error:"Agent-API svarer ikke (HTTP "+r.status+")"};}
+    if(r.status===404)j={error:"Funksjonen /api/agents er ikke publisert ennå"};
+    SYS.ag=j.configured===false?{ok:false,msg:"IKKE KOBLET"}:(r.ok&&!j.error?{ok:true,ms}:{ok:false,msg:"FEIL"});
+    renderAgents(j);}
+  catch(e){SYS.ag={ok:false,msg:"FEIL"};renderAgents({error:e.message||String(e)});}
+  renderSys();
+}
+async function loadWeb(){
+  try{const[r,ms]=await timed(()=>fetch("index.html",{method:"HEAD",cache:"no-store"}));SYS.web=r.ok?{ok:true,ms}:{ok:false,msg:"HTTP "+r.status};}
+  catch(e){SYS.web={ok:false,msg:"NEDE"};}renderSys();
+}
+function refresh(){loadOverview();loadAgents();loadWeb();}
+
+/* innlevering-knapper */
+document.addEventListener("click",async e=>{
+  const dl=e.target.closest("[data-dl]"),dn=e.target.closest("[data-done]");
+  if(dl){if(DEMO)return say("Demomodus – ingen ekte filer.");
+    const r=await sb.storage.from("innleveringer").createSignedUrl(dl.dataset.dl,120);
+    if(r.error)return say("Kunne ikke hente filen: "+r.error.message,false);
+    location.href=r.data.signedUrl;}
+  if(dn){if(DEMO){dn.closest(".row").querySelector(".pill").className="pill p-ok";dn.closest(".row").querySelector(".pill").textContent="importert";dn.remove();return;}
+    const r=await sb.from("innleveringer").update({status:"importert"}).eq("id",dn.dataset.done);
+    if(r.error)return say("Kunne ikke oppdatere: "+r.error.message,false);
+    say("Innleveringen er markert som importert.");loadOverview();}
+});
+
+/* ---------------- voice + command line ---------------- */
+let VOICES=[];function loadVoices(){try{VOICES=speechSynthesis.getVoices();}catch(_){}}
+if("speechSynthesis" in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices;}
+function speak(text){
+  if(!VOICE||!("speechSynthesis" in window))return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);
+    const v=VOICES.find(v=>/^(nb|no|nn)/i.test(v.lang))||VOICES.find(v=>/^en-GB/i.test(v.lang));
+    if(v){u.voice=v;u.lang=v.lang;}else u.lang="nb-NO";u.rate=1.02;u.pitch=.9;
+    u.onstart=()=>$("wave").classList.add("on");u.onend=u.onerror=()=>$("wave").classList.remove("on");
+    speechSynthesis.speak(u);}catch(_){}
+}
+let typeT=null;
+function say(text,talk){
+  const el=$("log");clearInterval(typeT);el.textContent="> ";let i=0;
+  typeT=setInterval(()=>{el.textContent="> "+text.slice(0,++i);if(i>=text.length)clearInterval(typeT);},14);
+  if(talk!==false)speak(text);
+}
+function statusReport(){
+  if(!DATA)return"Jeg venter fortsatt på data fra databasen.";
+  const t=DATA.totalt||{},otd=pct(t.i_tide,t.levert);
+  const run=AG&&AG.sessions?AG.sessions.filter(s=>s.status==="running").length:null;
+  let s=`${greeting()}, ${NAME}. Du har ${t.kunder} ${t.kunder==1?"kunde":"kunder"} og ${fmt(t.po_linjer)} PO-linjer til en samlet verdi av ${mill(t.spend).replace(" M"," millioner").replace(" k"," tusen")} kroner. Leveringspresisjonen er ${otd} prosent.`;
+  if(t.nye_innleveringer)s+=` ${t.nye_innleveringer} ${t.nye_innleveringer==1?"ny innlevering venter":"nye innleveringer venter"} på deg.`;
+  if(run!=null)s+=` ${run} ${run==1?"agent kjører":"agenter kjører"} akkurat nå.`;
+  return s;
+}
+const CMDS={
+  hjelp:()=>say("Kommandoer: status, kunder, agenter, macgregor, importer, oppdater, stemme, logg ut.",false),
+  status:()=>say(statusReport()),
+  kunder:()=>{const k=(DATA&&DATA.kunder||[]).filter(k=>k.portal!=="admin.html");say(k.length?"Kunder: "+k.map(k=>k.firma+" ("+mill(k.spend)+" kr)").join(", ")+".":"Ingen kunder ennå.");},
+  agenter:()=>{if(!AG||AG.configured===false)return say("Agent-nettverket er ikke koblet til ennå.");const a=(AG.agents||[]).filter(x=>!x.archived);const r=(AG.sessions||[]).filter(s=>s.status==="running").length;say(`${a.length} agenter registrert, ${r} aktive. ${a.map(x=>x.name).slice(0,6).join(", ")}.`);},
+  macgregor:()=>{say("Åpner MacGregor-portalen.");setTimeout(()=>location.href="macgregor-dashboard.html",700);},
+  importer:()=>{say("Åpner importmodulen.");setTimeout(()=>location.href="last-opp.html",700);},
+  oppdater:()=>{refresh();say("Oppdaterer alle datakilder.");},
+  stemme:()=>toggleVoice(),
+  "logg ut":()=>logout(),
+};
+const ALIAS={help:"hjelp",rapport:"status",hei:"status","hva skjer":"status",agents:"agenter",agent:"agenter",kunde:"kunder",refresh:"oppdater",import:"importer","last opp":"importer",mg:"macgregor",logout:"logg ut",stemmen:"stemme",voice:"stemme"};
+$("cForm").addEventListener("submit",e=>{e.preventDefault();const v=$("cIn").value.trim().toLowerCase();$("cIn").value="";if(!v)return;
+  let key=CMDS[v]?v:ALIAS[v];
+  if(!key)key=Object.keys(CMDS).find(k=>v.includes(k))||(Object.entries(ALIAS).find(([a])=>v.includes(a))||[])[1];
+  const fn=CMDS[key];fn?fn():say(`Beklager, «${v}» forstod jeg ikke. Skriv «hjelp».`,false);});
+function toggleVoice(){VOICE=!VOICE;$("voiceBtn").classList.toggle("on",VOICE);try{localStorage.setItem("lc_voice",VOICE?"1":"0");}catch(_){}
+  if(VOICE)say(statusReport());else{try{speechSynthesis.cancel();}catch(_){}say("Stemme deaktivert.",false);}}
+$("voiceBtn").addEventListener("click",toggleVoice);
+$("refBtn").addEventListener("click",()=>CMDS.oppdater());
+async function logout(){try{localStorage.removeItem("logichain_session");if(sb)await sb.auth.signOut();}catch(_){}location.href="index.html";}
+$("outBtn").addEventListener("click",logout);
+document.addEventListener("keydown",e=>{if(e.key==="/"&&document.activeElement!==$("cIn")&&!/input|textarea/i.test(document.activeElement.tagName)){e.preventDefault();$("cIn").focus();}});
+
+/* ---------------- auth ---------------- */
+async function start(){
+  $("gate").classList.add("hidden");$("app").classList.remove("hidden");
+  $("hello").textContent=(greeting()+", "+NAME).toUpperCase();
+  tick();TIMERS.push(setInterval(tick,1000));
+  renderSys();refresh();
+  TIMERS.push(setInterval(loadOverview,60000),setInterval(loadAgents,30000),setInterval(loadWeb,120000));
+  setTimeout(()=>say(greeting()+", "+NAME+". Kommandosentralen er klar.",false),900);
+}
+async function verify(){
+  if(DEMO){$("demoTag").classList.remove("hidden");return start();}
+  if(!sb){$("gErr").textContent="Kunne ikke laste innloggingsbiblioteket.";return $("gate").classList.remove("hidden");}
+  const r=await sb.auth.getSession();SESSION=r&&r.data&&r.data.session;
+  if(!SESSION){return $("gate").classList.remove("hidden");}
+  const p=await sb.from("kunder").select("firma,admin").eq("user_id",SESSION.user.id).maybeSingle();
+  if(!p.data||!p.data.admin){
+    $("gErr").textContent="Denne brukeren har ikke admin-tilgang.";await sb.auth.signOut();SESSION=null;
+    return $("gate").classList.remove("hidden");}
+  const em=SESSION.user.email||"";const nm=em.split("@")[0].split(/[._-]/)[0];
+  NAME=nm?nm.charAt(0).toUpperCase()+nm.slice(1):"Einar";
+  start();
+}
+$("gForm").addEventListener("submit",async e=>{e.preventDefault();$("gErr").textContent="";
+  const r=await sb.auth.signInWithPassword({email:$("gMail").value.trim(),password:$("gPass").value});
+  if(r.error){$("gErr").textContent=r.error.message==="Invalid login credentials"?"Feil e-post eller passord.":r.error.message;return;}
+  $("gPass").value="";verify();});
+if(sb)sb.auth.onAuthStateChange((ev,s)=>{if(s)SESSION=s;});
+try{VOICE=localStorage.getItem("lc_voice")==="1";$("voiceBtn").classList.toggle("on",VOICE);}catch(_){}
+
+/* ---------------- demo data ---------------- */
+function demoData(){
+  const m=["2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09","2026-10"];
+  const now=Date.now(),h=3600e3;
+  return{generert:new Date().toISOString(),
+    totalt:{kunder:3,po_linjer:4210,spend:148600000,leverandorer:261,materialer:2340,levert:3620,i_tide:2930,apne:590,brukere:5,innlogget_7d:3,nye_innleveringer:2},
+    kunder:[
+      {firma:"MacGregor Norway",portal:"macgregor-dashboard.html",po_linjer:3091,spend:112400000,levert:2710,i_tide:2240,apne:381,sist_innlogget:new Date(now-2*h).toISOString()},
+      {firma:"Norsk Industri AS",portal:"logichain-dashboard-demo.html",po_linjer:687,spend:24900000,levert:560,i_tide:420,apne:127,sist_innlogget:new Date(now-50*h).toISOString()},
+      {firma:"Vestfold Maritime",portal:null,po_linjer:432,spend:11300000,levert:350,i_tide:270,apne:82,sist_innlogget:null}],
+    innleveringer:[
+      {id:"d1",fil:"x/1730_macgregor_okt.csv",rader:412,spend:9800000,status:"ny",mottatt:new Date(now-1.5*h).toISOString(),firma:"MacGregor Norway"},
+      {id:"d2",fil:"x/1729_vestfold_q3.csv",rader:96,spend:2100000,status:"ny",mottatt:new Date(now-20*h).toISOString(),firma:"Vestfold Maritime"},
+      {id:"d3",fil:"x/1728_macgregor_sep.csv",rader:388,spend:8700000,status:"importert",mottatt:new Date(now-30*24*h).toISOString(),firma:"MacGregor Norway"}],
+    spend_mnd:m.map((k,i)=>({mnd:k,spend:11e6+Math.round(Math.sin(i*1.3)*3.2e6+i*6e5),linjer:380+i*9})),
+    forsinket_lev:[{navn:"Bergen Mek. Verksted",firma:"MacGregor Norway",sene:64,snitt_dager:14.2},{navn:"Hydraflow Systems AB",firma:"MacGregor Norway",sene:41,snitt_dager:9.8},{navn:"Grenland Teknikk AS",firma:"Norsk Industri AS",sene:22,snitt_dager:7.1}]};
+}
+function demoAgents(){const now=Date.now(),mi=60e3;
+  const agents=[{id:"a1",name:"Leverandør-analytiker",model:"claude-opus-5-5",version:4},{id:"a2",name:"PO-oppfølger",model:"claude-sonnet-5-5",version:2},{id:"a3",name:"Prisovervåker",model:"claude-haiku-5-5",version:7},{id:"a4",name:"Rapportskriver",model:"claude-sonnet-5-5",version:1}];
+  return{configured:true,agents,sessions:[
+    {id:"s1",status:"running",title:"Analyse av sene leveranser – oktober",agent_id:"a1",agent_name:"Leverandør-analytiker",updated_at:new Date(now-2*mi).toISOString()},
+    {id:"s2",status:"running",title:"Purring: 14 forfalte PO-linjer",agent_id:"a2",agent_name:"PO-oppfølger",updated_at:new Date(now-6*mi).toISOString()},
+    {id:"s3",status:"idle",title:"Ukentlig prissjekk Octopart",agent_id:"a3",agent_name:"Prisovervåker",updated_at:new Date(now-95*mi).toISOString()},
+    {id:"s4",status:"idle",title:"Månedsrapport MacGregor",agent_id:"a4",agent_name:"Rapportskriver",updated_at:new Date(now-26*60*mi).toISOString()},
+    {id:"s5",status:"terminated",title:"Test-økt",agent_id:"a3",agent_name:"Prisovervåker",updated_at:new Date(now-3*24*60*mi).toISOString()}]};}
+
+/* ---------------- go ---------------- */
+boot().then(()=>{endBoot();verify();});
+})();
+</script>
+</body>
+</html>
