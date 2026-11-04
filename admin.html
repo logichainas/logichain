@@ -1135,6 +1135,7 @@ function statusReport(){
   s+=` You have ${open.length} open mission${open.length==1?"":"s"}`+(hi.length?`, ${hi.length} marked high priority.`:".");
   return s;
 }
+function rateFor(v){return v&&v.localService===false?1.2:1.75;}
 let VOICES=[];function loadVoices(){try{VOICES=speechSynthesis.getVoices();}catch(_){}}
 if("speechSynthesis" in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices;}
 function jarvisVoice(){
@@ -1149,7 +1150,7 @@ function jarvisVoice(){
 function speak(text,force){
   if(MUTED||(!VOICE&&!force)||!("speechSynthesis" in window))return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=jarvisVoice();
-    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-GB";u.rate=1.75;u.pitch=.95;if(!/^en/i.test(u.lang))u.lang="en-GB";
+    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-GB";u.rate=rateFor(v);u.pitch=.95;if(!/^en/i.test(u.lang))u.lang="en-GB";
     u.onstart=()=>$("wave").classList.add("on");u.onend=u.onerror=()=>$("wave").classList.remove("on");
     speechSynthesis.speak(u);}catch(_){}
 }
@@ -1291,14 +1292,14 @@ function openVoicePicker(){
   const box=document.createElement("div");box.id="vpM";
   box.innerHTML=`<div class="holo panel br vp"><div class="vh"><div><h3>Jarvis' voice</h3><p>${all.some(v=>/natural|online/i.test(v.name))?"Natural voices are the best ones.":"Tip: Chrome has the free «Google UK English Male» voice, and Microsoft Edge has free «Natural» voices – no install or admin rights needed."}</p></div><div class="sp"></div><button class="hbtn" id="vpClose">Close ✕</button></div>
     <div class="vplist">${all.length?all.map(v=>`<div class="vprow ${(cur?v.name===cur:auto&&v.name===auto.name)?"on":""}" data-n="${esc(v.name)}"><div><b>${esc(v.name.replace(/^Microsoft /,"").replace(/ - .*$/,""))}</b><small>${esc(v.lang)}${/natural|online|neural/i.test(v.name)?" · natural":""}</small></div><button class="mini" data-test="${esc(v.name)}">▶ Test</button></div>`).join(""):'<div class="empty">No voices found in this browser.</div>'}</div>
-    <div class="rvfoot"><span style="flex:1;color:var(--muted);font-size:13px">Choice is remembered on this PC.</span><button class="hbtn" id="vpAuto">Auto-pick</button></div></div>`;
+    <div class="rvfoot"><span style="flex:1;color:var(--muted);font-size:13px">Now using: <b style="color:var(--text)">${esc(auto?auto.name+" ("+auto.lang+")":"browser default")}</b> · remembered on this PC.</span><button class="hbtn" id="vpAuto">Auto-pick</button></div></div>`;
   document.body.appendChild(box);
   const close=()=>box.remove();
   box.addEventListener("click",e=>{
     if(e.target===box||e.target.id==="vpClose")return close();
     if(e.target.id==="vpAuto"){try{localStorage.removeItem("lc_voice_name");}catch(_){}close();return say("Back to auto-pick, boss.",false);}
     const t=e.target.closest("[data-test]");
-    if(t){e.stopPropagation();try{speechSynthesis.cancel();const v=VOICES.find(x=>x.name===t.dataset.test);const u=new SpeechSynthesisUtterance("Evening, boss. This is how I'd sound. Not bad, right?");if(v){u.voice=v;u.lang=v.lang;}u.rate=1.75;u.pitch=.95;speechSynthesis.speak(u);}catch(_){}return;}
+    if(t){e.stopPropagation();try{speechSynthesis.cancel();const v=VOICES.find(x=>x.name===t.dataset.test);const u=new SpeechSynthesisUtterance("Evening, boss. This is how I'd sound. Not bad, right?");if(v){u.voice=v;u.lang=v.lang;}u.rate=rateFor(v);u.pitch=.95;speechSynthesis.speak(u);}catch(_){}return;}
     const row=e.target.closest(".vprow");
     if(row){try{localStorage.setItem("lc_voice_name",row.dataset.n);}catch(_){}box.querySelectorAll(".vprow").forEach(r=>r.classList.toggle("on",r===row));say("Voice saved, boss.",false);}
   });
@@ -1358,12 +1359,12 @@ function speakNow(text,onBlocked){
   if(MUTED)return;
   if(!("speechSynthesis" in window))return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=jarvisVoice();
-    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-US";u.rate=1.75;u.pitch=.95;
+    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-US";u.rate=rateFor(v);u.pitch=.95;
     u.onstart=()=>$("wave").classList.add("on");
     u.onend=()=>$("wave").classList.remove("on");
     u.onerror=e=>{$("wave").classList.remove("on");if(onBlocked&&/not-allowed/.test(e.error||""))onBlocked();};
     // voices may load late on first visit
-    if(!VOICES.length){loadVoices();setTimeout(()=>{const vv=jarvisVoice();if(vv){u.voice=vv;u.lang=vv.lang;}speechSynthesis.speak(u);},400);}
+    if(!VOICES.length){loadVoices();setTimeout(()=>{const vv=jarvisVoice();if(vv){u.voice=vv;u.lang=vv.lang;u.rate=rateFor(vv);}speechSynthesis.speak(u);},400);}
     else speechSynthesis.speak(u);}catch(_){}
 }
 
