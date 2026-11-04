@@ -1142,7 +1142,8 @@ function jarvisVoice(){
   if(chosen){const c=VOICES.find(v=>v.name===chosen);if(c)return c;}
   const en=VOICES.filter(v=>/^en/i.test(v.lang));
   // bro vibe: relaxed US male natural voices first (Edge: Andrew, Brian, Guy …), then UK, then anything English
-  const rank=v=>(/natural|online|neural/i.test(v.name)?0:4)+(/andrew|brian|guy|christopher|eric|davis|steffan|roger|ryan|mark|david|male/i.test(v.name)?0:2)+(/en-US/i.test(v.lang)?0:1);
+  // Edge "Natural" cloud voices first, then Chrome's Google UK English Male (the most Jarvis-like free voice), then other male English voices
+  const rank=v=>(/natural|online|neural/i.test(v.name)?0:/^Google UK English Male/i.test(v.name)?1:/^Google/i.test(v.name)?3:4)+(/andrew|brian|guy|christopher|eric|davis|steffan|roger|ryan|mark|david|male/i.test(v.name)?0:2)+(/en-US|en-GB/i.test(v.lang)?0:1);
   return en.sort((a,b)=>rank(a)-rank(b))[0]||null;
 }
 function speak(text,force){
@@ -1284,11 +1285,11 @@ $("voiceBtn").addEventListener("click",toggleVoice);
 /* ---- voice picker: lists every voice the browser offers (Edge has free "Natural" cloud voices) ---- */
 function openVoicePicker(){
   loadVoices();
-  const all=VOICES.slice().sort((a,b)=>{const r=v=>(/natural|online|neural/i.test(v.name)?0:2)+(/^en/i.test(v.lang)?0:1);return r(a)-r(b)||a.name.localeCompare(b.name);});
+  const all=VOICES.slice().sort((a,b)=>{const r=v=>(/natural|online|neural|^google/i.test(v.name)?0:2)+(/^en/i.test(v.lang)?0:1);return r(a)-r(b)||a.name.localeCompare(b.name);});
   let cur="";try{cur=localStorage.getItem("lc_voice_name")||"";}catch(_){}
   const auto=jarvisVoice();
   const box=document.createElement("div");box.id="vpM";
-  box.innerHTML=`<div class="holo panel br vp"><div class="vh"><div><h3>Jarvis' voice</h3><p>${all.some(v=>/natural|online/i.test(v.name))?"Natural voices are the best ones.":"Tip: open Jarvis in Microsoft Edge to get free, much better «Natural» voices – no install or admin rights needed."}</p></div><div class="sp"></div><button class="hbtn" id="vpClose">Close ✕</button></div>
+  box.innerHTML=`<div class="holo panel br vp"><div class="vh"><div><h3>Jarvis' voice</h3><p>${all.some(v=>/natural|online/i.test(v.name))?"Natural voices are the best ones.":"Tip: Chrome has the free «Google UK English Male» voice, and Microsoft Edge has free «Natural» voices – no install or admin rights needed."}</p></div><div class="sp"></div><button class="hbtn" id="vpClose">Close ✕</button></div>
     <div class="vplist">${all.length?all.map(v=>`<div class="vprow ${(cur?v.name===cur:auto&&v.name===auto.name)?"on":""}" data-n="${esc(v.name)}"><div><b>${esc(v.name.replace(/^Microsoft /,"").replace(/ - .*$/,""))}</b><small>${esc(v.lang)}${/natural|online|neural/i.test(v.name)?" · natural":""}</small></div><button class="mini" data-test="${esc(v.name)}">▶ Test</button></div>`).join(""):'<div class="empty">No voices found in this browser.</div>'}</div>
     <div class="rvfoot"><span style="flex:1;color:var(--muted);font-size:13px">Choice is remembered on this PC.</span><button class="hbtn" id="vpAuto">Auto-pick</button></div></div>`;
   document.body.appendChild(box);
