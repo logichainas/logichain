@@ -555,10 +555,10 @@ function initScene(){
 
   // reactor core
   const core=add(new T.Group());
-  const heart=add(new T.Mesh(new T.SphereGeometry(.9,32,32),new T.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.35,blending:T.AdditiveBlending})),core);
+  const heart=add(new T.Mesh(new T.SphereGeometry(.9,32,32),new T.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.22,blending:T.AdditiveBlending})),core);
   const ico=add(new T.Mesh(new T.IcosahedronGeometry(1.45,1),new T.MeshBasicMaterial({color:0x8ff6ff,wireframe:true,transparent:true,opacity:.55})),core);
   const ico2=add(new T.Mesh(new T.IcosahedronGeometry(2.1,2),new T.MeshBasicMaterial({color:0x00e5ff,wireframe:true,transparent:true,opacity:.1})),core);
-  add(glow(0x00e5ff,6.5,.85),core);add(glow(0xffffff,1.8,.9),core);
+  add(glow(0x00e5ff,6.5,.55),core);add(glow(0xffffff,1.6,.75),core);
   const rings=[[2.7,.014,[Math.PI/2,0,0]],[3.1,.009,[Math.PI/2.4,.5,0]],[3.5,.007,[Math.PI/1.8,-.4,.3]]].map(([r,t,rot],i)=>{
     const m=add(new T.Mesh(new T.TorusGeometry(r,t,8,160),new T.MeshBasicMaterial({color:i?0x00e5ff:0x8ff6ff,transparent:true,opacity:i?.35:.7,blending:T.AdditiveBlending})),core);
     m.rotation.set(rot[0],rot[1],rot[2]);return m;});
@@ -568,7 +568,7 @@ function initScene(){
   // holographic floor
   const grid=add(new T.GridHelper(90,90,0x00e5ff,0x00e5ff));grid.material.transparent=true;grid.material.opacity=.07;grid.position.y=-3.6;
   for(let i=1;i<=3;i++){const r=add(new T.Mesh(new T.RingGeometry(i*2.6,i*2.6+.035,128),new T.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.24/i,side:T.DoubleSide})));r.rotation.x=-Math.PI/2;r.position.y=-3.58;}
-  const beamUp=add(new T.Mesh(new T.CylinderGeometry(.05,.6,3.6,24,1,true),new T.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.12,blending:T.AdditiveBlending,side:T.DoubleSide})));beamUp.position.y=-1.8;
+  const beamUp=add(new T.Mesh(new T.CylinderGeometry(.05,.6,3.6,24,1,true),new T.MeshBasicMaterial({color:0x00e5ff,transparent:true,opacity:.07,blending:T.AdditiveBlending,side:T.DoubleSide})));beamUp.position.y=-1.8;
 
   const additive=(color,op)=>new T.MeshBasicMaterial({color,transparent:true,opacity:op,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide});
   const lineMat=(color,op)=>new T.LineBasicMaterial({color,transparent:true,opacity:op,blending:T.AdditiveBlending,depthWrite:false});
@@ -576,7 +576,7 @@ function initScene(){
   // arc-reactor disc (faces the camera, spins on its own axis)
   const reactor=add(new T.Group());
   const coilGeo=new T.BoxGeometry(.42,.2,.05);
-  for(let i=0;i<10;i++){const a=i/10*Math.PI*2,c=add(new T.Mesh(coilGeo,additive(0x8ff6ff,.42)),reactor);
+  for(let i=0;i<10;i++){const a=i/10*Math.PI*2,c=add(new T.Mesh(coilGeo,additive(0x8ff6ff,.28)),reactor);
     c.position.set(Math.cos(a)*1.78,Math.sin(a)*1.78,0);c.rotation.z=a+Math.PI/2;}
   add(new T.Mesh(new T.RingGeometry(1.52,1.56,96),additive(0x00e5ff,.5)),reactor);
   add(new T.Mesh(new T.RingGeometry(2.02,2.05,96),additive(0x00e5ff,.35)),reactor);
@@ -634,7 +634,7 @@ function initScene(){
     const gr=bx.createRadialGradient(256,240,0,256,240,360);gr.addColorStop(0,"#05263a");gr.addColorStop(.55,"#020c16");gr.addColorStop(1,"#010509");bx.fillStyle=gr;bx.fillRect(0,0,512,512);
     scene.background=new T.CanvasTexture(bg);
     composer=new T.EffectComposer(R);composer.addPass(new T.RenderPass(scene,cam));
-    bloom=new T.UnrealBloomPass(new T.Vector2(innerWidth/2,innerHeight/2),.85,.55,.18);composer.addPass(bloom);
+    bloom=new T.UnrealBloomPass(new T.Vector2(innerWidth/2,innerHeight/2),.62,.45,.32);composer.addPass(bloom);
     R.setPixelRatio(Math.min(devicePixelRatio,1.5));
   }catch(e){composer=null;scene.background=null;}}
 
@@ -656,7 +656,7 @@ function initScene(){
       const n=agents.length,st=agentState(a).st,color=new T.Color(COL[st]),dim=st==="none"||st==="terminated";
       const g=add(new T.Group(),nodes);
       const orb=add(new T.Mesh(new T.SphereGeometry(.3,24,24),new T.MeshBasicMaterial({color})),g);
-      add(glow(color,1.9,dim?.35:.95),g);
+      add(glow(color,1.6,dim?.3:.7),g);
       const ring=add(new T.Mesh(new T.TorusGeometry(.5,.014,6,48),new T.MeshBasicMaterial({color,transparent:true,opacity:.7})),g);
       const shell=add(new T.Mesh(new T.OctahedronGeometry(.62,0),new T.MeshBasicMaterial({color,wireframe:true,transparent:true,opacity:dim?.15:.45,blending:T.AdditiveBlending,depthWrite:false})),g);
       const drop=add(new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(),new T.Vector3()]),new T.LineDashedMaterial({color,dashSize:.12,gapSize:.1,transparent:true,opacity:.35})),nodes);
