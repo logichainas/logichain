@@ -117,8 +117,8 @@ WHAT THE DASHBOARD HOLDS
 
 RULES
 - Work only from the customer's purchasing data and Nora's report. Never use answer keys, solution sheets or sheets marked as hidden from the analyst; if present, say so in warnings.
-- Include only posted lines. Exclude cancelled and returned lines and say how many you excluded and why.
-- Convert all amounts to NOK as Nora did; dates as YYYY-MM-DD; use null when a value is genuinely missing.
+- Include all real order lines, both delivered and open (not yet delivered). Open lines get delivery_date null; the dashboard shows them as \"not delivered\" and leaves them out of delivery precision, but they count in spend. Exclude only cancelled, deleted and returned lines, and say how many you excluded and why.
+- All amounts must be in NOK. If the file already gives NOK values (Currency = NOK, or NOK columns plus an FX_rates sheet), use them as they are. If lines are in other currencies and no rate is available anywhere, exclude them and say so in warnings; dates as YYYY-MM-DD; use null when a value is genuinely missing.
 - (po, line) must be unique. If PO numbers are unreliable or reused, keep the PO number but assign line numbers 1..n within each PO so pairs are unique, and explain this in warnings.
 - Re-check Nora's headline figures against the data. If something does not reconcile, do not silently fix it: report the discrepancy in warnings and use the figure you can verify.
 - Insights must be factual, short and written for a procurement manager at the customer, in Norwegian (bokmål) because the customer dashboards are Norwegian. No internal notes about Logichain or about yourself.
