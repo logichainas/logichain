@@ -1148,6 +1148,7 @@ function jarvisVoice(){
   return en.sort((a,b)=>rank(a)-rank(b))[0]||null;
 }
 function speak(text,force){
+  text=noBossComma(text);
   if(MUTED||(!VOICE&&!force)||!("speechSynthesis" in window))return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=jarvisVoice();
     if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-GB";u.rate=rateFor(v);u.pitch=.95;if(!/^en/i.test(u.lang))u.lang="en-GB";
@@ -1155,7 +1156,8 @@ function speak(text,force){
     speechSynthesis.speak(u);}catch(_){}
 }
 let typeT=null;
-function say(text,talk){const el=$("toast");clearTimeout(typeT);
+const noBossComma=t=>String(t==null?"":t).replace(/,\s*(boss)\b/gi," $1");
+function say(text,talk){text=noBossComma(text);const el=$("toast");clearTimeout(typeT);
   if(text){el.textContent=text;el.classList.add("on");typeT=setTimeout(()=>el.classList.remove("on"),4200);}
   if(talk!==false)speak(text);}
 function findAgent(q){q=q.toLowerCase();return liveAgents().find(a=>a.name.toLowerCase()===q)||liveAgents().find(a=>a.name.toLowerCase().includes(q));}
@@ -1240,7 +1242,7 @@ async function askJarvis(text,fromVoice){
   }catch(e){j={error:e.message||String(e)};}
   BUSY=false;
   if(j.error){CHAT.push({role:"assistant",content:"Something's off on my end, boss: "+j.error});renderChat();saveChat();return;}
-  CHAT.push({role:"assistant",content:j.reply||"…"});
+  CHAT.push({role:"assistant",content:noBossComma(j.reply||"…")});
   await runActions(j.actions);
   renderChat();saveChat();
   speak(j.reply||"",LAST_VOICE_INPUT);
@@ -1254,20 +1256,30 @@ $("cClear").addEventListener("click",()=>{CHAT=[];saveChat();renderChat();say("F
 /* ---- microphone (speech-to-text) ---- */
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let REC=null,LISTEN=false;
 if(!SR)["micBtn","micBtn2"].forEach(id=>{$(id).classList.add("off");$(id).title="Voice input isn't supported in this browser – use Chrome or Edge";});
+// Listening keeps going through short pauses: it only sends after ~2.5 s of silence, or when you press the mic again.
+let WANT_LISTEN=false,SIL_T=null,HEARD="",LISTEN_STARTED=0;
+function setMicUI(on){LISTEN=on;$("micBtn").classList.toggle("on",on);$("micBtn2").classList.toggle("on",on);$("wave").classList.toggle("on",on);$("cIn").placeholder=on?"Listening … (pause or press the mic to send)":"Talk to Jarvis …";}
+function armSilence(ms){clearTimeout(SIL_T);SIL_T=setTimeout(()=>{WANT_LISTEN=false;try{REC&&REC.stop();}catch(_){}},ms);}
 function startListening(){
   if(!SR||LISTEN)return;
   try{speechSynthesis.cancel();}catch(_){}
-  REC=new SR();REC.lang="en-US";REC.interimResults=true;REC.maxAlternatives=1;REC.continuous=false;
-  let finalText="";
-  REC.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=t;else interim+=t;}
-    $("cIn").value=(finalText+interim).trim();};
-  REC.onerror=e=>{say(e.error==="not-allowed"?"Mic access is blocked – allow the microphone for this site.":"Didn't catch that ("+e.error+").",false);};
-  REC.onend=()=>{LISTEN=false;$("micBtn").classList.remove("on");$("micBtn2").classList.remove("on");$("wave").classList.remove("on");$("cIn").placeholder="Talk to Jarvis …";
-    const t=$("cIn").value.trim();if(t){$("cIn").value="";askJarvis(t,true);}};
-  showComms();LISTEN=true;$("micBtn").classList.add("on");$("micBtn2").classList.add("on");$("wave").classList.add("on");$("cIn").placeholder="Listening …";
-  try{REC.start();}catch(_){LISTEN=false;$("micBtn").classList.remove("on");}
+  WANT_LISTEN=true;HEARD="";LISTEN_STARTED=Date.now();showComms();setMicUI(true);armSilence(9000);
+  runRec();
 }
-function stopListening(){if(REC&&LISTEN)try{REC.stop();}catch(_){}}
+function runRec(){
+  REC=new SR();REC.lang="en-US";REC.interimResults=true;REC.maxAlternatives=1;REC.continuous=true;
+  let sessionFinal="";
+  REC.onresult=e=>{let interim="";for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)sessionFinal+=t+" ";else interim+=t;}
+    $("cIn").value=(HEARD+sessionFinal+interim).replace(/\s+/g," ").trim();armSilence(2500);};
+  REC.onerror=e=>{if(e.error==="no-speech"||e.error==="aborted")return;if(e.error==="not-allowed"){WANT_LISTEN=false;say("Mic access is blocked – allow the microphone for this site.",false);}};
+  REC.onend=()=>{HEARD=($("cIn").value||"").trim()+" ";
+    // the browser sometimes stops on its own mid-sentence – start again unless we decided to stop (max 2 min)
+    if(WANT_LISTEN&&Date.now()-LISTEN_STARTED<120000){try{runRec();return;}catch(_){}}
+    clearTimeout(SIL_T);setMicUI(false);LAST_ACTIVE=Date.now();
+    const t=$("cIn").value.trim();if(t){$("cIn").value="";askJarvis(t,true);}};
+  try{REC.start();}catch(_){WANT_LISTEN=false;setMicUI(false);}
+}
+function stopListening(){WANT_LISTEN=false;clearTimeout(SIL_T);if(REC)try{REC.stop();}catch(_){}}
 ["micBtn","micBtn2"].forEach(id=>$(id).addEventListener("click",()=>LISTEN?stopListening():startListening()));
 document.addEventListener("keydown",e=>{if(e.code==="Space"&&e.ctrlKey){e.preventDefault();LISTEN?stopListening():startListening();}});
 
@@ -1356,6 +1368,7 @@ function armGreeting(g){
   addEventListener("pointerdown",go,true);addEventListener("keydown",go,true);
 }
 function speakNow(text,onBlocked){
+  text=noBossComma(text);
   if(MUTED)return;
   if(!("speechSynthesis" in window))return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=jarvisVoice();
@@ -1503,11 +1516,12 @@ function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();loadTraffic()
 /* ---- Jarvis speaks up on his own now and then ---- */
 let LAST_ACTIVE=Date.now(),PRO_TIMER=null;
 ["pointerdown","keydown"].forEach(ev=>addEventListener(ev,()=>{LAST_ACTIVE=Date.now();},{passive:true}));
-function scheduleCheckIn(first){clearTimeout(PRO_TIMER);const min=first?4:22,max=first?7:40;PRO_TIMER=setTimeout(checkIn,(min+Math.random()*(max-min))*60e3);}
+function scheduleCheckIn(first){clearTimeout(PRO_TIMER);const min=first?15:45,max=first?25:90;PRO_TIMER=setTimeout(checkIn,(min+Math.random()*(max-min))*60e3);}
 async function checkIn(){
   try{
     // only when the tab is visible, he's been around in the last 15 min, and Jarvis isn't busy talking
-    if(document.hidden||BUSY||Date.now()-LAST_ACTIVE>15*60e3||(window.speechSynthesis&&speechSynthesis.speaking))return;
+    const idle=Date.now()-LAST_ACTIVE;
+    if(document.hidden||BUSY||LISTEN||WANT_LISTEN||idle<3*60e3||idle>20*60e3||(window.speechSynthesis&&speechSynthesis.speaking))return;
     let reply="";
     if(DEMO)reply=pick(["Quick question, boss: is the MacGregor upload still happening today, or did that quietly slide?","You've had that DNS mission open for two days. Want me to just nag you every hour instead?",""]);
     else{
