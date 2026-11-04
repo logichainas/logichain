@@ -1139,7 +1139,7 @@ let VOICES=[];function loadVoices(){try{VOICES=speechSynthesis.getVoices();}catc
 if("speechSynthesis" in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices;}
 function jarvisVoice(){
   let chosen=null;try{chosen=localStorage.getItem("lc_voice_name");}catch(_){}
-  if(chosen){const c=VOICES.find(v=>v.name===chosen);if(c)return c;}
+  if(chosen){const c=VOICES.find(v=>v.name===chosen&&/^en/i.test(v.lang));if(c)return c;}  // only ever speak English
   const en=VOICES.filter(v=>/^en/i.test(v.lang));
   // bro vibe: relaxed US male natural voices first (Edge: Andrew, Brian, Guy …), then UK, then anything English
   // Edge "Natural" cloud voices first, then Chrome's Google UK English Male (the most Jarvis-like free voice), then other male English voices
@@ -1149,7 +1149,7 @@ function jarvisVoice(){
 function speak(text,force){
   if(MUTED||(!VOICE&&!force)||!("speechSynthesis" in window))return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=jarvisVoice();
-    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-GB";u.rate=1.75;u.pitch=.95;
+    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-GB";u.rate=1.75;u.pitch=.95;if(!/^en/i.test(u.lang))u.lang="en-GB";
     u.onstart=()=>$("wave").classList.add("on");u.onend=u.onerror=()=>$("wave").classList.remove("on");
     speechSynthesis.speak(u);}catch(_){}
 }
@@ -1285,7 +1285,7 @@ $("voiceBtn").addEventListener("click",toggleVoice);
 /* ---- voice picker: lists every voice the browser offers (Edge has free "Natural" cloud voices) ---- */
 function openVoicePicker(){
   loadVoices();
-  const all=VOICES.slice().sort((a,b)=>{const r=v=>(/natural|online|neural|^google/i.test(v.name)?0:2)+(/^en/i.test(v.lang)?0:1);return r(a)-r(b)||a.name.localeCompare(b.name);});
+  const all=VOICES.filter(v=>/^en/i.test(v.lang)).sort((a,b)=>{const r=v=>(/natural|online|neural|^google/i.test(v.name)?0:2)+(/^en/i.test(v.lang)?0:1);return r(a)-r(b)||a.name.localeCompare(b.name);});
   let cur="";try{cur=localStorage.getItem("lc_voice_name")||"";}catch(_){}
   const auto=jarvisVoice();
   const box=document.createElement("div");box.id="vpM";
