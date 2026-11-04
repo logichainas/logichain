@@ -612,11 +612,13 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
             let dev=0,status="Ikke levert";
             if(dd&&pd){dev=Math.round((dd-pd)/864e5);status=dev<-OTD_TOL?"For tidlig":dev<=OTD_TOL?"I tide":"For sent";}
             const od2=od||pd||dd||new Date();
-            return {po:r.po,line:r.linjenr||1,sup,mat:mi,proj:r.prosjekt||"\u2013",qty:Number(r.antall)||1,order:od2,prom:pd||od2,del:dd,dev,status,value:Number(r.verdi)||0,month:od2.getMonth()};
+            return {po:r.po,line:r.linjenr||1,sup,mat:mi,proj:r.prosjekt||"\u2013",qty:Number(r.antall)||1,order:od2,prom:pd||od2,del:dd,dev,status,value:Number(r.verdi)||0,month:(pd||od2).getFullYear()*12+(pd||od2).getMonth()};
           });
+          // months follow the promised (planned) delivery date, and keep years apart
           const mset=[...new Set(lines.map(l=>l.month))].sort((a,b)=>a-b);
           lines.forEach(l=>l.month=mset.indexOf(l.month));
-          MONTHS=mset.map(m=>["Jan","Feb","Mar","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Des"][m]);
+          const MN=["Jan","Feb","Mar","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Des"],multiYear=new Set(mset.map(k=>Math.floor(k/12))).size>1;
+          MONTHS=mset.map(k=>MN[k%12]+(multiYear?" "+String(Math.floor(k/12)).slice(2):""));
           matSups=MATS.map((m,i)=>[...new Set(lines.filter(l=>l.mat===i).map(l=>l.sup.id))]);
           matTrend=MATS.map(()=>0);
           CATS=[...new Set(MATS.map(m=>m[2]))];
