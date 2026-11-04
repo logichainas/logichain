@@ -1171,10 +1171,10 @@ __render();
     try{
       var r=await fetch("/api/lead",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:name,email:email,company:company,lang:"en",page:location.pathname,hp:document.getElementById("dgHp").value})});
       var j=await r.json().catch(function(){return{};});
-      if(!r.ok){throw new Error(j.error||"HTTP "+r.status);}
+      if(r.status===400){var ve=new Error(j.error||"HTTP 400");ve.badInput=true;throw ve;}   // only bad input blocks – server trouble never locks visitors out
       try{localStorage.setItem("lc_demo_ok",JSON.stringify({name:name,company:company,at:Date.now()}));}catch(e){}
       g.classList.add("dg-out");document.body.classList.remove("dg-lock");setTimeout(function(){g.remove();},500);
-    }catch(e){err.textContent=e.message;btn.disabled=false;btn.textContent="Open the demo →";}
+    }catch(e){if(!e.badInput){g.classList.add("dg-out");document.body.classList.remove("dg-lock");setTimeout(function(){g.remove();},500);return;}err.textContent=e.message;btn.disabled=false;btn.textContent="Open the demo →";}
   });
 })();
 </script>
