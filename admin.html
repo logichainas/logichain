@@ -1449,6 +1449,7 @@ function boomSound(){
     zg.gain.setValueAtTime(.0001,now);zg.gain.exponentialRampToValueAtTime(.08,now+.1);zg.gain.exponentialRampToValueAtTime(.0001,now+.6);z.connect(zg).connect(out);z.start(now);z.stop(now+.7);
     setTimeout(()=>A.close(),2500);}catch(_){}
 }
+window.introBoom=introBoom;
 function introBoom(){
   if(RM)return;
   const f=$("boomFlash");f.classList.remove("go");void f.offsetWidth;f.classList.add("go");
@@ -1461,8 +1462,9 @@ function start(){
   tick();setInterval(tick,1000);refresh();setInterval(loadAgents,25000);setInterval(loadRuns,20000);setInterval(loadTraffic,300000);
   try{localStorage.setItem("lc_notrack","1");}catch(_){}
   CHAT=[];saveChat();
-  setTimeout(introBoom,250);
-  setTimeout(greetOnLogin,1300);
+  const bootWait=document.getElementById("boot")?750:150;   // let the boot screen fade out first
+  setTimeout(introBoom,bootWait);
+  setTimeout(greetOnLogin,bootWait+1100);
 
 }
 async function verify(){
