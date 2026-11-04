@@ -1156,7 +1156,7 @@ function speak(text,force){
     speechSynthesis.speak(u);}catch(_){}
 }
 let typeT=null;
-const noBossComma=t=>String(t==null?"":t).replace(/,\s*(boss)\b/gi," $1");
+const noBossComma=t=>String(t==null?"":t).replace(/,\s*(boss|bro)\b/gi," $1");
 function say(text,talk){text=noBossComma(text);const el=$("toast");clearTimeout(typeT);
   if(text){el.textContent=text;el.classList.add("on");typeT=setTimeout(()=>el.classList.remove("on"),4200);}
   if(talk!==false)speak(text);}
@@ -1329,10 +1329,10 @@ function broGreeting(){
   const open=TODOS.filter(t=>!t.done),hi=open.filter(t=>t.priority==="high");
   const today=new Date().toISOString().slice(0,10),due=open.filter(t=>t.due&&t.due<=today);
   const ags=AG?liveAgents():[],w=ags.filter(a=>agentState(a).st==="running");
-  const hello=h<5?pick(["It's the middle of the night, boss. Either something's on fire or you can't sleep.","Bit late for this, isn't it, boss? Fine. I'm up."])
-    :h<12?pick(["Morning, boss. Coffee first, or straight into it?","Morning, boss. You're up early. Suspicious.","There he is. Morning, boss."])
-    :h<18?pick(["Afternoon, boss. Missed me?","Welcome back, boss. I kept everything running. Mostly.","Oh, look who it is. Afternoon, boss."])
-    :pick(["Evening, boss. Working late again, I see.","Evening shift, boss? Alright, let's make it count.","Back for more, boss? I like the commitment."]);
+  const hello=h<5?pick(["Bro, it's the middle of the night. Either something's on fire or you can't sleep.","Late one again boss? Fine, I'm up. Let's make it count."])
+    :h<12?pick(["Morning boss. Coffee first or straight into it?","Morning bro. You're up early. I respect it.","There he is. Morning boss."])
+    :h<18?pick(["What's up boss. Missed me?","Hey bro, welcome back. I kept everything running. Mostly.","There's my guy. Afternoon boss."])
+    :pick(["Evening boss. Grinding late again, I see.","Hey bro. Evening shift? Alright, let's get after it.","Back for more boss? Love the commitment, honestly."]);
   let crew;
   if(!AG)crew="The agent network's offline right now. I'll keep an eye on it.";
   else if(w.length)crew=w.length===1?`${w[0].name} is hard at work, unlike some people.`:`${w.length} agents are working right now: ${w.map(a=>a.name).join(" and ")}.`;
