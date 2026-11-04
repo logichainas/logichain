@@ -226,7 +226,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .tbl td.n{text-align:right}
 
 /* ---------- brief modal + files ---------- */
-#briefM{position:fixed;inset:0;z-index:56;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.6);backdrop-filter:blur(3px)}
+#briefM,#newM{position:fixed;inset:0;z-index:56;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.6);backdrop-filter:blur(3px)}
 .bf{width:min(760px,100%);max-height:100%;display:flex!important;flex-direction:column;padding:0!important;animation:holoIn .5s cubic-bezier(.2,.9,.25,1) both}
 .bfbody{padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
 .bfbody label{display:flex;flex-direction:column;gap:6px;font:600 11px var(--hud);letter-spacing:.2em;color:var(--cyan)}
@@ -376,7 +376,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 
     <section class="side r">
       <div class="panel br" style="flex:1.1;min-height:0">
-        <div class="ph"><h2>AGENT ROSTER</h2><span><span id="aCount"></span> <button class="mini" id="briefBtn" title="Give an agent a task">+ BRIEF</button></span></div>
+        <div class="ph"><h2>AGENT ROSTER</h2><span><span id="aCount"></span> <button class="mini" id="briefBtn" title="Give an agent a task">+ BRIEF</button> <button class="mini" id="newAgentBtn" title="Create a new agent">+ AGENT</button></span></div>
         <div class="scroll" id="roster"><div class="empty">Scanning agent network …</div></div>
       </div>
       <div class="panel br" style="flex:1;min-height:0">
@@ -429,6 +429,31 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
       <span style="flex:1" id="bfErr" class="c-err"></span>
       <button type="button" class="hbtn" id="bfCancel">Cancel</button>
       <button class="talk" id="bfSend">➤ Send to agent</button>
+    </div>
+  </form>
+</div>
+
+<!-- NEW AGENT -->
+<div id="newM" class="hidden">
+  <form class="holo panel br bf" id="naForm" autocomplete="off">
+    <div class="vh">
+      <div class="orb" style="--c:#b48cff"></div>
+      <div><h3>Create an agent</h3><p>Adds a new agent to your Claude account. It shows up in the roster and you can brief it from here.</p></div>
+      <div class="sp"></div>
+      <button type="button" class="hbtn" id="naClose">Close ✕</button>
+    </div>
+    <div class="bfbody">
+      <label>Template<select class="field" id="naTpl"></select></label>
+      <label>Name<input class="field" id="naName" maxlength="80" required></label>
+      <label>Role (short description)<input class="field" id="naDesc" maxlength="300"></label>
+      <label>Model<select class="field" id="naModel"><option value="claude-sonnet-5-5">Claude Sonnet 5.5 · fast, everyday work</option><option value="claude-opus-5-5">Claude Opus 5.5 · deepest reasoning</option><option value="claude-haiku-5-5">Claude Haiku 5.5 · quick and cheap</option></select></label>
+      <label>Instructions<textarea class="field" id="naSys" rows="12" required></textarea></label>
+      <div class="bfhint">The instructions are the agent's job description: who it is, what it does, what it must never do, and how it delivers. You can change them later in Claude Console.</div>
+    </div>
+    <div class="rvfoot">
+      <span style="flex:1" id="naErr" class="c-err"></span>
+      <button type="button" class="hbtn" id="naCancel">Cancel</button>
+      <button class="talk" id="naSend">✦ Create agent</button>
     </div>
   </form>
 </div>
@@ -552,7 +577,7 @@ function initScene(){
   addEventListener("resize",resize);resize();
   addEventListener("mousemove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1;mouse.set(mx,-my);
     document.body.style.setProperty("--mx",mx.toFixed(3));document.body.style.setProperty("--my",my.toFixed(3));});
-  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM"))return;if(S.hover)openAgent(S.hover.agent.id);});
+  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM"))return;if(S.hover)openAgent(S.hover.agent.id);});
 
   S.build=function(agents){
     while(nodes.children.length)nodes.remove(nodes.children[0]);
@@ -786,6 +811,44 @@ $("bfForm").addEventListener("submit",async e=>{
   if(j.error){$("bfErr").textContent=j.error;return;}
   closeBrief();say(`${name} is on it, boss. Opening the work log.`);
   await loadAgents();openAgent(j.session.agent_id,j.session.id);
+});
+
+
+/* ================= CREATE AN AGENT ================= */
+const AGENT_TEMPLATES=[
+  {key:"anna",label:"Anna · Finance & Admin",name:"Anna",model:"claude-sonnet-5-5",
+   desc:"Økonomi og administrasjon for LogiChain AS: økonomioversikt, fakturagrunnlag, frister for AS, kostnadskontroll og maler.",
+   system:"Du er Anna, økonomi- og administrasjonsansvarlig i LogiChain AS – et norsk oppstartsselskap som leverer innkjøps- og leverandøranalyse (procurement intelligence) som abonnement til industribedrifter. Daglig leder og grunnlegger er Einar Fredriksen. Selskapet drives av gründerne ved siden av andre jobber, så alt du leverer skal være kort, konkret og klart til bruk.\n\nDINE OPPGAVER\n- Økonomioversikt: inntekter (kundeabonnementer), kostnader (f.eks. Anthropic/Claude, Supabase, Cloudflare, domene, Microsoft 365) og resultat per måned. Lag budsjett og prognoser når du blir bedt om det.\n- Fakturagrunnlag: sett opp hva hver kunde skal faktureres (periode, beløp, MVA, betalingsfrist) ut fra avtalene du får oppgitt.\n- Frister og plikter for et norsk aksjeselskap: MVA-terminer, aksjonærregisteroppgave, skattemelding, årsregnskap til Regnskapsregisteret, generalforsamling og eventuelle arbeidsgiverplikter (a-melding) hvis selskapet får ansatte. Lag en fristkalender.\n- Kostnadskontroll: finn abonnementer og utgifter som kan kuttes eller forhandles, og varsle om uventede økninger.\n- Administrasjon: maler for kundeavtaler, tilbud og purringer, og sjekklister for oppstart av nye kunder.\n\nSLIK JOBBER DU\n- Bruk bare tall og opplysninger du får fra Einar, fra filer du får, eller fra kilder du har sjekket. Finn aldri på beløp, kunder, avtaler eller frister.\n- Regler, satser og frister endrer seg. Sjekk alltid gjeldende informasjon på offisielle kilder (skatteetaten.no, brreg.no, altinn.no, regjeringen.no) før du oppgir dem, og oppgi kilden med lenke og hvilken dato du sjekket.\n- Merk tydelig hva som er fakta, hva som er estimat og hva som er antakelser.\n- Du er ikke revisor eller autorisert regnskapsfører. Ved tvil om skatt, MVA eller regnskapsføring sier du det rett ut og anbefaler at Einar bekrefter med regnskapsfører.\n- Du sender aldri e-post, betaler aldri regninger og endrer aldri noe i eksterne systemer. Du lager utkast og oversikter som Einar godkjenner.\n- Skriv på norsk, med mindre du blir bedt om noe annet.\n\nLEVERANSER\n- Lagre tabeller, budsjetter, fakturagrunnlag og fristkalendere som Excel (.xlsx) i /mnt/session/outputs/. Bruk tydelige faner, formler der det gir mening, NOK som valuta og norsk datoformat (dd.mm.åååå).\n- Skriftlige notater og maler lagres som Markdown (.md) i /mnt/session/outputs/.\n- Avslutt alltid med en kort oppsummering på 3–5 linjer: hva du har gjort, hva Einar må gjøre eller bestemme, og hvilke filer som ligger klare."},
+  {key:"custom",label:"Blank agent",name:"",model:"claude-sonnet-5-5",desc:"",system:""}
+];
+function fillTpl(k){const t=AGENT_TEMPLATES.find(x=>x.key===k)||AGENT_TEMPLATES[0];
+  $("naName").value=t.name;$("naDesc").value=t.desc;$("naModel").value=t.model;$("naSys").value=t.system;$("naErr").textContent="";}
+function openNewAgent(tplKey){
+  $("naTpl").innerHTML=AGENT_TEMPLATES.map(t=>`<option value="${t.key}">${esc(t.label)}</option>`).join("");
+  $("naTpl").value=tplKey||"anna";fillTpl($("naTpl").value);
+  $("newM").classList.remove("hidden");setTimeout(()=>$("naSend").focus(),60);
+}
+function closeNewAgent(){$("newM").classList.add("hidden");}
+$("newAgentBtn").addEventListener("click",e=>{e.stopPropagation();openNewAgent();});
+$("naTpl").addEventListener("change",e=>fillTpl(e.target.value));
+$("naClose").addEventListener("click",closeNewAgent);$("naCancel").addEventListener("click",closeNewAgent);
+$("newM").addEventListener("click",e=>{if(e.target.id==="newM")closeNewAgent();});
+$("naForm").addEventListener("submit",async e=>{
+  e.preventDefault();$("naErr").textContent="";
+  const name=$("naName").value.trim(),system=$("naSys").value.trim(),description=$("naDesc").value.trim(),model=$("naModel").value;
+  if(name.length<2){$("naErr").textContent="Give the agent a name.";return;}
+  if(system.length<30){$("naErr").textContent="Write a few sentences of instructions.";return;}
+  $("naSend").disabled=true;$("naSend").textContent="Creating …";
+  let j;
+  try{
+    if(DEMO){await new Promise(r=>setTimeout(r,700));j={ok:true,agent:{id:"agent_demo_"+Date.now(),name}};}
+    else{const r=await fetch("/api/agents",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(SESSION&&SESSION.access_token)},body:JSON.stringify({action:"create_agent",name,description,system,model})});
+      j=await r.json().catch(()=>({error:"HTTP "+r.status}));if(!r.ok&&!j.error)j.error="HTTP "+r.status;}
+  }catch(err){j={error:err.message};}
+  $("naSend").disabled=false;$("naSend").textContent="✦ Create agent";
+  if(j.error){$("naErr").textContent=j.error;return;}
+  closeNewAgent();say(`${name} is online, boss. Welcome to the crew. Hit brief when you've got a job for ${name==="Anna"?"her":"them"}.`);
+  await loadAgents();
 });
 
 /* ================= MISSIONS (to-do) ================= */

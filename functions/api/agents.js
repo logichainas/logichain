@@ -7,6 +7,7 @@
  *   POST /api/agents  {agent_id, task, title?} → start a new session for that agent ("brief")
  *   POST /api/agents  {session_id, action:"confirm", ids:[], result:"allow"|"deny"} → answer tool approvals
  *   POST /api/agents  {session_id, action:"message", text} → send a follow-up message to the agent
+ *   POST /api/agents  {action:"create_agent", name, description, system, model} → create a new agent
  *
  * The Claude API key lives only here, as a Cloudflare secret
  * (ANTHROPIC_API_KEY or "logichain-jarvis"). Never in the browser.
@@ -231,6 +232,35 @@ export async function onRequestPost({ request, env }) {
 
   let body;
   try { body = await request.json(); } catch (_) { return json({ error: "Bad JSON" }, 400); }
+
+  // ---- create a new agent ----
+  if (body.action === "create_agent") {
+    const MODELS = ["claude-sonnet-5-5", "claude-opus-5-5", "claude-haiku-5-5"];
+    const name = String(body.name || "").trim().slice(0, 80);
+    const system = String(body.system || "").trim();
+    const model = MODELS.includes(body.model) ? body.model : MODELS[0];
+    if (name.length < 2) return json({ error: "Give the agent a name" }, 400);
+    if (system.length < 30) return json({ error: "Write the agent's instructions (at least a few sentences)" }, 400);
+    if (system.length > 30000) return json({ error: "Instructions are too long" }, 400);
+    const hdr = { "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-beta": "managed-agents-2026-04-01", "content-type": "application/json" };
+    try {
+      const list = await claude("/agents?limit=100", key);
+      if ((list.data || []).some((a) => !a.archived_at && String(a.name || "").toLowerCase() === name.toLowerCase()))
+        return json({ error: `An agent called "${name}" already exists` }, 409);
+    } catch (_) { /* listing is only a duplicate guard */ }
+    const r = await fetch(`${API}/agents`, {
+      method: "POST", headers: hdr,
+      body: JSON.stringify({
+        name, model, system,
+        description: String(body.description || "").trim().slice(0, 500) || undefined,
+        tools: [{ type: "agent_toolset_20260401" }],
+        metadata: { owner: "logichain", created_from: "jarvis" },
+      }),
+    });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) return json({ error: `Could not create the agent: ${r.status} ${j?.error?.message || ""}`.trim() }, 502);
+    return json({ ok: true, agent: { id: j.id, name: j.name || name, model } });
+  }
 
   // ---- act on an existing session: approve/deny tools, or send a follow-up message ----
   if (body.session_id) {
