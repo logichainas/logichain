@@ -614,6 +614,11 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
             const od2=od||pd||dd||new Date();
             return {po:r.po,line:r.linjenr||1,sup,mat:mi,proj:r.prosjekt||"\u2013",qty:Number(r.antall)||1,order:od2,prom:pd||od2,del:dd,dev,status,value:Number(r.verdi)||0,month:(pd||od2).getFullYear()*12+(pd||od2).getMonth()};
           });
+          // Reporting window: from 1 January of the last complete month's year up to the end of the last complete month.
+          // Months the customer has not sent data for yet (current month and later) and leftovers from earlier years are left out.
+          {const now=new Date(),cutEnd=new Date(now.getFullYear(),now.getMonth(),1),last=new Date(cutEnd.getFullYear(),cutEnd.getMonth()-1,1),cutStart=new Date(last.getFullYear(),0,1);
+           const before=lines.length;lines=lines.filter(l=>l.prom>=cutStart&&l.prom<cutEnd);
+           window.__PERIOD={from:cutStart,to:new Date(cutEnd-864e5),hidden:before-lines.length};DIAG+="periode="+cutStart.toISOString().slice(0,10)+".."+new Date(cutEnd-864e5).toISOString().slice(0,10)+" skjult="+(before-lines.length)+" | ";}
           // months follow the promised (planned) delivery date, and keep years apart
           const mset=[...new Set(lines.map(l=>l.month))].sort((a,b)=>a-b);
           lines.forEach(l=>l.month=mset.indexOf(l.month));
@@ -1362,7 +1367,7 @@ document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" 
   if(["forside","spend","lev","po","octo","spar","tiltak","faq"].indexOf(h)>=0)goto(h);})();
 
   const bEl=document.getElementById("dataBadge");if(bEl)bEl.textContent=REAL?"\u2713 EKTE DATA":"GENERERT DEMODATA";
-  try{const u=document.querySelector(".updated");if(u&&REAL)u.textContent="Sist oppdatert: "+new Date().toLocaleDateString("no-NO")+" \u00b7 Datakilde: Supabase (ekte data)";}catch(_){}
+  try{const u=document.querySelector(".updated");if(u&&REAL){const P=window.__PERIOD,f=d=>d.toLocaleDateString("no-NO",{month:"short",year:"numeric"});u.textContent="Sist oppdatert: "+new Date().toLocaleDateString("no-NO")+" \u00b7 Periode: "+(P?f(P.from)+" – "+f(P.to):"–")+" \u00b7 Datakilde: MacGregor (ekte data)";}}catch(_){}
   window.goto=goto;window.renderPO=renderPO;window.renderLev=renderLev;
 }
 boot();
