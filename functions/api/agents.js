@@ -22,7 +22,7 @@ const FILES_VERSION = "2026-10-21";
 // Every session started from Jarvis gets a spend cap (list cost, whole US cents). "+ $3" in the viewer raises it.
 const SESSION_BUDGET_CENTS = 300;
 // Research agents (everyone except Nora and the Planner, who handle customer data) run in an environment with open internet.
-const RESEARCH_ENVIRONMENT = ""; // set to the env_… id of logichain-research-env
+const RESEARCH_ENVIRONMENT = "env_01YVZKu1ucYiQhpoYXwuGNDH"; // logichain-research-env (unrestricted networking)
 const CLOSED_AGENT = /nora|planner/i;
 const budgetOf = (cents) => ({ type: "limit", max_list_cost: { amount: String(Math.max(1, Math.round(cents))), currency: "USD" } });
 const centsOf = (v) => { const n = Number(v && typeof v === "object" ? v.amount : v); return Number.isFinite(n) ? n : null; };
