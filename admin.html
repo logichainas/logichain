@@ -60,6 +60,18 @@ button,input,select{font-family:var(--ui)}
 .ph span{font:12px var(--mono);color:var(--muted)}
 .scroll{overflow-y:auto;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.35) transparent}
 .empty{color:var(--muted);font-size:14px;padding:8px 2px;line-height:1.5}
+.tr-top{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.tr-big{font:700 34px/1 var(--hud);color:var(--cyan2);text-shadow:0 0 14px rgba(0,229,255,.6)}
+.tr-big small{display:block;font:600 10px var(--hud);letter-spacing:.2em;color:var(--muted);margin-top:6px;text-shadow:none}
+.tr-kpis{display:flex;gap:14px;font:12px var(--mono);color:var(--muted)}
+.tr-kpis b{display:block;font:700 15px var(--hud);color:var(--text)}
+.tr-bars{display:flex;align-items:flex-end;gap:3px;height:54px;margin:12px 0 4px}
+.tr-bars i{flex:1;min-height:2px;background:linear-gradient(180deg,var(--cyan2),rgba(0,229,255,.25));box-shadow:0 0 8px rgba(0,229,255,.35);position:relative;cursor:default}
+.tr-bars i.today{background:linear-gradient(180deg,#fff,var(--cyan))}
+.tr-bars i:hover::after{content:attr(data-t);position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%);white-space:nowrap;font:11px var(--mono);color:var(--text);background:rgba(2,14,24,.95);border:1px solid var(--line2);padding:3px 6px;z-index:5}
+.tr-axis{display:flex;justify-content:space-between;font:10px var(--mono);color:var(--dim)}
+.tr-src{margin-top:8px;font-size:13px;color:var(--muted);line-height:1.5}
+.tr-src b{color:var(--text);font-weight:600}
 .empty code{font-family:var(--mono);color:var(--cyan2);font-size:12px}
 
 /* ---------- HUD layout ---------- */
@@ -378,6 +390,10 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
       <div class="panel br" style="flex:1.1;min-height:0">
         <div class="ph"><h2>AGENT ROSTER</h2><span><span id="aCount"></span> <button class="mini" id="briefBtn" title="Give an agent a task">+ BRIEF</button> <button class="mini" id="newAgentBtn" title="Create a new agent">+ AGENT</button></span></div>
         <div class="scroll" id="roster"><div class="empty">Scanning agent network …</div></div>
+      </div>
+      <div class="panel br" style="flex:0 0 auto" id="trPanel">
+        <div class="ph"><h2>SITE TRAFFIC</h2><span id="trRange">logichain.no</span></div>
+        <div id="traffic"><div class="empty">Loading …</div></div>
       </div>
       <div class="panel br" style="flex:1;min-height:0">
         <div class="ph"><h2>LIVE ACTIVITY</h2><span id="sCount"></span></div>
@@ -1115,6 +1131,7 @@ function jarvisContext(){
     agents:(AG?liveAgents():[]).map(a=>{const{st,mine}=agentState(a);return{name:a.name,model:a.model,description:a.description,state:st,
       sessions:mine.slice(0,4).map(s=>({title:s.title,status:s.status,last_activity:loc(s.updated_at||s.created_at)}))};}),
     quick_links:LINKS.map(l=>l.title),
+    website_traffic:TRAFFIC||"not available",
     pipeline:RUNS.slice(0,8).map(r=>({run:r.id,file:r.file_name,status:r.status,updated:loc(r.updated_at),summary:r.proposal_summary||null}))
   };
 }
@@ -1357,11 +1374,39 @@ function demoRuns(){const n=Date.now(),iso=x=>new Date(n-x*60e3).toISOString();
     {id:2,status:"planning",file_name:"vestfold_oct.xlsx",updated_at:iso(2),created_at:iso(9)},
     {id:1,status:"applied",file_name:"macgregor_sep.xlsx",updated_at:iso(1500),created_at:iso(1600),apply_result:{kunde:"MacGregor Norway",po_lines_added:412,po_lines_skipped_existing:0,suppliers_added:2,materials_added:30,insights_published:true},proposal:{summary:"Applied.",po_lines:[]}}];}
 
-function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();}
+/* ================= SITE TRAFFIC ================= */
+let TRAFFIC=null;
+async function loadTraffic(){
+  let days,top;
+  if(DEMO){const base=[3,5,4,8,6,2,3,9,12,7,6,11,14,10,8,13,9,15,18,12,7,9,16,21,17,14,19,23,20,11];
+    const t0=new Date();days=base.map((v,i)=>{const d=new Date(t0);d.setDate(d.getDate()-(base.length-1-i));return{day:d.toISOString().slice(0,10),visitors:v,views:Math.round(v*1.7)};});
+    top=[{kind:"source",label:"Direct",visitors:61},{kind:"source",label:"linkedin.com",visitors:22},{kind:"source",label:"google.com",visitors:14},{kind:"page",label:"/",visitors:88},{kind:"page",label:"/logichain-dashboard-demo",visitors:31},{kind:"country",label:"NO",visitors:91}];}
+  else{
+    const [a,b]=await Promise.all([sb.rpc("visit_stats",{p_days:30}),sb.rpc("visit_top",{p_days:7})]);
+    if(a.error){$("traffic").innerHTML=`<div class="empty">Visitor counter not set up yet. Run <code>supabase/site-visits.sql</code> in Supabase.<br><small>${esc(a.error.message)}</small></div>`;TRAFFIC=null;return;}
+    days=(a.data||[]).map(r=>({day:String(r.day).slice(0,10),visitors:Number(r.visitors)||0,views:Number(r.views)||0}));top=b.error?[]:(b.data||[]);
+  }
+  const n=days.length,tod=days[n-1]||{visitors:0,views:0},yest=days[n-2]||{visitors:0};
+  const sum=k=>days.slice(-k).reduce((x,d)=>x+d.visitors,0);
+  const last14=days.slice(-14),max=Math.max(1,...last14.map(d=>d.visitors));
+  const fmtD=d=>new Date(d+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
+  const pick=k=>top.filter(r=>r.kind===k).slice(0,3).map(r=>`<b>${esc(r.label)}</b> ${esc(r.visitors)}`).join(" · ")||"–";
+  TRAFFIC={today:tod.visitors,today_page_views:tod.views,yesterday:yest.visitors,last_7_days:sum(7),last_30_days:sum(30),
+    daily_last_14:last14.map(d=>({day:d.day,visitors:d.visitors})),top_sources_7d:top.filter(r=>r.kind==="source").map(r=>r.label+" ("+r.visitors+")"),
+    top_pages_7d:top.filter(r=>r.kind==="page").map(r=>r.label+" ("+r.visitors+")")};
+  $("traffic").innerHTML=`<div class="tr-top"><div class="tr-big">${tod.visitors}<small>VISITORS TODAY</small></div>
+      <div class="tr-kpis"><span><b>${yest.visitors}</b>yesterday</span><span><b>${sum(7)}</b>7 days</span><span><b>${sum(30)}</b>30 days</span></div></div>
+    <div class="tr-bars">${last14.map((d,i)=>`<i class="${i===last14.length-1?"today":""}" style="height:${Math.max(4,d.visitors/max*100)}%" data-t="${esc(fmtD(d.day))}: ${d.visitors} visitors · ${d.views} views"></i>`).join("")}</div>
+    <div class="tr-axis"><span>${esc(last14[0]?fmtD(last14[0].day):"")}</span><span>today</span></div>
+    <div class="tr-src">Sources (7d): ${pick("source")}<br>Top pages: ${pick("page")}</div>`;
+}
+
+function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();loadTraffic();}
 function start(){
   $("gate").classList.add("hidden");$("app").classList.remove("hidden");$("coreLbl").classList.remove("hidden");
   $("hello").textContent=(greeting()+", boss").toUpperCase();
-  tick();setInterval(tick,1000);refresh();setInterval(loadAgents,25000);setInterval(loadRuns,20000);
+  tick();setInterval(tick,1000);refresh();setInterval(loadAgents,25000);setInterval(loadRuns,20000);setInterval(loadTraffic,300000);
+  try{localStorage.setItem("lc_notrack","1");}catch(_){}
   CHAT=[];saveChat();
   greetOnLogin();
 

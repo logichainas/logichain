@@ -750,5 +750,6 @@ document.getElementById("loginForm").addEventListener("submit",async e=>{
 })();
 })();
 </script>
+<script>try{if(!localStorage.getItem("lc_notrack")&&navigator.sendBeacon)navigator.sendBeacon("/api/hit",new Blob([JSON.stringify({p:location.pathname,r:document.referrer})],{type:"text/plain"}))}catch(e){}</script>
 </body>
 </html>

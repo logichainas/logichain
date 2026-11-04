@@ -1137,5 +1137,6 @@ document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" 
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 <script src="assets/dash-fx.js?v=1" defer></script>
+<script>try{if(!localStorage.getItem("lc_notrack")&&navigator.sendBeacon)navigator.sendBeacon("/api/hit",new Blob([JSON.stringify({p:location.pathname,r:document.referrer})],{type:"text/plain"}))}catch(e){}</script>
 </body>
 </html>
