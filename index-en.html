@@ -69,8 +69,10 @@ header.scrolled{background:rgba(4,6,12,.72);backdrop-filter:blur(16px) saturate(
 .links a{font-size:15px;color:var(--muted);transition:color .2s}
 .links a:hover{color:#fff}
 .nav .sp{flex:1}
-.lang{font:600 13px var(--body);color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:6px 9px}
-.lang:hover{color:#fff;border-color:var(--line2)}
+.lang{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;padding:6px 8px;line-height:0;transition:border-color .2s,transform .2s}
+.lang .flag,.lang-foot .flag{display:block;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.15)}
+.lang-foot{display:inline-flex;align-items:center}
+.lang:hover{border-color:var(--line2);transform:translateY(-1px)}
 .nav .btn{padding:10px 16px;font-size:14.5px}
 .burger{display:none;background:none;border:0;color:#fff;cursor:pointer;padding:6px}
 .burger svg{width:26px;height:26px}
@@ -295,7 +297,7 @@ footer a:hover{color:#fff}
   .scrollcue{display:none}
   .srcs{grid-template-columns:1fr}
 }
-@media (max-width:460px){.nav{gap:12px}.lang{display:none}.chip{min-width:140px;padding:11px 13px}.chip strong{font-size:21px}}
+@media (max-width:460px){.nav{gap:12px}.chip{min-width:140px;padding:11px 13px}.chip strong{font-size:21px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rv{opacity:1;transform:none}html{scroll-behavior:auto}}
 </style>
 </head>
@@ -316,7 +318,7 @@ footer a:hover{color:#fff}
       <a href="#kontakt">Contact</a>
     </nav>
     <span class="sp"></span>
-    <a class="lang" href="index.html" hreflang="no">NO</a>
+    <a class="lang" href="index.html" hreflang="no" title="Bytt til norsk" aria-label="Bytt til norsk"><svg class="flag" viewBox="0 0 22 16" width="22" height="16" aria-hidden="true"><rect width="22" height="16" fill="#BA0C2F"/><rect x="6" width="4" height="16" fill="#fff"/><rect y="6" width="22" height="4" fill="#fff"/><rect x="7" width="2" height="16" fill="#00205B"/><rect y="7" width="22" height="2" fill="#00205B"/></svg></a>
     <a class="btn btn-g demo" href="logichain-dashboard-demo-en.html">Try demo</a>
     <a class="btn btn-p" href="#" id="loginBtn" onclick="openLogin();return false;">Log in</a>
     <button class="burger" id="burger" aria-label="Menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -556,7 +558,7 @@ footer a:hover{color:#fff}
   <div class="wrap">
     <a class="logo" href="#top" style="font-size:17px"><i style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="#050816" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M8.2 8.2l2.6 6.6M15.8 8.2l-2.6 6.6M8.4 7h7.2"/></svg></i>Logichain</a>
     <span>Turn purchasing data into decisions · © 2026 Logichain</span>
-    <nav><a href="logichain-dashboard-demo-en.html">Try demo</a><a href="#kontakt">Contact</a><a href="index.html">NO</a></nav>
+    <nav><a href="logichain-dashboard-demo-en.html">Try demo</a><a href="#kontakt">Contact</a><a href="index.html" class="lang-foot" title="Bytt til norsk" aria-label="Bytt til norsk"><svg class="flag" viewBox="0 0 22 16" width="22" height="16" aria-hidden="true"><rect width="22" height="16" fill="#BA0C2F"/><rect x="6" width="4" height="16" fill="#fff"/><rect y="6" width="22" height="4" fill="#fff"/><rect x="7" width="2" height="16" fill="#00205B"/><rect y="7" width="22" height="2" fill="#00205B"/></svg></a></nav>
   </div>
 </footer>
 
