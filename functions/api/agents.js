@@ -42,6 +42,32 @@ async function sessionFiles(sessionId, key) {
     .map((f) => ({ id: f.id, filename: f.filename, size: f.size_bytes ?? null, mime: f.mime_type ?? null, created_at: f.created_at ?? null }));
 }
 
+// Files the agent produced in its earlier sessions → mounted read-only into the new session,
+// so every agent can build on its own previous work (newest first, max 20 files / ~150 MB).
+async function previousFiles(agentId, key) {
+  let sessions = [];
+  try { sessions = (await claude(`/sessions?agent_id=${encodeURIComponent(agentId)}&limit=10`, key)).data || []; } catch (_) { return []; }
+  sessions.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+  const out = [], seen = new Set();
+  let bytes = 0;
+  for (const s of sessions) {
+    const files = await sessionFiles(s.id, key);
+    files.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+    for (const f of files) {
+      if (out.length >= 20) return out;
+      const safe = String(f.filename || f.id).replace(/[^\w.\- ]+/g, "_").slice(0, 120);
+      const day = String(f.created_at || s.created_at || "").slice(0, 10);
+      let name = safe;
+      if (seen.has(name.toLowerCase())) name = `${day}_${safe}`;
+      if (seen.has(name.toLowerCase())) continue;
+      if (f.size && bytes + f.size > 150e6) continue;
+      seen.add(name.toLowerCase()); bytes += f.size || 0;
+      out.push({ id: f.id, name, session_title: s.title || null, day });
+    }
+  }
+  return out;
+}
+
 const keyFrom = (env) => env.ANTHROPIC_API_KEY || env["logichain-jarvis"] || env.LOGICHAIN_JARVIS;
 
 const json = (body, status = 200) =>
@@ -336,13 +362,20 @@ export async function onRequestPost({ request, env }) {
       environmentId = s?.environment_id || pick(s?.environment, "id") || DEFAULT_ENVIRONMENT;
     } catch (_) { /* keep default */ }
 
+    const prev = await previousFiles(agentId, key);
+    const prevNote = prev.length ? [
+      "",
+      "Your earlier work: read-only copies of the files you produced in previous sessions are mounted under /mnt/session/uploads/previous/ (run `ls -R /mnt/session/uploads` if you can't find them). Use them when relevant instead of starting from scratch:",
+      ...prev.map((f) => `- ${f.name}${f.session_title ? ` (from "${String(f.session_title).slice(0, 80)}", ${f.day})` : ""}`),
+    ] : [];
     const text = [
       task,
+      ...prevNote,
       "",
       "Deliverables: save any report or data you produce as files in /mnt/session/outputs/ (Excel .xlsx for tables/reports, Markdown .md for written reports) so they can be downloaded from the Logichain command center. Finish with a short summary of what you did and where the files are.",
     ].join("\n");
 
-    const r = await fetch(`${API}/sessions`, {
+    const create = (withFiles) => fetch(`${API}/sessions`, {
       method: "POST",
       headers: {
         "x-api-key": key,
@@ -354,14 +387,18 @@ export async function onRequestPost({ request, env }) {
         agent: agentId,
         environment_id: environmentId,
         title,
-        metadata: { source: "jarvis-brief" },
+        metadata: { source: "jarvis-brief", previous_files: String(withFiles ? prev.length : 0) },
         budget: budgetOf(SESSION_BUDGET_CENTS),
-        initial_events: [{ type: "user.message", content: [{ type: "text", text }] }],
+        ...(withFiles && prev.length ? { resources: prev.map((f) => ({ type: "file", file_id: f.id, mount_path: `/previous/${f.name}` })) } : {}),
+        initial_events: [{ type: "user.message", content: [{ type: "text", text: withFiles ? text : text.replace(prevNote.join("\n"), "") }] }],
       }),
     });
+    let r = await create(true);
+    // if the earlier files can't be attached for some reason, start the task anyway without them
+    if (!r.ok && prev.length && r.status >= 400 && r.status < 500) r = await create(false);
     const j = await r.json().catch(() => ({}));
     if (!r.ok) return json({ error: `Could not start the agent: ${r.status} ${j?.error?.message || ""}`.trim() }, 502);
-    return json({ ok: true, session: { id: j.id, status: j.status, title: j.title || title, agent_id: agentId } });
+    return json({ ok: true, previous_files: (j.metadata && Number(j.metadata.previous_files)) || 0, session: { id: j.id, status: j.status, title: j.title || title, agent_id: agentId } });
   } catch (e) {
     return json({ error: String(e.message || e) }, 502);
   }

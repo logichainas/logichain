@@ -975,7 +975,7 @@ $("bfForm").addEventListener("submit",async e=>{
   }catch(err){j={error:err.message};}
   $("bfSend").disabled=false;$("bfSend").textContent="➤ Send to agent";
   if(j.error){$("bfErr").textContent=j.error;return;}
-  closeBrief();say(`${name} is on it, boss. Opening the work log.`);
+  closeBrief();say(`${name} is on it boss${j.previous_files?` – with ${j.previous_files} file${j.previous_files==1?"":"s"} from earlier work`:""}. Opening the work log.`);
   await loadAgents();openAgent(j.session.agent_id,j.session.id);
 });
 
