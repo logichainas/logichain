@@ -279,6 +279,10 @@ async function onNoraIdle(reqId: string, session: any) {
     });
   }
   if (run.status !== "analysing") { log("info", reqId, "nora_idle_ignored", { runId: run.id, status: run.status }); return; }
+  if (session?.stop_reason?.type === "budget_reached") {
+    await updateRun(run.id, "analysing", { error: "Nora: " + "Spend limit reached ($3). Open the agent's work log in Jarvis and press + $3 budget to let it finish." });
+    log("warn", reqId, "nora_budget_reached", { runId: run.id }); return;
+  }
 
   const report = await findOutput(session.id, (files) =>
     files.filter((f) => /\.xlsx$/i.test(f.filename) && f.filename !== "data.xlsx" && f.id !== run!.source_file_id)
@@ -320,6 +324,7 @@ async function onNoraIdle(reqId: string, session: any) {
         environment_id: ENVIRONMENT_ID,
         title: `Dashboard update plan – run #${run.id}${run.file_name ? " – " + run.file_name : ""}`.slice(0, 500),
         metadata: { source: "logichain-planner", run_id: String(run.id), nora_session_id: session.id },
+        budget: { type: "limit", max_list_cost: { amount: "300", currency: "USD" } }, // $3 spend cap per session
         resources,
         initial_events: [{ type: "user.message", content: [{ type: "text", text: prompt }] }],
       }),
@@ -339,6 +344,10 @@ async function onPlannerIdle(reqId: string, session: any) {
   const run = await findRun("planner_session_id", session.id);
   if (!run) { log("warn", reqId, "planner_run_missing", { sessionId: session.id }); return; }
   if (run.status !== "planning") { log("info", reqId, "planner_idle_ignored", { runId: run.id, status: run.status }); return; }
+  if (session?.stop_reason?.type === "budget_reached") {
+    await updateRun(run.id, "planning", { error: "Planner: " + "Spend limit reached ($3). Open the agent's work log in Jarvis and press + $3 budget to let it finish." });
+    log("warn", reqId, "planner_budget_reached", { runId: run.id }); return;
+  }
 
   const file = await findOutput(session.id, (files) => files.find((f) => f.filename === PROPOSAL_FILE) ?? files.find((f) => /\.json$/i.test(f.filename)));
   if (!file) {
