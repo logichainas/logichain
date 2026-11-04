@@ -180,7 +180,7 @@ rect.clickable:hover{fill:#6db3ff}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/dash-theme.css?v=1">
+<link rel="stylesheet" href="assets/dash-theme.css?v=2">
 </head>
 <body>
 
@@ -216,6 +216,7 @@ rect.clickable:hover{fill:#6db3ff}
 
 <main>
 <div class="crumbbar" id="crumbs"></div>
+<div class="monthbar" id="monthBar"></div>
 <div class="hint-line" id="hintline"></div>
 
 <!-- ============ EXECUTIVE OVERVIEW ============ -->
@@ -579,6 +580,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
           if(mg&&mg.data)kid=mg.data.id;
         }
         const fetchAll=async function(tbl,ord){
+          if(window.__MGC&&window.__MGC[tbl])return window.__MGC[tbl];
           var out=[],from=0,done=false;
           while(!done){
             var rr=null,err=null;
@@ -589,6 +591,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
             out=out.concat(rws);
             if(rws.length<1000)done=true;else from+=1000;
           }
+          (window.__MGC=window.__MGC||{})[tbl]=out;
           return out;
         };
         let lev=[],levE=null,mat=[],matE=null,po=[],poE=null;
@@ -687,6 +690,12 @@ suppliers.forEach(s=>{
 
 
   }
+/* ================= MONTH FILTER (whole page follows the selected month) ================= */
+const ALL_LINES=lines;
+if(window.__MONTH!=null&&window.__MONTH>=0&&window.__MONTH<MONTHS.length)lines=lines.filter(l=>l.month===window.__MONTH);else window.__MONTH=null;
+(function(){const el=document.getElementById("monthBar");if(!el)return;const sel=window.__MONTH;
+  el.innerHTML=`<span class="mb-lbl">Periode</span><button class="${sel==null?"active":""}" onclick="setMonth(null)">Hele perioden <small>${ALL_LINES.length.toLocaleString("nb-NO")}</small></button>`+
+    MONTHS.map((m,i)=>`<button class="${sel===i?"active":""}" onclick="setMonth(${i})">${m} <small>${ALL_LINES.filter(l=>l.month===i).length.toLocaleString("nb-NO")}</small></button>`).join("");})();
 /* ================= HELPERS ================= */
 const fmt=n=>Math.round(n).toLocaleString("nb-NO");
 const fmtM=n=>n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" mill kr":fmt(n)+" kr";
@@ -710,8 +719,8 @@ suppliers.forEach(s=>{const a=agg[s.id];
   s.latePct=a.ev?Math.round(a.late/a.ev*100):0;s.spend=a.spend;});
 
 /* ---- spend aggregations ---- */
-const spendByMonth=MONTHS.map((m,i)=>lines.filter(l=>l.month===i).reduce((a,l)=>a+l.value,0));
-const qtyByMonth=MONTHS.map((m,i)=>lines.filter(l=>l.month===i).reduce((a,l)=>a+l.qty,0));
+const spendByMonth=MONTHS.map((m,i)=>ALL_LINES.filter(l=>l.month===i).reduce((a,l)=>a+l.value,0));
+const qtyByMonth=MONTHS.map((m,i)=>ALL_LINES.filter(l=>l.month===i).reduce((a,l)=>a+l.qty,0));
 const spendByCat=CATS.map(c=>({cat:c,val:lines.filter(l=>matCat(l.mat)===c).reduce((a,l)=>a+l.value,0)}));
 const topSorted=[...suppliers].filter(s=>s.spend>0).sort((a,b)=>b.spend-a.spend);
 const top5Share=Math.round(topSorted.slice(0,5).reduce((a,s)=>a+s.spend,0)/totVal*100);
@@ -757,12 +766,12 @@ const avgAbs=(lines.reduce((a,l)=>a+Math.abs(l.dev),0)/lines.length).toFixed(1);
 const avgPriceTrend=(matTrend.reduce((a,t)=>a+t,0)/matTrend.length*100);
 
 /* ================= TABS ================= */
-function goto(t){document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
+function goto(t){window.__TAB=t;document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
   ["forside","spend","lev","po","octo","spar","tiltak","faq"].forEach(x=>document.getElementById("tab-"+x).style.display=x===t?"":"none");
   const h=document.getElementById("hintline");if(h)h.textContent=HINTS[t]||"";
   setCrumbs([["Logichain","goto('forside')"],[TABNAMES[t]||t]]);
   window.scrollTo(0,0);}
-document.getElementById("tabs").addEventListener("click",e=>{if(e.target.dataset.tab)goto(e.target.dataset.tab)});
+if(!window.__BOOTED)document.getElementById("tabs").addEventListener("click",e=>{if(e.target.dataset.tab)goto(e.target.dataset.tab)});
 
 const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl}${help?` <span class="kpi-help" title="${help}">ⓘ</span>`:""}</div><div class="val ${cls}">${val}</div><div class="sub">${sub}</div></div>`;
 
@@ -790,7 +799,7 @@ function renderPO(){
 renderPO();
 
 const monthsData=MONTHS.map((m,i)=>{
-  const ml=lines.filter(l=>l.month===i);
+  const ml=ALL_LINES.filter(l=>l.month===i);
   const ev=ml.filter(l=>l.status!=="Ikke levert");return{m,n:ml.length,otd:ev.length?Math.round(ev.filter(l=>l.status==="I tide").length/ev.length*100):0}});
 document.getElementById("kpi-po").innerHTML=
   kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad")+
@@ -817,7 +826,7 @@ document.getElementById("kpi-po").innerHTML=
   });
   const my=pad+(H-pad-30)*(1-0.9);
   document.getElementById("chartOTD").innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%">${grid}<line x1="${pad}" x2="${W}" y1="${my}" y2="${my}" stroke="#2ecc71" stroke-dasharray="6 5" opacity=".6"/><text x="${W-60}" y="${my-6}" fill="#2ecc71" font-size="10">Mål 90%</text>${bars}${dots}</svg>`;
-  document.getElementById("chartMonths").innerHTML=`<div class="chips"><button class="active" data-m="" onclick="filterMonth(null)">Hele året · ${fmt(lines.length)}</button>${monthsData.map((d,i)=>`<button data-m="${i}" onclick="filterMonth(${i})">${d.m} · ${d.n}</button>`).join("")}</div>`;
+  document.getElementById("chartMonths").innerHTML=`<div class="chips"><button class="${window.__MONTH==null?"active":""}" data-m="" onclick="filterMonth(null)">Hele året · ${fmt(ALL_LINES.length)}</button>${monthsData.map((d,i)=>`<button class="${window.__MONTH===i?"active":""}" data-m="${i}" onclick="filterMonth(${i})">${d.m} · ${d.n}</button>`).join("")}</div>`;
 })();
 
 (function(){
@@ -870,7 +879,7 @@ function vbars(data,fmtY,fmtL,clickFn){
   for(let g=0;g<=3;g++){const y=pad+(H-pad-30)*g/3;out+=`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="#1e2a4a"/>`;}
   data.forEach((d,i)=>{
     const cx=pad+i*bw+bw/2, bh=(H-pad-30)*(d.v/max), y=H-26-bh;
-    out+=`<rect x="${cx-16}" y="${y}" width="32" height="${Math.max(bh,2)}" fill="#3d8bff" opacity="${0.35+0.65*d.v/max}" rx="3"${clickFn?` class="clickable" onclick="showMonth(${i})"`:""}/>`;
+    out+=`<rect x="${cx-16}" y="${y}" width="32" height="${Math.max(bh,2)}" fill="#3d8bff" opacity="${window.__MONTH!=null&&n===MONTHS.length?(i===window.__MONTH?1:0.18):0.35+0.65*d.v/max}" rx="3"${clickFn?` class="clickable" onclick="showMonth(${i})"`:""}/>`;
     out+=`<text x="${cx}" y="${y-6}" fill="#6db3ff" font-size="9.5" text-anchor="middle">${fmtY(d.v)}</text>`;
     out+=`<text x="${cx}" y="${H-8}" fill="#8fa0c0" font-size="10" text-anchor="middle">${fmtL(d.l)}</text>`;
   });
@@ -884,7 +893,7 @@ function hbars(el,rows,fmtV){
 }
 document.getElementById("kpi-spend").innerHTML=
   kpi("Total spend 2026",fmtM(totVal),fmt(lines.length)+" PO-linjer","","Summen av alle PO-linjene i perioden")+
-  kpi("Spend per måned (snitt)",fmtM(totVal/Math.max(1,MONTHS.length)),MONTHS.length?MONTHS[0]+" – "+MONTHS[MONTHS.length-1]:"–","","Gjennomsnittlig månedlig innkjøpsvolum")+
+  (window.__MONTH!=null?kpi("Spend i "+MONTHS[window.__MONTH],fmtM(totVal),"valgt måned","","Innkjøpsvolum i valgt måned"):kpi("Spend per måned (snitt)",fmtM(totVal/Math.max(1,MONTHS.length)),MONTHS.length?MONTHS[0]+" – "+MONTHS[MONTHS.length-1]:"–","","Gjennomsnittlig månedlig innkjøpsvolum"))+
   kpi("Top 5-konsentrasjon",top5Share+"%","av total spend hos topp 5 leverandører",top5Share>60?"warn":"","Leverandøravhengighet: andel av spenden hos de fem største – klikk på listen under for å se dem")+
   kpi("Tail spend",tailShare+"%",tailSup.length+" leverandører står for andel > 80 %-kutten","","De små leverandørene etter 80 %-kutten – ofte mye administrasjon per krone")+
   kpi("Single-source materialer",singleSource.length,"uten dokumentert alternativ",singleSource.length>2?"warn":"","Materialer som kun én leverandør kan levere – forsyningssrisiko")+
@@ -1093,14 +1102,15 @@ window.setCrumbs=function(items){
 };
 window.openSup=function(id){hideModal();goto("lev");levDetail(id);};
 window.filterMonth=function(i){
+  if(window.setMonth&&i!==window.__MONTH)return window.setMonth(i);
   poMonth=i;
   document.querySelectorAll("#chartMonths .chips button").forEach(b=>b.classList.toggle("active",b.dataset.m===(i===null?"":String(i))));
   renderPO();
 };
 window.showMonth=function(i){
-  const ls=lines.filter(l=>l.month===i);
+  const ls=ALL_LINES.filter(l=>l.month===i);
   const spend=ls.reduce((a,l)=>a+l.value,0);
-  const prev=i>0?lines.filter(l=>l.month===i-1).reduce((a,l)=>a+l.value,0):null;
+  const prev=i>0?ALL_LINES.filter(l=>l.month===i-1).reduce((a,l)=>a+l.value,0):null;
   const d=prev?Math.round((spend-prev)/prev*1000)/10:null;
   const per={};ls.forEach(l=>{per[l.sup.id]=(per[l.sup.id]||0)+l.value;});
   const top=Object.entries(per).map(([id,v])=>({id,v})).sort((a,b)=>b.v-a.v).slice(0,6);
@@ -1301,8 +1311,8 @@ window.doSearch=function(){
   if(!out)out=`<div class="grp">Ingen treff på «${q}»</div>`;
   dd.innerHTML=out;dd.classList.add("show");
 };
-document.addEventListener("mousedown",e=>{if(!e.target.closest(".searchbox"))document.getElementById("searchDD").classList.remove("show");});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){hideModal();document.getElementById("searchDD").classList.remove("show");}});
+if(!window.__BOOTED)document.addEventListener("mousedown",e=>{if(!e.target.closest(".searchbox"))document.getElementById("searchDD").classList.remove("show");});
+if(!window.__BOOTED)document.addEventListener("keydown",e=>{if(e.key==="Escape"){hideModal();document.getElementById("searchDD").classList.remove("show");}});
 goto(document.querySelector(".tabs button.active").dataset.tab);
 (function(){
   if(!__KUNDE)return;
@@ -1364,13 +1374,20 @@ const FAQ=[
 document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" onclick="this.classList.toggle('open')"><h4>❓ ${q}</h4><div class="ans">${a}</div></div>`).join("");
 
 /* deep-link support: logichain-dashboard-demo.html#spend opens that module */
-(function(){const h=location.hash.slice(1);
+(function(){const h=window.__BOOTED?(window.__TAB||"forside"):location.hash.slice(1);
   if(["forside","spend","lev","po","octo","spar","tiltak","faq"].indexOf(h)>=0)goto(h);})();
 
   const bEl=document.getElementById("dataBadge");if(bEl)bEl.textContent=REAL?"\u2713 EKTE DATA":"GENERERT DEMODATA";
   try{const u=document.querySelector(".updated");if(u&&REAL){const P=window.__PERIOD,f=d=>d.toLocaleDateString("no-NO",{month:"short",year:"numeric"});u.textContent="Sist oppdatert: "+new Date().toLocaleDateString("no-NO")+" \u00b7 Periode: "+(P?f(P.from)+" – "+f(P.to):"–")+" \u00b7 Datakilde: MacGregor (ekte data)";}}catch(_){}
   window.goto=goto;window.renderPO=renderPO;window.renderLev=renderLev;
+  window.__BOOTED=true;
 }
+window.setMonth=async function(i){
+  window.__MONTH=i;const y=window.scrollY;
+  document.body.classList.add("mb-busy");
+  try{await boot();}finally{document.body.classList.remove("mb-busy");}
+  window.scrollTo(0,y);
+};
 boot();
 </script>
 <script>
