@@ -228,3 +228,22 @@ body.mb-busy main{opacity:.55;transition:opacity .15s;pointer-events:none}
 .notebox textarea:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 4px rgba(34,211,238,.12)}
 .note-st{font-size:11.5px;color:var(--muted);margin-top:6px}
 .note-st.err{color:var(--bad)}
+
+/* demo sign-up gate */
+body.dg-lock{overflow:hidden}
+body.dg-lock>.topbar,body.dg-lock>.tabs,body.dg-lock>main{filter:blur(6px) saturate(.8);pointer-events:none;user-select:none}
+.dg{position:fixed;inset:0;z-index:200;display:grid;place-items:center;padding:20px 16px;background:radial-gradient(900px 600px at 50% 30%,rgba(99,102,241,.25),rgba(2,4,10,.82) 70%);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);transition:opacity .45s}
+.dg.dg-out{opacity:0}
+.dg-card{width:100%;max-width:440px;padding:32px 30px 24px;border-radius:24px;background:rgba(10,14,28,.88);border:1px solid rgba(129,140,248,.35);box-shadow:0 40px 100px -40px rgba(99,102,241,.7),0 1px 0 rgba(255,255,255,.06) inset;animation:lcPop .6s cubic-bezier(.2,.8,.2,1)}
+.dg-top{display:flex;align-items:center;gap:10px;font-family:var(--head);font-size:17px;margin-bottom:18px}
+.dg-card h2{font-family:var(--head);font-size:30px;letter-spacing:-.02em;line-height:1.1;margin-bottom:6px;background:linear-gradient(180deg,#fff 30%,#c7cdf3);-webkit-background-clip:text;background-clip:text;color:transparent}
+.dg-sub{color:var(--muted);font-size:14px;margin-bottom:20px;line-height:1.5}
+.dg-card label{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:12px}
+.dg-card input{display:block;width:100%;margin-top:6px;padding:12px 14px;font-size:15px;background:rgba(5,8,18,.6);color:var(--txt);border:1px solid var(--line2);border-radius:12px;font-family:var(--body)}
+.dg-card input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 4px rgba(34,211,238,.12)}
+.dg-hp{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0}
+.dg-err{color:var(--bad);font-size:13px;min-height:18px;margin:2px 0 6px}
+.dg-card button{width:100%;padding:14px;border:0;border-radius:12px;background:var(--grad);color:#050816;font:700 15px var(--body);cursor:pointer;box-shadow:0 12px 34px -10px rgba(129,140,248,.7);transition:transform .2s}
+.dg-card button:hover{transform:translateY(-2px)}.dg-card button:disabled{opacity:.6;transform:none;cursor:wait}
+.dg-legal{font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.5}
+.dg-back{display:inline-block;margin-top:10px;color:var(--muted);font-size:12.5px;text-decoration:none}.dg-back:hover{color:var(--cyan)}

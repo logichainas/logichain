@@ -69,6 +69,15 @@ button,input,select{font-family:var(--ui)}
 .ph span{font:12px var(--mono);color:var(--muted)}
 .scroll{overflow-y:auto;min-height:0;scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.35) transparent}
 .empty{color:var(--muted);font-size:14px;padding:8px 2px;line-height:1.5}
+.lead{display:flex;gap:10px;align-items:flex-start;padding:8px 2px;border-bottom:1px solid rgba(0,229,255,.08)}
+.lead:last-child{border-bottom:0}
+.lead .ld-dot{width:8px;height:8px;border-radius:50%;margin-top:7px;flex:none;background:var(--green);box-shadow:0 0 8px var(--green)}
+.lead.done .ld-dot{background:var(--dim);box-shadow:none}
+.lead b{font-weight:600;color:var(--text)}
+.lead small{display:block;font:11.5px var(--mono);color:var(--muted)}
+.lead a{color:var(--cyan);text-decoration:none}
+.lead .ld-ok{margin-left:auto;flex:none}
+.lead.done{opacity:.55}
 .tr-top{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
 .tr-big{font:700 34px/1 var(--hud);color:var(--cyan2);text-shadow:0 0 14px rgba(0,229,255,.6)}
 .tr-big small{display:block;font:600 10px var(--hud);letter-spacing:.2em;color:var(--muted);margin-top:6px;text-shadow:none}
@@ -388,6 +397,10 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
       <div class="panel br" id="apPanel" style="flex:.85;min-height:0">
         <div class="ph"><h2>APPROVALS</h2><span id="apCount"></span></div>
         <div class="scroll" id="approvals"><div class="empty">Loading pipeline …</div></div>
+      </div>
+      <div class="panel br" style="flex:.7;min-height:0">
+        <div class="ph"><h2>DEMO LEADS</h2><span id="ldCount"></span></div>
+        <div class="scroll" id="leads"><div class="empty">Loading …</div></div>
       </div>
       <div class="panel br" style="flex:1">
         <div class="ph"><h2>MISSIONS</h2><span id="mCount"></span></div>
@@ -1209,6 +1222,7 @@ function jarvisContext(){
       sessions:mine.slice(0,4).map(s=>({title:s.title,status:s.status,last_activity:loc(s.updated_at||s.created_at)}))};}),
     quick_links:LINKS.map(l=>l.title),
     website_traffic:TRAFFIC||"not available",
+    demo_leads_recent:LEADS.slice(0,10).map(x=>({name:x.name,company:x.company,email:x.email,when:loc(x.created_at),followed_up:!!x.handled})),
     pipeline:RUNS.slice(0,8).map(r=>({run:r.id,file:r.file_name,status:r.status,updated:loc(r.updated_at),summary:r.proposal_summary||null}))
   };
 }
@@ -1485,6 +1499,32 @@ function demoRuns(){const n=Date.now(),iso=x=>new Date(n-x*60e3).toISOString();
     {id:2,status:"planning",file_name:"vestfold_oct.xlsx",updated_at:iso(2),created_at:iso(9)},
     {id:1,status:"applied",file_name:"macgregor_sep.xlsx",updated_at:iso(1500),created_at:iso(1600),apply_result:{kunde:"MacGregor Norway",po_lines_added:412,po_lines_skipped_existing:0,suppliers_added:2,materials_added:30,insights_published:true},proposal:{summary:"Applied.",po_lines:[]}}];}
 
+/* ================= DEMO LEADS (people who signed up for the demo) ================= */
+let LEADS=[],LEADS_MAX=null;
+async function loadLeads(){
+  let rows;
+  if(DEMO){const h=x=>new Date(Date.now()-x*36e5).toISOString();rows=LEADS.length?LEADS:[{id:3,name:"Kari Nordmann",email:"kari@imenco.no",company:"Imenco",created_at:h(.3),handled:false},{id:2,name:"Ola Hansen",email:"ola@sperre.com",company:"Sperre",created_at:h(5),handled:false},{id:1,name:"Per Lie",email:"per@noratel.com",company:"Noratel",created_at:h(30),handled:true}];}
+  else{const r=await sb.from("demo_leads").select("id,created_at,name,email,company,lang,referrer,country,handled").order("created_at",{ascending:false}).limit(60);
+    if(r.error){$("leads").innerHTML=`<div class="empty">Lead list not set up yet. Run <code>supabase/demo-leads.sql</code> in Supabase.<br><small>${esc(r.error.message)}</small></div>`;return;}
+    rows=r.data||[];}
+  const newest=rows[0]?rows[0].id:0;
+  if(LEADS_MAX!==null&&newest>LEADS_MAX){const n=rows.filter(x=>x.id>LEADS_MAX);const l=n[0];say(n.length>1?`${n.length} new demo leads boss. Latest: ${l.name} from ${l.company}.`:`New demo lead boss: ${l.name} from ${l.company}.`,true);}
+  LEADS_MAX=newest;LEADS=rows;renderLeads();
+}
+function renderLeads(){
+  const day=864e5,now=Date.now(),today=LEADS.filter(x=>now-new Date(x.created_at)<day).length,week=LEADS.filter(x=>now-new Date(x.created_at)<7*day).length;
+  $("ldCount").textContent=LEADS.length?`${today} today · ${week} 7d`:"";
+  $("leads").innerHTML=LEADS.length?LEADS.slice(0,30).map(x=>`<div class="lead ${x.handled?"done":""}" data-id="${x.id}"><i class="ld-dot"></i>
+      <div style="min-width:0"><b>${esc(x.name)}</b> · ${esc(x.company)}<small><a href="mailto:${esc(x.email)}?subject=${encodeURIComponent("Logichain – takk for at du så demoen")}">${esc(x.email)}</a> · ${esc(ago(x.created_at))}${x.country?" · "+esc(x.country):""}</small></div>
+      <button class="mini ld-ok" data-ld="${x.id}" title="${x.handled?"Mark as not followed up":"Mark as followed up"}">${x.handled?"↺":"✓"}</button></div>`).join("")
+    :`<div class="empty">No demo sign-ups yet. Everyone who opens the demo on logichain.no shows up here.</div>`;
+}
+$("leads").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-ld]");if(!b)return;const x=LEADS.find(l=>String(l.id)===b.dataset.ld);if(!x)return;
+  x.handled=!x.handled;renderLeads();
+  if(!DEMO){const r=await sb.from("demo_leads").update({handled:x.handled}).eq("id",x.id);if(r.error){x.handled=!x.handled;renderLeads();say("Couldn't save: "+r.error.message,false);}}
+});
+
 /* ================= SITE TRAFFIC ================= */
 let TRAFFIC=null;
 async function loadTraffic(){
@@ -1512,7 +1552,7 @@ async function loadTraffic(){
     <div class="tr-src">Sources (7d): ${pick("source")}<br>Top pages: ${pick("page")}</div>`;
 }
 
-function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();loadTraffic();}
+function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();loadTraffic();loadLeads();}
 /* ---- Jarvis speaks up on his own now and then ---- */
 let LAST_ACTIVE=Date.now(),PRO_TIMER=null;
 ["pointerdown","keydown"].forEach(ev=>addEventListener(ev,()=>{LAST_ACTIVE=Date.now();},{passive:true}));
@@ -1576,7 +1616,7 @@ function introBoom(){
 function start(){
   $("gate").classList.add("hidden");$("app").classList.remove("hidden");$("coreLbl").classList.remove("hidden");
   $("hello").textContent=(greeting()+", boss").toUpperCase();
-  tick();setInterval(tick,1000);refresh();setInterval(loadAgents,25000);setInterval(loadRuns,20000);setInterval(loadTraffic,300000);
+  tick();setInterval(tick,1000);refresh();setInterval(loadAgents,25000);setInterval(loadRuns,20000);setInterval(loadTraffic,300000);setInterval(loadLeads,60000);
   try{localStorage.setItem("lc_notrack","1");}catch(_){}
   CHAT=[];saveChat();
   const bootWait=document.getElementById("boot")?750:150;   // let the boot screen fade out first

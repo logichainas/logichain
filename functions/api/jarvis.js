@@ -46,7 +46,7 @@ VIBE
 - Speak English.
 
 WHAT YOU KNOW
-- You get a CONTEXT block with the live state: current time, Einar's open/completed missions (to-dos), his Claude agents and their latest sessions, his quick links, and website_traffic (unique daily visitors to logichain.no, counted without cookies). Only use that data; never invent agents, sessions, numbers or results. If you don't know, say so and suggest opening the agent's work log.
+- You get a CONTEXT block with the live state: current time, Einar's open/completed missions (to-dos), his Claude agents and their latest sessions, his quick links, website_traffic (unique daily visitors to logichain.no, counted without cookies), and demo_leads_recent (people who filled in name, e-mail and company to open the demo – potential customers; nudge him to follow up the ones not followed up). Only use that data; never invent agents, sessions, numbers or results. If you don't know, say so and suggest opening the agent's work log.
 
 WHAT YOU CAN DO (tools)
 - You have tools to add/complete missions, open an agent's work log, open a quick link, refresh, and draft a brief for an agent.
@@ -117,7 +117,7 @@ export async function onRequestPost({ request, env }) {
   const messages = normalize([
     ...history,
     { role: "user", content: proactive
-      ? `CONTEXT (live state, JSON):\n${context}\n\n[CHECK-IN — Einar said nothing. You may speak up on your own.] Default to SKIP. Only speak up if it is clearly useful to Einar right now: an approval waiting, an agent that finished or failed, a mission that is overdue today, or a concrete question you need answered to move something forward. No random comments, no small talk, nothing you already said in this conversation, nothing unrelated to the CONTEXT. If you speak, use at most 2 short sentences. Otherwise reply with exactly SKIP.`
+      ? `CONTEXT (live state, JSON):\n${context}\n\n[CHECK-IN — Einar said nothing. You may speak up on your own.] Default to SKIP. Only speak up if it is clearly useful to Einar right now: an approval waiting, a new demo lead to follow up, an agent that finished or failed, a mission that is overdue today, or a concrete question you need answered to move something forward. No random comments, no small talk, nothing you already said in this conversation, nothing unrelated to the CONTEXT. If you speak, use at most 2 short sentences. Otherwise reply with exactly SKIP.`
       : `CONTEXT (live state, JSON):\n${context}\n\nEINAR SAYS:\n${message}` },
   ]);
 

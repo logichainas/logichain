@@ -128,7 +128,7 @@ rect.clickable:hover{fill:#6db3ff}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/dash-theme.css?v=3">
+<link rel="stylesheet" href="assets/dash-theme.css?v=5">
 </head>
 <body>
 
@@ -1142,5 +1142,42 @@ __render();
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 <script src="assets/dash-fx.js?v=1" defer></script>
 <script>try{if(!localStorage.getItem("lc_notrack")&&navigator.sendBeacon)navigator.sendBeacon("/api/hit",new Blob([JSON.stringify({p:location.pathname,r:document.referrer})],{type:"text/plain"}))}catch(e){}</script>
+<div id="demoGate" class="dg" role="dialog" aria-modal="true" aria-labelledby="dgH" hidden>
+  <form class="dg-card" id="dgForm" novalidate>
+    <div class="dg-top"><span class="lc-mark"><svg viewBox="0 0 24 24" fill="none" stroke="#050816" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M8.2 8.2l2.6 6.6M15.8 8.2l-2.6 6.6M8.4 7h7.2"/></svg></span><b>Logichain</b></div>
+    <h2 id="dgH">Se demoen</h2><p class="dg-sub">Fyll inn navn, e-post og bedrift for å åpne den interaktive demoen. Det tar ti sekunder.</p>
+    <label>Navn<input id="dgName" name="name" autocomplete="name" required maxlength="120"></label>
+    <label>Jobb-e-post<input id="dgEmail" name="email" type="email" autocomplete="email" required maxlength="200"></label>
+    <label>Bedrift<input id="dgCompany" name="company" autocomplete="organization" required maxlength="160"></label>
+    <input id="dgHp" name="website" tabindex="-1" autocomplete="off" class="dg-hp" aria-hidden="true">
+    <div class="dg-err" id="dgErr" role="alert"></div>
+    <button type="submit" id="dgBtn">Åpne demoen →</button>
+    <p class="dg-legal">Vi bruker opplysningene bare til å følge opp interessen din for Logichain. Ingen nyhetsbrev uten at du ber om det.</p>
+    <a class="dg-back" href="index.html">← Tilbake til logichain.no</a>
+  </form>
+</div>
+<script>
+(function(){
+  var ok=false;try{ok=!!(localStorage.getItem("lc_demo_ok")||localStorage.getItem("lc_notrack"));}catch(e){}
+  if(/[?&]nogate=1/.test(location.search))ok=true;
+  var g=document.getElementById("demoGate");if(ok){g.remove();return;}
+  g.hidden=false;document.body.classList.add("dg-lock");
+  setTimeout(function(){var n=document.getElementById("dgName");n&&n.focus();},300);
+  document.getElementById("dgForm").addEventListener("submit",async function(ev){
+    ev.preventDefault();
+    var name=document.getElementById("dgName").value.trim(),email=document.getElementById("dgEmail").value.trim(),company=document.getElementById("dgCompany").value.trim();
+    var err=document.getElementById("dgErr"),btn=document.getElementById("dgBtn");err.textContent="";
+    if(name.length<2||company.length<2||!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){err.textContent="Fyll inn navn, gyldig e-post og bedrift.";return;}
+    btn.disabled=true;btn.textContent="Åpner …";
+    try{
+      var r=await fetch("/api/lead",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:name,email:email,company:company,lang:"no",page:location.pathname,hp:document.getElementById("dgHp").value})});
+      var j=await r.json().catch(function(){return{};});
+      if(!r.ok){throw new Error(j.error||"HTTP "+r.status);}
+      try{localStorage.setItem("lc_demo_ok",JSON.stringify({name:name,company:company,at:Date.now()}));}catch(e){}
+      g.classList.add("dg-out");document.body.classList.remove("dg-lock");setTimeout(function(){g.remove();},500);
+    }catch(e){err.textContent=e.message;btn.disabled=false;btn.textContent="Åpne demoen →";}
+  });
+})();
+</script>
 </body>
 </html>
