@@ -128,7 +128,7 @@ rect.clickable:hover{fill:#6db3ff}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/dash-theme.css?v=2">
+<link rel="stylesheet" href="assets/dash-theme.css?v=3">
 </head>
 <body>
 
@@ -155,7 +155,6 @@ rect.clickable:hover{fill:#6db3ff}
   <button data-tab="spend">💠 Spend Intelligence</button>
   <button data-tab="lev">🏢 Suppliers</button>
   <button data-tab="po">📦 PO Performance</button>
-  <button data-tab="octo">🌐 Market (Octopart)</button>
   <button data-tab="spar">💰 Savings Potential</button>
   <button data-tab="tiltak">🛠️ Actions</button>
   <button data-tab="faq">❓ FAQ</button>
@@ -210,12 +209,6 @@ rect.clickable:hover{fill:#6db3ff}
       <h4>Actions</h4>
       <p>Prioritised actions with estimated value and evidence – ready for supplier follow-up.</p>
       <a onclick="goto('tiltak')">Open →</a>
-    </div>
-    <div class="feature">
-      <div style="font-size:24px">🌐</div>
-      <h4>Market (Octopart)</h4>
-      <p>Market prices, stock and lead times from distributors – benchmarked against your own prices, with alternative sources for single-source risk.</p>
-      <a onclick="goto('octo')">Open →</a>
     </div>
     <div class="feature">
       <div style="font-size:24px">❓</div>
@@ -802,7 +795,7 @@ window.tiltakPrioChange=function(v){tiltakPrio=v;renderTiltak();};
 window.tiltakSortChange=function(v){tiltakSort=v;renderTiltak();};
 function cardFor(x){
   const[cls,c]=prioLbl[x.prio];
-  const chip=x.kat==="Risk"?`<a class="chip" onclick="goto('octo')">🌐 See single-source materials</a>`:x.ev&&x.ev[0]==="sup"?`<a class="chip" onclick="openSup(${x.ev[1]})">🏢 ${suppliers.find(s=>s.id===x.ev[1]).name}</a>`:"";
+  const chip=x.kat==="Risk"?`<a class="chip" onclick="goto('spend')">💠 See single-source materials</a>`:x.ev&&x.ev[0]==="sup"?`<a class="chip" onclick="openSup(${x.ev[1]})">🏢 ${suppliers.find(s=>s.id===x.ev[1]).name}</a>`:"";
   return `<div class="tiltak ${cls}">
     <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">
       <span class="tag ${c}" style="opacity:.85">${prioShort[x.prio]} · ${x.kat}</span>
@@ -1022,8 +1015,6 @@ window.showMat=function(mi){
     ${kpi("Price index Jan→Sep",first+" → "+last,`${chg>0?"+":""}${chg.toFixed(1)} %`,chg>1?"bad":chg<-1?"good":"")}
     ${kpi("Suppliers",matSups[mi].length,ss?"single-source":"active suppliers",ss?"warn":"")}
   </div>`;
-  if(OCTO_MATCH[mt[0]])html+=`<div class="mlinks"><a onclick="showOcto(${mi})">🌐 Check market price and alternative sources (Octopart)</a></div>`;
-  else html+=`<div class="mlinks"><a onclick="window.open('https://octopart.com/search?q='+encodeURIComponent(mt[1]),'_blank')">🌐 Search on Octopart (external link)</a></div>`;
   html+=`<h3 class="sect">Suppliers for this material – click for details</h3>
   <table><tr><th>Supplier</th><th>Rating</th><th>OTD</th><th style="text-align:right">Spend on material</th><th style="text-align:right">Share</th></tr>`+
   sups.map(s=>{const sv=suppliers.find(x=>x.id===s.id);
@@ -1127,7 +1118,6 @@ renderOctoTab();
 /* ================= FAQ ================= */
 const FAQ=[
 ["What is Spend Intelligence?","Spend Intelligence shows where the money goes: total spend, spend by supplier/category/month, top 10 suppliers, concentration (top 5), price development per material, volume development, tail spend and single-source risk."],
-["What is “Market (Octopart)”?","An integration with Octopart/Nexar that benchmarks your purchase price against real-time market prices, stock and lead times from distributors – and suggests alternative sources where there is single-source risk. In the demo the data is mocked, but the architecture (Cloudflare Worker against the Nexar API) is production-ready."],
 ["Where do the figures come from?","Suppliers deliver reports in Excel. Logichain validates and consolidates the data automatically into one model. In this demo everything is generated as demo data."],
 ["What does OTD mean?","OTD (On-Time Delivery) is the share of deliveries made within ±5 days of the promised date. “On time” = delivered up to 5 days before or after the agreed date."],
 ["What do the A, B, C and D ratings mean?","A combination of delivery precision, deviations and quality. A is the best class; C and D should be followed up with improvement actions."],

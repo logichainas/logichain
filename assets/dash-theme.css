@@ -218,3 +218,13 @@ rect.clickable:hover{fill:url(#lcBar);filter:brightness(1.35) drop-shadow(0 0 8p
 .monthbar button.active{background:var(--grad);color:#050816;border-color:transparent}
 .monthbar button.active small{opacity:.75}
 body.mb-busy main{opacity:.55;transition:opacity .15s;pointer-events:none}
+
+/* PO notes */
+.btn-note{background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.35);color:#bfeaf5;border-radius:12px;padding:9px 14px;font:600 13px var(--body);cursor:pointer;transition:all .2s}
+.btn-note:hover{background:rgba(34,211,238,.16);color:#fff}
+.notecell{text-align:center;width:32px}
+.noteflag{cursor:help;filter:drop-shadow(0 0 6px rgba(34,211,238,.6))}
+.notebox textarea{width:100%;min-height:96px;resize:vertical;padding:12px 14px;font:14px/1.5 var(--body);background:rgba(5,8,18,.6);border:1px solid var(--line2);color:var(--txt);border-radius:12px}
+.notebox textarea:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 4px rgba(34,211,238,.12)}
+.note-st{font-size:11.5px;color:var(--muted);margin-top:6px}
+.note-st.err{color:var(--bad)}
