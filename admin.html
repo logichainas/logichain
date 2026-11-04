@@ -1138,7 +1138,7 @@ function jarvisVoice(){
 function speak(text,force){
   if(MUTED||(!VOICE&&!force)||!("speechSynthesis" in window))return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=jarvisVoice();
-    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-GB";u.rate=1.25;u.pitch=.95;
+    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-GB";u.rate=1.75;u.pitch=.95;
     u.onstart=()=>$("wave").classList.add("on");u.onend=u.onerror=()=>$("wave").classList.remove("on");
     speechSynthesis.speak(u);}catch(_){}
 }
@@ -1325,7 +1325,7 @@ function speakNow(text,onBlocked){
   if(MUTED)return;
   if(!("speechSynthesis" in window))return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);const v=jarvisVoice();
-    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-US";u.rate=1.25;u.pitch=.95;
+    if(v){u.voice=v;u.lang=v.lang;}else u.lang="en-US";u.rate=1.75;u.pitch=.95;
     u.onstart=()=>$("wave").classList.add("on");
     u.onend=()=>$("wave").classList.remove("on");
     u.onerror=e=>{$("wave").classList.remove("on");if(onBlocked&&/not-allowed/.test(e.error||""))onBlocked();};
