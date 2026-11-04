@@ -777,9 +777,9 @@ const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl
 
 /* ================= EXECUTIVE OVERVIEW ================= */
 document.getElementById("kpi-forside").innerHTML=
-  kpi("Totalt innkjøp 2026",fmtM(totVal),`${fmt(lines.length)} PO-linjer · ${suppliers.length} leverandører`,"","Summen av alle linjeverdier i perioden")+
+  kpi("Totalt innkjøp 2026",fmtM(totVal),`${fmt(lines.length)} PO-linjer · ${new Set(lines.map(l=>l.sup.id)).size} leverandører`,"","Summen av alle linjeverdier i perioden")+
   kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad","On-Time Delivery: andel leveringer levert innen ±"+OTD_TOL+" dager fra love-datoen")+
-  kpi("Aktive leverandører",suppliers.length,"med leveringer i perioden","","Leverandører med minst én PO-linje i perioden")+
+  kpi("Aktive leverandører",new Set(lines.map(l=>l.sup.id)).size,"med leveringer i perioden","","Leverandører med minst én PO-linje i perioden")+
   kpi("Top 5-konsentrasjon",top5Share+"%","andel av total spend hos topp 5","","Hvor stor del av innkjøpet som går til de fem største leverandørene – høy andel betyr leverandøravhengighet")+
   kpi("Single-source materialer",singleSource.length,"uten alternativ leverandør",singleSource.length>3?"warn":"","Materialer som kun leveres av én leverandør – se Spend Intelligence")+
   kpi("Identifisert sparepotensial",fmtM(savTotal),"per år – se dokumentasjon","good","Summen av fire kilder. Klikk deg inn i Sparingspotensial for dokumentasjon bak tallet");
