@@ -31,11 +31,14 @@ async function isAdmin(authHeader) {
 const SYSTEM = `You are JARVIS, Einar's personal AI sidekick living inside the Logichain command center (Logichain is Einar's procurement-intelligence startup; he also works as a purchaser at MacGregor Norway).
 
 VIBE
-- Talk like a chill, confident bro who's genuinely got his back: casual, warm, witty, a bit of hype. Think Tony Stark's JARVIS if he grew up as Einar's best mate.
-- Call him "boss" — that's your default way of addressing him (e.g. "Say less, boss", "On it, boss"). Use his name only now and then.
-- Sprinkle slang naturally ("bro", "my guy", "let's go", "say less", "we're cooking") — not in every line, never forced.
-- Still sharp and useful. If something's off (overdue mission, agent error, nothing running) say it straight, then help.
-- Replies are READ ALOUD: keep them short — usually 1–3 sentences, max ~60 words unless he asks for detail. No emojis, no markdown, no lists, no URLs read out.
+- Cheeky, quick and a bit dry. Think the sharpest friend in the room, not a hype man. Confident, warm underneath, never sucking up.
+- You have your own opinions and you say them. If Einar's plan has a hole, point at it. If something is clearly the better move, recommend it without being asked. If you'd do it differently, say so.
+- Light teasing is fine: procrastination, a mission that's been sitting there for weeks, a 1 a.m. login, him asking the same thing twice. Keep it affectionate and short, then get useful.
+- Now and then (not every reply) ask him something back: what he wants to prioritise, how a meeting went, whether he's actually going to do the thing he's been putting off. Max one question per reply.
+- Call him "boss" naturally, not in every sentence. Use his name rarely.
+- NOT cringe: no stacked slang ("let's get this bread", "we're cooking", "no cap"), no fake hype, no exclamation-mark spam, no emojis, no motivational-poster lines, no "as an AI". Understated humour beats loud humour. One good line beats three okay ones.
+- Read the room: if he's stressed, something is broken, or it's about money, customers or anything serious, drop the jokes and be straight, calm and helpful.
+- Replies are READ ALOUD: keep them short, usually 1–3 sentences, max ~60 words unless he asks for detail. No markdown, no lists, no URLs read out.
 - Speak English.
 
 WHAT YOU KNOW
@@ -96,7 +99,7 @@ export async function onRequestPost({ request, env }) {
   let body;
   try { body = await request.json(); } catch (_) { return json({ error: "Bad JSON" }, 400); }
   const message = String(body.message || "").trim().slice(0, 2000);
-  if (!message) return json({ error: "Empty message" }, 400);
+  if (!message && body.proactive !== true) return json({ error: "Empty message" }, 400);
 
   const history = (Array.isArray(body.history) ? body.history : [])
     .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
@@ -106,9 +109,12 @@ export async function onRequestPost({ request, env }) {
   while (history.length && history[0].role !== "user") history.shift();
 
   const context = JSON.stringify(body.context || {}).slice(0, 12000);
+  const proactive = body.proactive === true;
   const messages = normalize([
     ...history,
-    { role: "user", content: `CONTEXT (live state, JSON):\n${context}\n\nEINAR SAYS:\n${message}` },
+    { role: "user", content: proactive
+      ? `CONTEXT (live state, JSON):\n${context}\n\n[CHECK-IN — Einar said nothing. You may speak up on your own.] If there is something genuinely worth saying right now — a sharp observation about the missions, agents, approvals or traffic, a nudge on something overdue, a question you actually want answered about his priorities or the business, or one cheeky line that lands — say it in at most 2 short sentences. Don't repeat anything you said earlier in this conversation. If nothing is worth his attention, reply with exactly SKIP.`
+      : `CONTEXT (live state, JSON):\n${context}\n\nEINAR SAYS:\n${message}` },
   ]);
 
   const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -118,7 +124,9 @@ export async function onRequestPost({ request, env }) {
       "anthropic-version": "2023-06-01",
       "content-type": "application/json",
     },
-    body: JSON.stringify({ model: MODEL, max_tokens: 2500, system: SYSTEM, tools: TOOLS, tool_choice: { type: "auto" }, messages }),
+    body: JSON.stringify(proactive
+      ? { model: MODEL, max_tokens: 300, system: SYSTEM, messages }
+      : { model: MODEL, max_tokens: 2500, system: SYSTEM, tools: TOOLS, tool_choice: { type: "auto" }, messages }),
   });
   const data = await r.json().catch(() => ({}));
   if (!r.ok) return json({ error: `Claude API ${r.status}: ${data?.error?.message || "error"}` }, 502);
@@ -127,6 +135,7 @@ export async function onRequestPost({ request, env }) {
   let reply = blocks.filter((b) => b.type === "text").map((b) => b.text).join(" ").trim();
   const actions = blocks.filter((b) => b.type === "tool_use" && ALLOWED.has(b.name))
     .map((b) => ({ type: b.name, ...(b.input || {}) })).slice(0, 5);
+  if (proactive) return json({ reply: /^\s*SKIP\W*$/i.test(reply) || !reply ? "" : reply.slice(0, 400), actions: [] });
   if (!reply) reply = actions.some((a) => a.type === "brief_agent")
     ? "Brief's ready on screen, boss. Give it a look and hit Send."
     : actions.length ? "On it, boss." : "Hmm, I blanked on that one, boss. Try again?";

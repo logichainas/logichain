@@ -1045,7 +1045,26 @@ async function toggleTodo(id,quiet){
   const t=TODOS.find(x=>x.id==id);if(!t)return;
   const upd={done:!t.done,done_at:!t.done?new Date().toISOString():null};Object.assign(t,upd);renderTodos();
   if(!DEMO){const r=await sb.from("admin_todos").update(upd).eq("id",id);if(r.error){say("Sync failed: "+r.error.message,false);loadTodos();}}
-  if(upd.done&&!quiet)say("Mission complete. Let's go!");
+  if(upd.done)celebrate(t,quiet);
+}
+/* ---- celebrate a finished mission: mini explosion + a cheeky line ---- */
+let LAST_DONE=0,DONE_STREAK=0,LAST_LINE="";
+function celebrate(t,quiet){
+  if(quiet){if(typeof miniBoom==="function")miniBoom();return;}   // Jarvis already talks when he completes it himself
+  const now=Date.now();DONE_STREAK=now-LAST_DONE<10*60e3?DONE_STREAK+1:1;LAST_DONE=now;
+  const today=new Date().toISOString().slice(0,10),left=TODOS.filter(x=>!x.done).length;
+  const ageD=t.created_at?Math.floor((now-new Date(t.created_at))/864e5):0;
+  let pool;
+  if(!left)pool=["Board's empty. Either you're a machine or you've been hiding missions from me.","That's the last one. Go outside, boss. Or give me more work.","Clean sheet. I'll admit it, that was impressive."];
+  else if(DONE_STREAK>=3)pool=["Three in a row. Who are you and what have you done with the boss?","You're on a run. I'm not saying anything in case I jinx it.","Okay, now you're just showing off."];
+  else if(DONE_STREAK===2)pool=["Two down. Don't stop now, it was just getting interesting.","Back to back. Keep that going."];
+  else if(t.due&&t.due<today)pool=["Late, but done. I'll allow it.","Overdue, but we don't talk about that. Nice one.","Better late than never. Barely."];
+  else if(ageD>=7)pool=[`That one's been sitting there for ${ageD} days. Finally.`,`${ageD} days. I was about to start charging it rent.`];
+  else if(t.priority==="high")pool=["Big one cleared. That's the stuff.","High priority, handled. Now that's a good use of a morning.","Done. That was the one that mattered."];
+  else pool=["Done. Look at you, actually finishing things.","Ticked off. I'll pretend I'm not impressed.","One less thing for me to nag you about.","Clean. What's next?","Mission complete. Let's go, boss.",`${left} left. Momentum looks good on you.`];
+  let line=pick(pool);if(line===LAST_LINE&&pool.length>1)line=pick(pool.filter(x=>x!==LAST_LINE));LAST_LINE=line;
+  if(typeof miniBoom==="function")miniBoom();
+  say(line,false);if(!MUTED)setTimeout(()=>speak(line,true),250);
 }
 async function delTodo(id){
   TODOS=TODOS.filter(x=>x.id!=id);renderTodos();
@@ -1129,7 +1148,7 @@ function say(text,talk){const el=$("toast");clearTimeout(typeT);
   if(talk!==false)speak(text);}
 function findAgent(q){q=q.toLowerCase();return liveAgents().find(a=>a.name.toLowerCase()===q)||liveAgents().find(a=>a.name.toLowerCase().includes(q));}
 const CMDS={
-  help:()=>say("Just talk to me, bro. Shortcuts: status · agents · open <agent> · add <mission> (end with ! for high priority) · done <number> · missions · link <name> · refresh · voice · sign out",false),
+  help:()=>say("Just talk to me, boss. Shortcuts: status · agents · open <agent> · add <mission> (end with ! for high priority) · done <number> · missions · link <name> · refresh · voice · sign out",false),
   status:()=>say(statusReport()),
   agents:()=>{if(!AG)return say("The agent network is offline.");const a=liveAgents();say(a.length?a.map(x=>x.name+" ("+STX[agentState(x).st][1].toLowerCase()+")").join(", ")+".":"No agents registered.");},
   missions:()=>{const o=TODOS.filter(t=>!t.done);say(o.length?o.slice(0,6).map((t,i)=>(i+1)+". "+t.text).join("   "):"No open missions.");},
@@ -1208,7 +1227,7 @@ async function askJarvis(text,fromVoice){
     }
   }catch(e){j={error:e.message||String(e)};}
   BUSY=false;
-  if(j.error){CHAT.push({role:"assistant",content:"Bro, something's off on my end: "+j.error});renderChat();saveChat();return;}
+  if(j.error){CHAT.push({role:"assistant",content:"Something's off on my end, boss: "+j.error});renderChat();saveChat();return;}
   CHAT.push({role:"assistant",content:j.reply||"…"});
   await runActions(j.actions);
   renderChat();saveChat();
@@ -1264,20 +1283,20 @@ function broGreeting(){
   const open=TODOS.filter(t=>!t.done),hi=open.filter(t=>t.priority==="high");
   const today=new Date().toISOString().slice(0,10),due=open.filter(t=>t.due&&t.due<=today);
   const ags=AG?liveAgents():[],w=ags.filter(a=>agentState(a).st==="running");
-  const hello=h<5?pick(["Yo boss, burning the midnight oil?","Late night grind, boss? Respect."])
-    :h<12?pick(["Morning, boss! Let's get this bread.","Rise and grind, boss.","Yo, good morning boss!"])
-    :h<18?pick(["What's good, boss!","Yo boss, welcome back.","There he is! What's up, boss."])
-    :pick(["Evening, boss! Good to see you.","Yo boss, what's good tonight?","Welcome back, boss. Let's cook."]);
+  const hello=h<5?pick(["It's the middle of the night, boss. Either something's on fire or you can't sleep.","Bit late for this, isn't it, boss? Fine. I'm up."])
+    :h<12?pick(["Morning, boss. Coffee first, or straight into it?","Morning, boss. You're up early. Suspicious.","There he is. Morning, boss."])
+    :h<18?pick(["Afternoon, boss. Missed me?","Welcome back, boss. I kept everything running. Mostly.","Oh, look who it is. Afternoon, boss."])
+    :pick(["Evening, boss. Working late again, I see.","Evening shift, boss? Alright, let's make it count.","Back for more, boss? I like the commitment."]);
   let crew;
-  if(!AG)crew="The agent network's offline right now, so I'll keep an eye on it.";
-  else if(w.length)crew=w.length===1?`${w[0].name} is grinding as we speak.`:`${w.length} agents are grinding right now: ${w.map(a=>a.name).join(" and ")}.`;
-  else crew=ags.length?`All ${ags.length} agents are chilling on standby.`:"No agents online yet.";
+  if(!AG)crew="The agent network's offline right now. I'll keep an eye on it.";
+  else if(w.length)crew=w.length===1?`${w[0].name} is hard at work, unlike some people.`:`${w.length} agents are working right now: ${w.map(a=>a.name).join(" and ")}.`;
+  else crew=ags.length?`All ${ags.length} agents are on standby, waiting for you to give them something to do.`:"No agents online yet.";
   let ms;
-  if(!open.length)ms="Mission board's clean. Nothing on your plate.";
+  if(!open.length)ms="Mission board's empty. Either you're on top of things or you stopped writing them down.";
   else ms=`You've got ${open.length} mission${open.length==1?"":"s"} on deck`+(due.length?`, and ${due.length} ${due.length==1?"is":"are"} due today, so let's knock ${due.length==1?"that":"those"} out first.`:hi.length?`, ${hi.length} marked high priority.`:".");
   const pend=RUNS.filter(r=>r.status==="awaiting_approval").length;
   const ap=pend?` Heads up: ${pend} upload${pend==1?" is":"s are"} waiting for your approval.`:"";
-  return `${hello} ${crew} ${ms}${ap} ${pick(["Let's get it.","I got you.","Say the word.","We're cooking."])}`;
+  return `${hello} ${crew} ${ms}${ap} ${pick(["Where do you want to start?","Your move, boss.","Say the word.","What are we tackling first?"])}`;
 }
 let GREETED=false;
 function greetOnLogin(){
@@ -1447,6 +1466,28 @@ async function loadTraffic(){
 }
 
 function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();loadTraffic();}
+/* ---- Jarvis speaks up on his own now and then ---- */
+let LAST_ACTIVE=Date.now(),PRO_TIMER=null;
+["pointerdown","keydown"].forEach(ev=>addEventListener(ev,()=>{LAST_ACTIVE=Date.now();},{passive:true}));
+function scheduleCheckIn(first){clearTimeout(PRO_TIMER);const min=first?4:22,max=first?7:40;PRO_TIMER=setTimeout(checkIn,(min+Math.random()*(max-min))*60e3);}
+async function checkIn(){
+  try{
+    // only when the tab is visible, he's been around in the last 15 min, and Jarvis isn't busy talking
+    if(document.hidden||BUSY||Date.now()-LAST_ACTIVE>15*60e3||(window.speechSynthesis&&speechSynthesis.speaking))return;
+    let reply="";
+    if(DEMO)reply=pick(["Quick question, boss: is the MacGregor upload still happening today, or did that quietly slide?","You've had that DNS mission open for two days. Want me to just nag you every hour instead?",""]);
+    else{
+      const history=CHAT.filter(m=>m.role==="user"||m.role==="assistant").slice(-10);
+      const r=await fetch("/api/jarvis",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(SESSION&&SESSION.access_token)},
+        body:JSON.stringify({proactive:true,history,context:jarvisContext()})});
+      const j=await r.json().catch(()=>({}));reply=(j&&j.reply)||"";
+    }
+    if(!reply)return;
+    CHAT.push({role:"assistant",content:reply});saveChat();renderChat();
+    say(reply,false);if(!MUTED)speak(reply,true);
+  }catch(_){}
+  finally{scheduleCheckIn(false);}
+}
 function boomSound(mini){
   if(MUTED)return;
   try{const A=new (window.AudioContext||window.webkitAudioContext)();if(A.state==="suspended")A.resume();const now=A.currentTime,out=A.createGain();out.gain.value=mini?.22:.55;out.connect(A.destination);
@@ -1493,6 +1534,7 @@ function start(){
   const bootWait=document.getElementById("boot")?750:150;   // let the boot screen fade out first
   setTimeout(introBoom,bootWait);
   setTimeout(greetOnLogin,bootWait+1100);
+  scheduleCheckIn(true);
 
 }
 async function verify(){
