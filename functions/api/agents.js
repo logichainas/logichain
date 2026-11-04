@@ -19,6 +19,13 @@ const SUPABASE_ANON = "sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH";
 const API = "https://api.anthropic.com/v1";
 const DEFAULT_ENVIRONMENT = "env_01JRRjqD3KBCcjH2iiwkYbdR";
 const FILES_VERSION = "2026-10-21";
+// Every session started from Jarvis gets a spend cap (list cost, whole US cents). "+ $3" in the viewer raises it.
+const SESSION_BUDGET_CENTS = 300;
+// Research agents (everyone except Nora and the Planner, who handle customer data) run in an environment with open internet.
+const RESEARCH_ENVIRONMENT = ""; // set to the env_… id of logichain-research-env
+const CLOSED_AGENT = /nora|planner/i;
+const budgetOf = (cents) => ({ type: "limit", max_list_cost: { amount: String(Math.max(1, Math.round(cents))), currency: "USD" } });
+const centsOf = (v) => { const n = Number(v && typeof v === "object" ? v.amount : v); return Number.isFinite(n) ? n : null; };
 
 const filesHeaders = (key) => ({
   Authorization: `Bearer ${key}`,
@@ -176,6 +183,8 @@ export async function onRequestGet({ request, env }) {
           id: session.id,
           status: session.status,
           title: session.title || null,
+          budget_cents: centsOf(session.budget && session.budget.max_list_cost),
+          spent_cents: centsOf(session.usage && (session.usage.list_cost ?? session.usage.total_list_cost)),
           created_at: session.created_at || null,
           updated_at: session.updated_at || null,
         },
@@ -275,6 +284,19 @@ export async function onRequestPost({ request, env }) {
         type: "user.tool_confirmation", tool_use_id: id, result,
         ...(result === "deny" && body.deny_message ? { deny_message: String(body.deny_message).slice(0, 2000) } : {}),
       }));
+    } else if (body.action === "budget") {
+      const cur = await claude(`/sessions/${sid}`, key);
+      const cap = centsOf(cur.budget && cur.budget.max_list_cost) || 0;
+      const spent = centsOf(cur.usage && (cur.usage.list_cost ?? cur.usage.total_list_cost)) || cap;
+      const next = Math.max(cap, spent) + SESSION_BUDGET_CENTS;
+      const u = await fetch(`${API}/sessions/${sid}`, {
+        method: "POST",
+        headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-beta": "managed-agents-2026-04-01", "content-type": "application/json" },
+        body: JSON.stringify({ budget: budgetOf(next) }),
+      });
+      const uj = await u.json().catch(() => ({}));
+      if (!u.ok) return json({ error: `Could not raise the budget: ${u.status} ${uj?.error?.message || ""}`.trim() }, 502);
+      return json({ ok: true, budget_cents: next });
     } else if (body.action === "message") {
       const text = String(body.text || "").trim();
       if (text.length < 2) return json({ error: "Write a message" }, 400);
@@ -305,7 +327,10 @@ export async function onRequestPost({ request, env }) {
   try {
     // Reuse the environment from this agent's latest session, otherwise the default one
     let environmentId = DEFAULT_ENVIRONMENT;
-    try {
+    let agentName = "";
+    try { agentName = (await claude(`/agents/${agentId}`, key)).name || ""; } catch (_) { /* name only decides the environment */ }
+    if (RESEARCH_ENVIRONMENT && !CLOSED_AGENT.test(agentName)) environmentId = RESEARCH_ENVIRONMENT;
+    else try {
       const last = await claude(`/sessions?agent_id=${encodeURIComponent(agentId)}&limit=1`, key);
       const s = (last.data || [])[0];
       environmentId = s?.environment_id || pick(s?.environment, "id") || DEFAULT_ENVIRONMENT;
@@ -330,6 +355,7 @@ export async function onRequestPost({ request, env }) {
         environment_id: environmentId,
         title,
         metadata: { source: "jarvis-brief" },
+        budget: budgetOf(SESSION_BUDGET_CENTS),
         initial_events: [{ type: "user.message", content: [{ type: "text", text }] }],
       }),
     });

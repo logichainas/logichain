@@ -804,6 +804,11 @@ function renderAct(j){
       <div class="row"><button class="talk" id="vAllow">✓ Approve</button><button class="hbtn rej" id="vDeny">Deny</button>
       <label><input type="checkbox" id="vAuto" ${VIEW.auto?"checked":""}> keep approving automatically while this is open</label></div></div>`;
   }
+  const ss=j.session||{},usd=c=>"$"+(c/100).toFixed(2);
+  if(j.stop_reason==="budget_reached")h+=`<div class="pend"><h4>⚠ ${esc(nm.toUpperCase())} HIT THE SPEND LIMIT${ss.budget_cents!=null?" ("+usd(ss.budget_cents)+")":""}</h4>
+      <div style="font-size:14px;color:var(--muted)">The work is paused, nothing is lost. Give another $3 to let ${esc(nm)} finish, or leave it here.</div>
+      <div class="row"><button class="talk" id="vBudget">+ $3 budget</button></div></div>`;
+  else if(ss.budget_cents!=null)h+=`<div style="font:12px var(--mono);color:var(--muted)">SPEND ${ss.spent_cents!=null?usd(ss.spent_cents):"–"} / ${usd(ss.budget_cents)} LIMIT</div>`;
   if(j.session&&!DEMO)h+=`<div class="vrep"><input id="vMsg" placeholder="${j.session.status==="running"?"Send ":"Reply to "}${esc(nm)} — e.g. &quot;continue&quot; or new instructions" maxlength="4000"><button class="hbtn" id="vSend">Send ➤</button></div>`;
   box.innerHTML=h;
   const inp=box.querySelector("#vMsg");if(inp&&draft)inp.value=draft;
@@ -826,6 +831,8 @@ $("vAct").addEventListener("click",async e=>{
   if(e.target.id==="vDeny")confirmTools(LASTPEND.map(p=>p.id),"deny");
   if(e.target.id==="vAuto"){VIEW.auto=e.target.checked;if(VIEW.auto&&LASTPEND.length)confirmTools(LASTPEND.map(p=>p.id),"allow");}
   if(e.target.id==="vSend")sendFollowUp();
+  if(e.target.id==="vBudget"){e.target.disabled=true;try{const r=await sessionPost({action:"budget"});say(`Budget raised to $${(r.budget_cents/100).toFixed(2)}. Back to work.`,false);}catch(err){say("Could not raise the budget: "+err.message,false);}
+    setTimeout(()=>VIEW.session&&openSession(VIEW.session,true),1500);}
 });
 $("vAct").addEventListener("keydown",e=>{if(e.target.id==="vMsg"&&e.key==="Enter"){e.preventDefault();sendFollowUp();}});
 async function sendFollowUp(){
