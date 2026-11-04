@@ -763,7 +763,7 @@ const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl
 /* ================= EXECUTIVE OVERVIEW ================= */
 document.getElementById("kpi-forside").innerHTML=
   kpi("Totalt innkjøp 2026",fmtM(totVal),`${fmt(lines.length)} PO-linjer · ${suppliers.length} leverandører`,"","Summen av alle linjeverdier i perioden")+
-  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(lines.length)} i tide`,overallOTD>=80?"good":"bad","On-Time Delivery: andel leveringer levert innen ±"+OTD_TOL+" dager fra love-datoen")+
+  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad","On-Time Delivery: andel leveringer levert innen ±"+OTD_TOL+" dager fra love-datoen")+
   kpi("Aktive leverandører",suppliers.length,"med leveringer i perioden","","Leverandører med minst én PO-linje i perioden")+
   kpi("Top 5-konsentrasjon",top5Share+"%","andel av total spend hos topp 5","","Hvor stor del av innkjøpet som går til de fem største leverandørene – høy andel betyr leverandøravhengighet")+
   kpi("Single-source materialer",singleSource.length,"uten alternativ leverandør",singleSource.length>3?"warn":"","Materialer som kun leveres av én leverandør – se Spend Intelligence")+
@@ -787,7 +787,7 @@ const monthsData=MONTHS.map((m,i)=>{
   const ml=lines.filter(l=>l.month===i);
   return{m,n:ml.length,otd:ml.length?Math.round(ml.filter(l=>l.status==="I tide").length/ml.length*100):0}});
 document.getElementById("kpi-po").innerHTML=
-  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(lines.length)} i tide`,overallOTD>=80?"good":"bad")+
+  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad")+
   kpi("Evaluerte leveringer",fmt(lines.length),"PO-linjer i utvalget")+
   kpi("For sent",Math.round(lateLines/lines.length*100)+"%",fmt(lateLines)+" forsinkede leveringer","bad")+
   kpi("Snitt |avvik|",avgAbs+" dgr","absolutt avvik pr. levering")+
