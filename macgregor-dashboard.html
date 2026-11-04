@@ -785,7 +785,7 @@ renderPO();
 
 const monthsData=MONTHS.map((m,i)=>{
   const ml=lines.filter(l=>l.month===i);
-  return{m,n:ml.length,otd:ml.length?Math.round(ml.filter(l=>l.status==="I tide").length/ml.length*100):0}});
+  const ev=ml.filter(l=>l.status!=="Ikke levert");return{m,n:ml.length,otd:ev.length?Math.round(ev.filter(l=>l.status==="I tide").length/ev.length*100):0}});
 document.getElementById("kpi-po").innerHTML=
   kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad")+
   kpi("Evaluerte leveringer",fmt(lines.length),"PO-linjer i utvalget")+
