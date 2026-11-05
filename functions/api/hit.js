@@ -36,3 +36,8 @@ export async function onRequestPost({ request, env }) {
   } catch (_) { /* counting must never break the site */ }
   return none();
 }
+
+// Only POST is used (sendBeacon); anything else is not a page.
+export async function onRequestGet() {
+  return new Response("Not found", { status: 404, headers: { "X-Robots-Tag": "noindex, nofollow" } });
+}
