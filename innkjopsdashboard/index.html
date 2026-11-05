@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Innkjøpsdashboard – spend, leveringspresisjon og leverandører på én skjerm | Logichain</title>
+<meta name="description" content="Et ferdig innkjøpsdashboard bygget på Excel-eksporten fra ERP-systemet: spend, leveringspresisjon (OTD), leverandørrating, åpne ordrer og sparepotensial. Klart på dager, uten IT-prosjekt.">
+<link rel="canonical" href="https://logichain.no/innkjopsdashboard/">
+<meta property="og:title" content="Innkjøpsdashboard – spend, leveringspresisjon og leverandører på én skjerm | Logichain">
+<meta property="og:description" content="Et ferdig innkjøpsdashboard bygget på Excel-eksporten fra ERP-systemet: spend, leveringspresisjon (OTD), leverandørrating, åpne ordrer og sparepotensial. Klart på dager, uten IT-prosjekt.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://logichain.no/innkjopsdashboard/">
+<meta property="og:image" content="https://logichain.no/assets/og-no.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Logichain">
+<meta property="og:locale" content="nb_NO">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#04060c">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebPage", "name": "Innkjøpsdashboard – spend, leveringspresisjon og leverandører på én skjerm | Logichain", "description": "Et ferdig innkjøpsdashboard bygget på Excel-eksporten fra ERP-systemet: spend, leveringspresisjon (OTD), leverandørrating, åpne ordrer og sparepotensial. Klart på dager, uten IT-prosjekt.", "url": "https://logichain.no/innkjopsdashboard/", "inLanguage": "nb-NO", "publisher": {"@type": "Organization", "name": "Logichain", "url": "https://logichain.no/", "logo": "https://logichain.no/assets/og-no.png"}}, {"@type": "Service", "name": "Innkjøpsdashboard", "serviceType": "Innkjøpsdashboard", "provider": {"@type": "Organization", "name": "Logichain", "url": "https://logichain.no/", "logo": "https://logichain.no/assets/og-no.png"}, "areaServed": "NO", "description": "Et ferdig innkjøpsdashboard bygget på Excel-eksporten fra ERP-systemet: spend, leveringspresisjon (OTD), leverandørrating, åpne ordrer og sparepotensial. Klart på dager, uten IT-prosjekt."}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Hvilke systemer fungerer det med?", "acceptedAnswer": {"@type": "Answer", "text": "Alle systemer som kan eksportere innkjøpsordrelinjer til Excel eller CSV – for eksempel SAP, Visma, Microsoft Dynamics/Business Central og andre ERP-systemer. Det trengs ingen integrasjon."}}, {"@type": "Question", "name": "Hvor lang tid tar det å komme i gang?", "acceptedAnswer": {"@type": "Answer", "text": "Med en eksport av innkjøpslinjene er første versjon av dashboardet typisk klar i løpet av dager."}}, {"@type": "Question", "name": "Hva koster et innkjøpsdashboard?", "acceptedAnswer": {"@type": "Answer", "text": "Logichain er et fast abonnement tilpasset størrelse og omfang – en brøkdel av et tradisjonelt BI-prosjekt. Ta kontakt for et konkret tilbud."}}]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Forside", "item": "https://logichain.no/"}, {"@type": "ListItem", "position": 2, "name": "Innkjøpsdashboard", "item": "https://logichain.no/innkjopsdashboard/"}]}]}</script>
+<style>
+:root{--bg:#04060c;--card:rgba(14,20,38,.62);--line:rgba(148,163,255,.12);--line2:rgba(148,163,255,.26);
+--text:#e8ecf8;--muted:#8d97b5;--dim:#5b6584;--cyan:#22d3ee;--green:#34d399;--amber:#fbbf24;
+--grad:linear-gradient(110deg,#22d3ee 0%,#818cf8 55%,#c084fc 100%);
+--head:"Space Grotesk",system-ui,sans-serif;--body:"Inter",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:17.5px;line-height:1.72;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+ background:radial-gradient(1100px 600px at 80% -10%,rgba(99,102,241,.2),transparent 60%),radial-gradient(800px 500px at -10% 30%,rgba(34,211,238,.08),transparent 60%)}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+header{border-bottom:1px solid var(--line);background:rgba(4,6,12,.7);backdrop-filter:blur(14px);position:sticky;top:0;z-index:10}
+.nav{display:flex;align-items:center;gap:20px;height:66px}
+.logo{display:flex;align-items:center;gap:10px;font:700 18px var(--head);color:#fff}
+.logo i{width:28px;height:28px;border-radius:8px;background:var(--grad);display:grid;place-items:center}
+.logo i svg{width:17px;height:17px}
+.nav .sp{flex:1}
+.nav a.l{font-size:15px;color:var(--muted)} .nav a.l:hover{color:#fff}
+.btn{display:inline-flex;align-items:center;gap:8px;font:600 15px var(--body);padding:12px 20px;border-radius:12px;white-space:nowrap}
+.btn-p{background:var(--grad);color:#050816;box-shadow:0 10px 30px -8px rgba(99,102,241,.6)}
+.btn-g{border:1px solid var(--line2);color:#fff;background:rgba(255,255,255,.04)}
+.nav .btn{padding:9px 15px;font-size:14px}
+h1,h2,h3{font-family:var(--head);letter-spacing:-.02em;line-height:1.15;color:#fff}
+.crumbs{font-size:14px;color:var(--dim);margin:40px 0 18px}.crumbs a:hover{color:#fff}
+.eyebrow{font:600 12.5px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+article{max-width:740px;margin:0 auto;padding-bottom:40px}
+article h1{font-size:clamp(32px,5vw,48px);margin:12px 0 18px}
+.lede{font-size:20px;color:#c9d0e6;margin-bottom:22px}
+.meta{font-size:14px;color:var(--dim);padding-bottom:28px;border-bottom:1px solid var(--line);margin-bottom:34px}
+article h2{font-size:28px;margin:48px 0 14px}
+article h3{font-size:20px;margin:30px 0 10px}
+article p{margin:0 0 18px;color:#d3d9ec}
+article ul,article ol{margin:0 0 20px 22px;color:#d3d9ec} article li{margin:6px 0}
+article strong{color:#fff}
+article a.in{color:var(--cyan);border-bottom:1px solid rgba(34,211,238,.35)} article a.in:hover{border-color:var(--cyan)}
+.box{border:1px solid var(--line2);background:var(--card);border-radius:16px;padding:22px 24px;margin:26px 0}
+.box.f{font-family:var(--mono);font-size:16px;color:#fff;text-align:center;line-height:1.9}
+.box.f small{display:block;font-family:var(--body);font-size:14px;color:var(--muted);margin-top:6px}
+.box h3{margin-top:0}
+.box.tip{border-color:rgba(52,211,153,.35)} .box.tip b{color:var(--green)}
+.box.warn{border-color:rgba(251,191,36,.35)} .box.warn b{color:var(--amber)}
+.tw{overflow-x:auto;margin:22px 0 26px;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;font-size:15.5px;min-width:520px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 13px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.03)}
+tr:last-child td{border-bottom:0}
+td.n{font-family:var(--mono);white-space:nowrap}
+.cta{margin:50px 0 10px;padding:30px;border-radius:20px;border:1px solid var(--line2);
+ background:linear-gradient(135deg,rgba(34,211,238,.10),rgba(129,140,248,.12) 55%,rgba(192,132,252,.10))}
+.cta h2{margin:0 0 10px;font-size:26px}.cta p{color:#c9d0e6;margin-bottom:18px}
+.cta .row{display:flex;gap:12px;flex-wrap:wrap}
+.more{margin-top:46px}.more h2{font-size:22px;margin-bottom:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.card{display:block;border:1px solid var(--line);background:var(--card);border-radius:18px;padding:24px;transition:border-color .2s,transform .2s}
+.card:hover{border-color:var(--line2);transform:translateY(-3px)}
+.card .eyebrow{font-size:11.5px}
+.card h3{font-size:21px;margin:10px 0 10px}
+.card p{color:var(--muted);font-size:15.5px;margin:0}
+.card .go{display:inline-block;margin-top:14px;color:var(--cyan);font-size:14.5px;font-weight:600}
+.hero{max-width:760px;padding:30px 0 40px}
+.hero h1{font-size:clamp(34px,5.5vw,56px);margin:12px 0 16px}
+.hero p{color:var(--muted);font-size:19px}
+footer{margin-top:80px;padding:34px 0 46px;border-top:1px solid var(--line);color:var(--dim);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+footer nav{display:flex;gap:20px} footer a:hover{color:#fff}
+@media(max-width:640px){.nav a.l{display:none}article h2{font-size:24px}.lede{font-size:18.5px}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav">
+  <a class="logo" href="/" aria-label="Logichain"><i><svg viewBox="0 0 24 24" fill="none" stroke="#050816" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M8.2 8.2l2.6 6.6M15.8 8.2l-2.6 6.6M8.4 7h7.2"/></svg></i>Logichain</a>
+  <span class="sp"></span>
+  <a class="l" href="/artikler/">Fagartikler</a>
+  <a class="l" href="/#kontakt">Kontakt</a>
+  <a class="btn btn-g" href="/logichain-dashboard-demo.html">Prøv demo</a>
+</div></header>
+<main class="wrap">
+<div style="max-width:1000px;margin:0 auto"><style>
+.lhero{padding:30px 0 30px;max-width:820px}
+.lhero h1{font-size:clamp(34px,5.4vw,58px);margin:14px 0 18px}
+.lhero p{font-size:20px;color:#c9d0e6;margin-bottom:26px}
+.lhero .row{display:flex;gap:12px;flex-wrap:wrap}
+.lhero small{display:block;color:var(--dim);font-size:14px;margin-top:14px}
+.lsec{margin-top:70px}
+.lsec>h2{font-size:clamp(26px,3.6vw,38px);margin-bottom:10px}
+.lsec>p.sub{color:var(--muted);max-width:720px;margin-bottom:26px}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.feat div{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:22px}
+.feat h3{font-size:18px;margin-bottom:8px}.feat p{color:var(--muted);font-size:15.5px}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;counter-reset:s}
+.steps div{border:1px solid var(--line);border-radius:16px;padding:22px;position:relative}
+.steps div::before{counter-increment:s;content:counter(s);font:700 15px var(--mono);color:#050816;background:var(--grad);width:30px;height:30px;border-radius:8px;display:grid;place-items:center;margin-bottom:12px}
+.steps h3{font-size:18px;margin-bottom:6px}.steps p{color:var(--muted);font-size:15.5px}
+.lcols{display:grid;grid-template-columns:1fr 1fr;gap:30px}
+.lcols ul{margin-left:20px;color:#d3d9ec}.lcols li{margin:7px 0}
+.lfaq h3{font-size:19px;margin:22px 0 6px}.lfaq p{color:#d3d9ec}
+.links2{display:flex;gap:10px;flex-wrap:wrap}.links2 a{border:1px solid var(--line2);border-radius:999px;padding:8px 14px;font-size:14.5px;color:#d3d9ec}.links2 a:hover{color:#fff;border-color:var(--cyan)}
+@media(max-width:760px){.lcols{grid-template-columns:1fr}.lhero p{font-size:18px}}
+</style>
+<div class="crumbs"><a href="/">Forside</a> / Innkjøpsdashboard</div>
+<div class="lhero"><span class="eyebrow">Innkjøpsdashboard</span><h1>Innkjøpsdashboard – uten IT-prosjekt</h1><p>Få spend, leveringspresisjon, leverandørrating og sparepotensial på én skjerm. Logichain bygger dashboardet fra Excel-eksporten dere allerede har – fra SAP, Visma, Business Central eller et regneark.</p>
+<div class="row"><a class="btn btn-p" href="/logichain-dashboard-demo.html">Prøv demoen</a><a class="btn btn-g" href="/#kontakt">Book en prat</a></div>
+<small>Ingen installasjon. Demoen bruker illustrative data.</small></div>
+<div class="lsec"><h2>Dette får dere</h2><p class="sub">Bygget på dataene dere allerede har – ingen integrasjon, ingen nye rutiner for leverandørene.</p>
+<div class="feat"><div><h3>Oversikt</h3><p>Hele innkjøpsfunksjonen på én skjerm: volum, leveringspresisjon, risiko og identifisert potensial.</p></div><div><h3>Spend</h3><p>Innkjøp per leverandør, kategori og måned – med konsentrasjon og single-source-risiko.</p></div><div><h3>Leveringspresisjon</h3><p>OTD per leverandør og måned, med fast toleranse og full linjeliste bak hvert tall.</p></div><div><h3>Innkjøpsordrer</h3><p>Alle ordrelinjer søkbare – avtalt dato, faktisk levering, avvik og notater per linje.</p></div><div><h3>Sparepotensial</h3><p>Prisavvik, mulige dobbeltbestillinger og konsolidering – som et spenn, med grunnlaget synlig.</p></div><div><h3>Klikk på en måned</h3><p>Velg en måned, og alle tall i dashboardet oppdateres for den perioden.</p></div></div></div>
+<div class="lsec"><h2>Slik fungerer det</h2>
+<div class="steps"><div><h3>Send inn data</h3><p>Excel- eller CSV-eksport av innkjøpsordrelinjer fra ERP-systemet, eller rapporter fra leverandørene.</p></div>
+<div><h3>Analyse og kvalitetssikring</h3><p>Data valideres og samles. AI-analytikeren finner avvik og potensial, og alt kvalitetssikres før det publiseres.</p></div>
+<div><h3>Beslutninger</h3><p>Dashboard med nøkkeltall, leverandørrating og prioriterte tiltak – oppdatert hver måned.</p></div></div></div>
+<div class="lsec lcols"><div><h2 style="font-size:26px;margin-bottom:12px">Passer for dere som …</h2><ul><li>Ledelsen spør om tall som tar en dag å lage i Excel</li><li>Flere avdelinger trenger de samme innkjøpstallene</li><li>Dere vil følge leverandørene måned for måned, ikke bare ved årsslutt</li><li>Dere har ikke tid eller budsjett til et BI-prosjekt</li></ul></div>
+<div><h2 style="font-size:26px;margin-bottom:12px">Dere får</h2><ul><li>Ferdig dashboard med innlogging for dere</li><li>Månedlig oppdatering når ny eksport kommer inn</li><li>AI-analyse som kvalitetssikres av en analytiker før publisering</li><li>Eksport til Excel når som helst – dataene er deres</li></ul></div></div>
+<div class="lsec lfaq"><h2>Ofte stilte spørsmål</h2><h3>Hvilke systemer fungerer det med?</h3><p>Alle systemer som kan eksportere innkjøpsordrelinjer til Excel eller CSV – for eksempel SAP, Visma, Microsoft Dynamics/Business Central og andre ERP-systemer. Det trengs ingen integrasjon.</p><h3>Hvor lang tid tar det å komme i gang?</h3><p>Med en eksport av innkjøpslinjene er første versjon av dashboardet typisk klar i løpet av dager.</p><h3>Hva koster et innkjøpsdashboard?</h3><p>Logichain er et fast abonnement tilpasset størrelse og omfang – en brøkdel av et tradisjonelt BI-prosjekt. Ta kontakt for et konkret tilbud.</p></div>
+<div class="cta">
+  <h2>Se tallene dine i et ferdig dashboard</h2>
+  <p>Logichain leser eksporten fra ERP-systemet (SAP, Visma, Business Central m.fl.) og gir deg leveringspresisjon, leverandørscorecard og besparelsesanalyse – uten at du bygger noe selv.</p>
+  <div class="row"><a class="btn btn-p" href="/logichain-dashboard-demo.html">Prøv demoen</a><a class="btn btn-g" href="/#kontakt">Snakk med oss</a></div>
+</div>
+<div class="more"><h2>Les mer</h2><div class="cards"><a class="card" href="/artikler/nokkeltall-innkjop-kpi/"><span class="eyebrow">Innkjøpsstyring · 8 min</span><h3>Nøkkeltall for innkjøp: 10 KPI-er som faktisk betyr noe</h3><p>Hvilke nøkkeltall bør en innkjøpsavdeling måle? Ti KPI-er for leveranse, kostnad, risiko og prosess – med definisjon, hvordan du regner dem ut og hvilke data du trenger.</p><span class="go">Les artikkelen →</span></a><a class="card" href="/artikler/leverandoroppfolging-excel-eller-dashboard/"><span class="eyebrow">Leverandøroppfølging · 6 min</span><h3>Leverandøroppfølging: Excel eller dashboard?</h3><p>Hva bør leverandøroppfølging inneholde, når holder Excel, og når lønner det seg å gå over til et dashboard? Sjekkliste for et leverandørscorecard som faktisk blir brukt.</p><span class="go">Les artikkelen →</span></a></div></div>
+<div class="lsec" style="margin-top:40px"><div class="links2"><a href="/leverandoroppfolging/">Leverandøroppfølging</a><a href="/spendanalyse/">Spendanalyse</a><a href="/artikler/">Alle fagartikler</a></div></div></div>
+</main>
+<footer><div class="wrap">
+  <span>© 2026 Logichain · Innkjøpsanalyse og leverandøroppfølging</span>
+  <nav style="flex-wrap:wrap"><a href="/">Forside</a><a href="/innkjopsdashboard/">Innkjøpsdashboard</a><a href="/leverandoroppfolging/">Leverandøroppfølging</a><a href="/spendanalyse/">Spendanalyse</a><a href="/artikler/">Fagartikler</a><a href="/logichain-dashboard-demo.html">Demo</a><a href="/#kontakt">Kontakt</a></nav>
+</div></footer>
+<script>try{if(!localStorage.getItem("lc_notrack")&&navigator.sendBeacon)navigator.sendBeacon("/api/hit",new Blob([JSON.stringify({p:location.pathname,r:document.referrer})],{type:"text/plain"}))}catch(e){}</script>
+</body>
+</html>
