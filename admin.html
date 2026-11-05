@@ -1618,6 +1618,8 @@ function start(){
   $("hello").textContent=(greeting()+", boss").toUpperCase();
   tick();setInterval(tick,1000);refresh();setInterval(loadAgents,25000);setInterval(loadRuns,20000);setInterval(loadTraffic,300000);setInterval(loadLeads,60000);
   try{localStorage.setItem("lc_notrack","1");}catch(_){}
+  // mark this device+network as "me" for today, so Jarvis leaves my own visits out of SITE TRAFFIC
+  try{navigator.sendBeacon&&navigator.sendBeacon("/api/hit",new Blob([JSON.stringify({p:"__admin",r:""})],{type:"text/plain"}));}catch(_){}
   CHAT=[];saveChat();
   const bootWait=document.getElementById("boot")?750:150;   // let the boot screen fade out first
   setTimeout(introBoom,bootWait);
