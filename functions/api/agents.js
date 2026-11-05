@@ -24,6 +24,25 @@ const SESSION_BUDGET_CENTS = 300;
 // Research agents (everyone except Nora and the Planner, who handle customer data) run in an environment with open internet.
 const RESEARCH_ENVIRONMENT = "env_01YVZKu1ucYiQhpoYXwuGNDH"; // logichain-research-env (unrestricted networking)
 const CLOSED_AGENT = /nora|planner/i;
+// The CEO agent has a hard lifetime spend cap across ALL his sessions (Einar's rule): $3 in total, then he stops.
+const CEO_AGENT = /ceo/i;
+const CEO_TOTAL_CENTS = 300;
+// Sum of what the agent has used across every session. A running session counts with its full cap (it may still spend it).
+async function agentCommittedCents(agentId, key) {
+  const list = (await claude(`/sessions?agent_id=${encodeURIComponent(agentId)}&limit=100`, key)).data || [];
+  const full = await Promise.all(list.map((s) => claude(`/sessions/${s.id}`, key).catch(() => s)));
+  return full.reduce((sum, s) => {
+    const spent = centsOf(s.usage && (s.usage.list_cost ?? s.usage.total_list_cost)) || 0;
+    const cap = centsOf(s.budget && s.budget.max_list_cost) || 0;
+    return sum + (s.status === "running" ? Math.max(spent, cap) : spent);
+  }, 0);
+}
+async function sessionAgent(cur, key) {
+  const id = typeof cur.agent === "string" ? cur.agent : pick(cur.agent, "id") || cur.agent_id;
+  let name = pick(cur.agent, "name") || "";
+  if (!name && id) try { name = (await claude(`/agents/${id}`, key)).name || ""; } catch (_) { /* unknown */ }
+  return { id, name };
+}
 const budgetOf = (cents) => ({ type: "limit", max_list_cost: { amount: String(Math.max(1, Math.round(cents))), currency: "USD" } });
 const centsOf = (v) => { const n = Number(v && typeof v === "object" ? v.amount : v); return Number.isFinite(n) ? n : null; };
 
@@ -314,7 +333,13 @@ export async function onRequestPost({ request, env }) {
       const cur = await claude(`/sessions/${sid}`, key);
       const cap = centsOf(cur.budget && cur.budget.max_list_cost) || 0;
       const spent = centsOf(cur.usage && (cur.usage.list_cost ?? cur.usage.total_list_cost)) || cap;
-      const next = Math.max(cap, spent) + SESSION_BUDGET_CENTS;
+      let next = Math.max(cap, spent) + SESSION_BUDGET_CENTS;
+      const ag = await sessionAgent(cur, key);
+      if (CEO_AGENT.test(ag.name)) {
+        const left = CEO_TOTAL_CENTS - (await agentCommittedCents(ag.id, key));
+        if (left < 5) return json({ error: "The CEO agent has used his total budget of $3." }, 402);
+        next = Math.max(cap, spent) + left;
+      }
       const u = await fetch(`${API}/sessions/${sid}`, {
         method: "POST",
         headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-beta": "managed-agents-2026-04-01", "content-type": "application/json" },
@@ -326,6 +351,10 @@ export async function onRequestPost({ request, env }) {
     } else if (body.action === "message") {
       const text = String(body.text || "").trim();
       if (text.length < 2) return json({ error: "Write a message" }, 400);
+      const cur = await claude(`/sessions/${sid}`, key).catch(() => ({}));
+      const ag = await sessionAgent(cur, key);
+      if (CEO_AGENT.test(ag.name) && (await agentCommittedCents(ag.id, key)) >= CEO_TOTAL_CENTS)
+        return json({ error: "The CEO agent has used his total budget of $3." }, 402);
       events = [{ type: "user.message", content: [{ type: "text", text: text.slice(0, 20000) }] }];
     } else return json({ error: "Unknown action" }, 400);
     const r = await fetch(`${API}/sessions/${sid}/events`, {
@@ -355,6 +384,12 @@ export async function onRequestPost({ request, env }) {
     let environmentId = DEFAULT_ENVIRONMENT;
     let agentName = "";
     try { agentName = (await claude(`/agents/${agentId}`, key)).name || ""; } catch (_) { /* name only decides the environment */ }
+    let budgetCents = SESSION_BUDGET_CENTS;
+    if (CEO_AGENT.test(agentName)) {
+      const left = CEO_TOTAL_CENTS - (await agentCommittedCents(agentId, key));
+      if (left < 10) return json({ error: "The CEO agent has used his total budget of $3. Nothing was started." }, 402);
+      budgetCents = Math.min(SESSION_BUDGET_CENTS, left);
+    }
     if (RESEARCH_ENVIRONMENT && !CLOSED_AGENT.test(agentName)) environmentId = RESEARCH_ENVIRONMENT;
     else try {
       const last = await claude(`/sessions?agent_id=${encodeURIComponent(agentId)}&limit=1`, key);
@@ -388,7 +423,7 @@ export async function onRequestPost({ request, env }) {
         environment_id: environmentId,
         title,
         metadata: { source: "jarvis-brief", previous_files: String(withFiles ? prev.length : 0) },
-        budget: budgetOf(SESSION_BUDGET_CENTS),
+        budget: budgetOf(budgetCents),
         ...(withFiles && prev.length ? { resources: prev.map((f) => ({ type: "file", file_id: f.id, mount_path: `/previous/${f.name}` })) } : {}),
         initial_events: [{ type: "user.message", content: [{ type: "text", text: withFiles ? text : text.replace(prevNote.join("\n"), "") }] }],
       }),

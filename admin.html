@@ -263,13 +263,16 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .vprow:hover{border-color:var(--line2)}
 .vprow.on{border-color:var(--cyan);background:rgba(0,229,255,.08);box-shadow:var(--glow)}
 .vprow small{display:block;font:11px var(--mono);color:var(--muted)}
-#briefM,#newM{position:fixed;inset:0;z-index:56;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.6);backdrop-filter:blur(3px)}
+#ceoM,#briefM,#newM{position:fixed;inset:0;z-index:56;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.6);backdrop-filter:blur(3px)}
 .bf{width:min(760px,100%);max-height:100%;display:flex!important;flex-direction:column;padding:0!important;animation:holoIn .5s cubic-bezier(.2,.9,.25,1) both}
 .bfbody{padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
 .bfbody label{display:flex;flex-direction:column;gap:6px;font:600 11px var(--hud);letter-spacing:.2em;color:var(--cyan)}
 .bfbody textarea{resize:vertical;font:500 15px/1.45 var(--ui);min-height:160px}
 .bfbody select{font-size:16px}
 .bfhint{font-size:13px;color:var(--muted)}
+.ceotxt{font:500 15px/1.6 var(--ui);color:var(--txt,#d8f6ff);white-space:pre-wrap;word-wrap:break-word}
+.ceotxt a{color:var(--cyan)}
+#ceoBtn.has{border-color:#ffb547;color:#ffb547;box-shadow:0 0 12px rgba(255,181,71,.45)}
 .fh{font:700 10px var(--hud);letter-spacing:.24em;color:var(--cyan);margin:16px 0 8px;padding-top:12px;border-top:1px solid var(--line)}
 .fl{display:flex;align-items:center;gap:8px;padding:7px 8px;border:1px solid var(--line);background:var(--glass2);margin-bottom:6px;cursor:pointer;transition:.2s}
 .fl:hover{border-color:var(--cyan);box-shadow:var(--glow)}
@@ -478,6 +481,24 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
       <button class="talk" id="bfSend">➤ Send to agent</button>
     </div>
   </form>
+</div>
+
+<!-- MESSAGE FROM THE CEO -->
+<div id="ceoM" class="hidden">
+  <div class="holo panel br bf">
+    <div class="vh">
+      <div class="orb" style="--c:#ffb547"></div>
+      <div><h3 id="ceoH">Message from the CEO</h3><p id="ceoSub"></p></div>
+      <div class="sp"></div>
+      <button type="button" class="hbtn" id="ceoClose">Close ✕</button>
+    </div>
+    <div class="bfbody"><div class="ceotxt" id="ceoTxt"></div></div>
+    <div class="rvfoot">
+      <span style="flex:1" class="bfhint" id="ceoFoot"></span>
+      <button type="button" class="hbtn" id="ceoLog">Open work log</button>
+      <button type="button" class="talk" id="ceoRead">✓ Got it</button>
+    </div>
+  </div>
 </div>
 
 <!-- NEW AGENT -->
@@ -709,9 +730,9 @@ function initScene(){
   addEventListener("resize",resize);resize();
   addEventListener("mousemove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1;mouse.set(mx,-my);
     document.body.style.setProperty("--mx",mx.toFixed(3));document.body.style.setProperty("--my",my.toFixed(3));});
-  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM"))return;if(S.hover)openAgent(S.hover.agent.id);});
+  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM"))return;if(S.hover)openAgent(S.hover.agent.id);});
   // double-click the reactor core → mini explosion
-  addEventListener("dblclick",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,input,textarea,button"))return;
+  addEventListener("dblclick",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,input,textarea,button"))return;
     const c=new T.Vector3(0,0,0).project(cam),cx=(c.x*.5+.5)*innerWidth,cy=(-c.y*.5+.5)*innerHeight;
     if(Math.hypot(e.clientX-cx,e.clientY-cy)<Math.min(innerWidth,innerHeight)*.2){window.getSelection&&window.getSelection().removeAllRanges();miniBoom();}});
 
@@ -810,6 +831,7 @@ async function api(path){
 async function loadAgents(){
   const j=DEMO?demoAgents():await api("/api/agents").catch(e=>({error:e.message}));
   AG=(j&&j.agents)?j:null;renderAgents(j);
+  if(AG)checkCeoInbox();
 }
 function renderAgents(j){
   const ro=$("roster"),ac=$("activity");
@@ -1048,14 +1070,14 @@ async function startCeoPlan(auto){
   const a=ceoAgent();
   if(!a){if(!auto)say("I can't find a CEO agent in the roster boss.",false);return;}
   if(DEMO){if(!auto)say("Demo mode – CEO plan not sent.",false);return;}
-  if(!auto)say("Briefing the CEO with this week's numbers boss. Plan coming up.",false);
+  if(!auto)say("Briefing the CEO with this week's numbers boss. He'll message you here when the plan is ready.",false);
   let j;
   try{const r=await fetch("/api/agents",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(SESSION&&SESSION.access_token)},
       body:JSON.stringify({agent_id:a.id,task:ceoTask(),title:CEO_TITLE+" uke "+isoWeek(new Date())})});
     j=await r.json().catch(()=>({error:"HTTP "+r.status}));if(!r.ok&&!j.error)j.error="HTTP "+r.status;}catch(e){j={error:e.message};}
   if(j.error){if(!auto)say("CEO brief failed: "+j.error,false);return;}
   try{localStorage.setItem("lc_ceo_week",String(isoWeek(new Date())));}catch(_){}
-  if(auto)say("Fresh week boss. I've asked the CEO for this week's action plan – it'll be in his log shortly.",false);
+  if(auto)say("Fresh week boss. I've asked the CEO for this week's action plan – he'll message you here when it's ready.",false);
   await loadAgents();if(!auto)openAgent(j.session.agent_id,j.session.id);
 }
 async function maybeAutoCeoPlan(){
@@ -1067,7 +1089,36 @@ async function maybeAutoCeoPlan(){
   if(last&&String(last.title||"").endsWith(" uke "+wk)){try{localStorage.setItem("lc_ceo_week",wk);}catch(_){}return;}
   await startCeoPlan(true);
 }
-$("ceoBtn").addEventListener("click",e=>{e.stopPropagation();startCeoPlan(false);});
+/* ---- CEO inbox: his finished briefs and plans arrive as a direct message in Jarvis ---- */
+let CEO_MSG=null,CEO_CHECKING=false;
+function ceoReadId(){try{return localStorage.getItem("lc_ceo_read")||"";}catch(_){return"";}}
+function linkify(t){return esc(t).replace(/https?:\/\/[^\s<)\]]+/g,u=>`<a href="${u}" target="_blank" rel="noopener">${u}</a>`);}
+async function checkCeoInbox(){
+  const a=ceoAgent();if(!a||!AG||DEMO||CEO_CHECKING)return;
+  const done=(AG.sessions||[]).filter(x=>x.agent_id===a.id&&x.status!=="running"&&/^(Markedsbrief|Handlingsplan)/.test(x.title||""))
+    .sort((x,y)=>new Date(y.created_at)-new Date(x.created_at))[0];
+  if(!done||done.id===ceoReadId()||(CEO_MSG&&CEO_MSG.id===done.id))return;
+  CEO_CHECKING=true;
+  try{const j=await api("/api/agents?session="+encodeURIComponent(done.id));
+    const msgs=(j.log||[]).filter(e=>e.kind==="agent"&&e.text&&e.text.trim());
+    if(!msgs.length)return;
+    CEO_MSG={id:done.id,title:done.title||"Message",time:done.updated_at||done.created_at,text:msgs[msgs.length-1].text};
+    $("ceoBtn").classList.add("has");$("ceoBtn").textContent="CEO ✉ 1";
+    say(`New message from the CEO boss – ${CEO_MSG.title}. Click CEO to read it.`,true);
+  }catch(_){}finally{CEO_CHECKING=false;}
+}
+function openCeoMsg(){if(!CEO_MSG)return;
+  $("ceoH").textContent="Message from the CEO · "+CEO_MSG.title;$("ceoSub").textContent=ago(CEO_MSG.time);
+  $("ceoTxt").innerHTML=linkify(CEO_MSG.text);$("ceoFoot").textContent="CEO budget: $3 in total for all his work.";
+  $("ceoM").classList.remove("hidden");}
+function closeCeoMsg(){$("ceoM").classList.add("hidden");}
+function markCeoRead(){if(!CEO_MSG)return;try{localStorage.setItem("lc_ceo_read",CEO_MSG.id);}catch(_){}
+  CEO_MSG=null;$("ceoBtn").classList.remove("has");$("ceoBtn").textContent="CEO PLAN";closeCeoMsg();}
+$("ceoClose").addEventListener("click",closeCeoMsg);
+$("ceoRead").addEventListener("click",markCeoRead);
+$("ceoLog").addEventListener("click",()=>{if(CEO_MSG){const m=CEO_MSG;closeCeoMsg();openAgent(ceoAgent().id,m.id);}});
+$("ceoM").addEventListener("click",e=>{if(e.target.id==="ceoM")closeCeoMsg();});
+$("ceoBtn").addEventListener("click",e=>{e.stopPropagation();if(CEO_MSG)return openCeoMsg();startCeoPlan(false);});
 
 /* ================= CREATE AN AGENT ================= */
 const AGENT_TEMPLATES=[

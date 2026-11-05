@@ -1,7 +1,7 @@
 // Logichain · CEO daily market scan
 // Called by pg_cron (see supabase/ceo-daily-scan.sql) at 21:00 and 22:00 UTC. Runs once a day at 23:00 Oslo time:
 // starts a session for the CEO agent that scans the last 24 hours for news and market moves that matter to Logichain.
-// Spend cap: $3 per run. Guarded by a shared secret stored in the database and by a one-run-per-day lock.
+// Spend cap: the CEO agent has $3 IN TOTAL across all his sessions (Einar's rule); a run only gets what is left. Guarded by a shared secret stored in the database and by a one-run-per-day lock.
 const API = "https://api.anthropic.com/v1";
 const RESEARCH_ENV = Deno.env.get("RESEARCH_ENVIRONMENT_ID") ?? "env_01YVZKu1ucYiQhpoYXwuGNDH"; // open internet
 const headers = (k: string) => ({
@@ -74,7 +74,22 @@ Deno.serve(async (req) => {
   const ceo = (agents.data || []).find((a: { name?: string; archived_at?: string }) => /ceo/i.test(a.name || "") && !a.archived_at);
   if (!ceo) { log("no_ceo_agent"); return Response.json({ error: "CEO agent not found" }, { status: 404 }); }
 
-  // 5) start the session, $3 cap
+  // 5) lifetime budget: $3 in total for the CEO agent, across every session (running sessions count with their full cap)
+  const list = await fetch(`${API}/sessions?agent_id=${encodeURIComponent(ceo.id)}&limit=100`, { headers: headers(apiKey) })
+    .then((r) => r.json()).catch(() => ({ data: null }));
+  if (!Array.isArray(list.data)) { log("budget_check_failed"); await fetch(`${url}/rest/v1/ceo_daily_runs?day=eq.${now.day}`, { method: "DELETE", headers: sb }); return Response.json({ error: "could not check budget" }, { status: 502 }); }
+  const cents = (v: unknown) => { const n = Number(v && typeof v === "object" ? (v as { amount?: unknown }).amount : v); return Number.isFinite(n) ? n : 0; };
+  const full = await Promise.all(list.data.map((x: { id: string }) =>
+    fetch(`${API}/sessions/${x.id}`, { headers: headers(apiKey) }).then((r) => r.json()).catch(() => x)));
+  const committed = full.reduce((sum: number, x: { status?: string; usage?: { list_cost?: unknown; total_list_cost?: unknown }; budget?: { max_list_cost?: unknown } }) => {
+    const spent = cents(x.usage && (x.usage.list_cost ?? x.usage.total_list_cost));
+    const cap = cents(x.budget && x.budget.max_list_cost);
+    return sum + (x.status === "running" ? Math.max(spent, cap) : spent);
+  }, 0);
+  const left = 300 - committed;
+  if (left < 10) { log("budget_used", { committed }); return Response.json({ skipped: "CEO total budget of $3 is used" }); }
+
+  // 6) start the session with whatever is left of the $3 (max $3)
   const r = await fetch(`${API}/sessions`, {
     method: "POST", headers: headers(apiKey),
     body: JSON.stringify({
@@ -82,7 +97,7 @@ Deno.serve(async (req) => {
       environment_id: RESEARCH_ENV,
       title: `Markedsbrief ${now.label}`,
       metadata: { source: "ceo-daily-scan", day: now.day },
-      budget: { type: "limit", max_list_cost: { amount: "300", currency: "USD" } },
+      budget: { type: "limit", max_list_cost: { amount: String(Math.min(300, Math.floor(left))), currency: "USD" } },
       initial_events: [{ type: "user.message", content: [{ type: "text", text: prompt(now.label) }] }],
     }),
   });
