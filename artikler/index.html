@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fagartikler om innkjøp og leverandøroppfølging | Logichain</title>
+<meta name="description" content="Praktiske guider om leveringspresisjon (OTD), leverandøroppfølging og innkjøpsanalyse for innkjøpere i norske bedrifter.">
+<link rel="canonical" href="https://logichain.no/artikler/">
+<meta property="og:title" content="Fagartikler om innkjøp og leverandøroppfølging | Logichain">
+<meta property="og:description" content="Praktiske guider om leveringspresisjon (OTD), leverandøroppfølging og innkjøpsanalyse for innkjøpere i norske bedrifter.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://logichain.no/artikler/">
+<meta property="og:image" content="https://logichain.no/assets/og-no.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Logichain">
+<meta property="og:locale" content="nb_NO">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#04060c">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Fagartikler om innkjøp", "url": "https://logichain.no/artikler/", "inLanguage": "nb-NO", "publisher": {"@type": "Organization", "name": "Logichain", "url": "https://logichain.no/", "logo": "https://logichain.no/assets/og-no.png"}, "hasPart": [{"@type": "Article", "headline": "Leveringspresisjon (OTD): slik måler du det riktig", "url": "https://logichain.no/artikler/leveringspresisjon-otd/"}, {"@type": "Article", "headline": "Leverandøroppfølging: Excel eller dashboard?", "url": "https://logichain.no/artikler/leverandoroppfolging-excel-eller-dashboard/"}, {"@type": "Article", "headline": "Innkjøpsanalyse: hvor finner du besparelsene?", "url": "https://logichain.no/artikler/innkjopsanalyse-besparelser/"}]}</script>
+<style>
+:root{--bg:#04060c;--card:rgba(14,20,38,.62);--line:rgba(148,163,255,.12);--line2:rgba(148,163,255,.26);
+--text:#e8ecf8;--muted:#8d97b5;--dim:#5b6584;--cyan:#22d3ee;--green:#34d399;--amber:#fbbf24;
+--grad:linear-gradient(110deg,#22d3ee 0%,#818cf8 55%,#c084fc 100%);
+--head:"Space Grotesk",system-ui,sans-serif;--body:"Inter",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--body);font-size:17.5px;line-height:1.72;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+ background:radial-gradient(1100px 600px at 80% -10%,rgba(99,102,241,.2),transparent 60%),radial-gradient(800px 500px at -10% 30%,rgba(34,211,238,.08),transparent 60%)}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+header{border-bottom:1px solid var(--line);background:rgba(4,6,12,.7);backdrop-filter:blur(14px);position:sticky;top:0;z-index:10}
+.nav{display:flex;align-items:center;gap:20px;height:66px}
+.logo{display:flex;align-items:center;gap:10px;font:700 18px var(--head);color:#fff}
+.logo i{width:28px;height:28px;border-radius:8px;background:var(--grad);display:grid;place-items:center}
+.logo i svg{width:17px;height:17px}
+.nav .sp{flex:1}
+.nav a.l{font-size:15px;color:var(--muted)} .nav a.l:hover{color:#fff}
+.btn{display:inline-flex;align-items:center;gap:8px;font:600 15px var(--body);padding:12px 20px;border-radius:12px;white-space:nowrap}
+.btn-p{background:var(--grad);color:#050816;box-shadow:0 10px 30px -8px rgba(99,102,241,.6)}
+.btn-g{border:1px solid var(--line2);color:#fff;background:rgba(255,255,255,.04)}
+.nav .btn{padding:9px 15px;font-size:14px}
+h1,h2,h3{font-family:var(--head);letter-spacing:-.02em;line-height:1.15;color:#fff}
+.crumbs{font-size:14px;color:var(--dim);margin:40px 0 18px}.crumbs a:hover{color:#fff}
+.eyebrow{font:600 12.5px var(--body);letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+article{max-width:740px;margin:0 auto;padding-bottom:40px}
+article h1{font-size:clamp(32px,5vw,48px);margin:12px 0 18px}
+.lede{font-size:20px;color:#c9d0e6;margin-bottom:22px}
+.meta{font-size:14px;color:var(--dim);padding-bottom:28px;border-bottom:1px solid var(--line);margin-bottom:34px}
+article h2{font-size:28px;margin:48px 0 14px}
+article h3{font-size:20px;margin:30px 0 10px}
+article p{margin:0 0 18px;color:#d3d9ec}
+article ul,article ol{margin:0 0 20px 22px;color:#d3d9ec} article li{margin:6px 0}
+article strong{color:#fff}
+article a.in{color:var(--cyan);border-bottom:1px solid rgba(34,211,238,.35)} article a.in:hover{border-color:var(--cyan)}
+.box{border:1px solid var(--line2);background:var(--card);border-radius:16px;padding:22px 24px;margin:26px 0}
+.box.f{font-family:var(--mono);font-size:16px;color:#fff;text-align:center;line-height:1.9}
+.box.f small{display:block;font-family:var(--body);font-size:14px;color:var(--muted);margin-top:6px}
+.box h3{margin-top:0}
+.box.tip{border-color:rgba(52,211,153,.35)} .box.tip b{color:var(--green)}
+.box.warn{border-color:rgba(251,191,36,.35)} .box.warn b{color:var(--amber)}
+.tw{overflow-x:auto;margin:22px 0 26px;border:1px solid var(--line);border-radius:14px}
+table{width:100%;border-collapse:collapse;font-size:15.5px;min-width:520px}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 13px var(--body);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.03)}
+tr:last-child td{border-bottom:0}
+td.n{font-family:var(--mono);white-space:nowrap}
+.cta{margin:50px 0 10px;padding:30px;border-radius:20px;border:1px solid var(--line2);
+ background:linear-gradient(135deg,rgba(34,211,238,.10),rgba(129,140,248,.12) 55%,rgba(192,132,252,.10))}
+.cta h2{margin:0 0 10px;font-size:26px}.cta p{color:#c9d0e6;margin-bottom:18px}
+.cta .row{display:flex;gap:12px;flex-wrap:wrap}
+.more{margin-top:46px}.more h2{font-size:22px;margin-bottom:14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.card{display:block;border:1px solid var(--line);background:var(--card);border-radius:18px;padding:24px;transition:border-color .2s,transform .2s}
+.card:hover{border-color:var(--line2);transform:translateY(-3px)}
+.card .eyebrow{font-size:11.5px}
+.card h3{font-size:21px;margin:10px 0 10px}
+.card p{color:var(--muted);font-size:15.5px;margin:0}
+.card .go{display:inline-block;margin-top:14px;color:var(--cyan);font-size:14.5px;font-weight:600}
+.hero{max-width:760px;padding:30px 0 40px}
+.hero h1{font-size:clamp(34px,5.5vw,56px);margin:12px 0 16px}
+.hero p{color:var(--muted);font-size:19px}
+footer{margin-top:80px;padding:34px 0 46px;border-top:1px solid var(--line);color:var(--dim);font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}
+footer nav{display:flex;gap:20px} footer a:hover{color:#fff}
+@media(max-width:640px){.nav a.l{display:none}article h2{font-size:24px}.lede{font-size:18.5px}}
+</style>
+</head>
+<body>
+<header><div class="wrap nav">
+  <a class="logo" href="/" aria-label="Logichain"><i><svg viewBox="0 0 24 24" fill="none" stroke="#050816" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="7" r="2.4"/><circle cx="18" cy="7" r="2.4"/><circle cx="12" cy="17" r="2.4"/><path d="M8.2 8.2l2.6 6.6M15.8 8.2l-2.6 6.6M8.4 7h7.2"/></svg></i>Logichain</a>
+  <span class="sp"></span>
+  <a class="l" href="/artikler/">Fagartikler</a>
+  <a class="l" href="/#kontakt">Kontakt</a>
+  <a class="btn btn-g" href="/logichain-dashboard-demo.html">Prøv demo</a>
+</div></header>
+<main class="wrap">
+<div class="crumbs"><a href="/">Forside</a> / Fagartikler</div>
+<div class="hero"><span class="eyebrow">Fagartikler</span>
+<h1>Innkjøp, <span style="background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent">målt riktig</span></h1>
+<p>Praktiske guider om leveringspresisjon, leverandøroppfølging og innkjøpsanalyse – skrevet for innkjøpere og ledere som vil styre på tall.</p></div>
+<div class="cards"><a class="card" href="/artikler/leveringspresisjon-otd/"><span class="eyebrow">Leverandøroppfølging · 7 min</span><h3>Leveringspresisjon (OTD): slik måler du det riktig</h3><p>Hva er leveringspresisjon (OTD), hvordan regner du det ut fra ERP-data, hvilken toleranse bør du bruke, og hvilke feil gjør at tallet lyver? En praktisk guide for innkjøpere.</p><span class="go">Les artikkelen →</span></a><a class="card" href="/artikler/leverandoroppfolging-excel-eller-dashboard/"><span class="eyebrow">Leverandøroppfølging · 6 min</span><h3>Leverandøroppfølging: Excel eller dashboard?</h3><p>Hva bør leverandøroppfølging inneholde, når holder Excel, og når lønner det seg å gå over til et dashboard? Sjekkliste for et leverandørscorecard som faktisk blir brukt.</p><span class="go">Les artikkelen →</span></a><a class="card" href="/artikler/innkjopsanalyse-besparelser/"><span class="eyebrow">Innkjøpsanalyse · 8 min</span><h3>Innkjøpsanalyse: hvor finner du besparelsene?</h3><p>Seks analyser som finner besparelser i innkjøpsdata: prisavvik på samme vare, dobbeltbestillinger, leverandørkonsentrasjon, internhandel, rammeavtaler og masterdata. Med metode og eksempler.</p><span class="go">Les artikkelen →</span></a></div>
+<div class="cta">
+  <h2>Se tallene dine i et ferdig dashboard</h2>
+  <p>Logichain leser eksporten fra ERP-systemet (SAP, Visma, Business Central m.fl.) og gir deg leveringspresisjon, leverandørscorecard og besparelsesanalyse – uten at du bygger noe selv.</p>
+  <div class="row"><a class="btn btn-p" href="/logichain-dashboard-demo.html">Prøv demoen</a><a class="btn btn-g" href="/#kontakt">Snakk med oss</a></div>
+</div>
+</main>
+<footer><div class="wrap">
+  <span>© 2026 Logichain · Innkjøpsanalyse og leverandøroppfølging</span>
+  <nav><a href="/">Forside</a><a href="/artikler/">Fagartikler</a><a href="/logichain-dashboard-demo.html">Demo</a><a href="/#kontakt">Kontakt</a></nav>
+</div></footer>
+<script>try{if(!localStorage.getItem("lc_notrack")&&navigator.sendBeacon)navigator.sendBeacon("/api/hit",new Blob([JSON.stringify({p:location.pathname,r:document.referrer})],{type:"text/plain"}))}catch(e){}</script>
+</body>
+</html>
