@@ -293,7 +293,62 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .vh h3{font:700 18px var(--hud);letter-spacing:.12em;color:#fff}
 .vh p{font:12px var(--mono);color:var(--muted);margin-top:3px;max-width:640px}
 .vh .sp{flex:1}
-.vs{border-right:1px solid var(--line);padding:12px;overflow-y:auto}
+.vs{border-right:1px solid var(--line);padding:12px;overflow-y:auto;background:rgba(0,10,18,.35)}
+.vsh{font:700 10px var(--hud);letter-spacing:.28em;color:var(--dim);margin:2px 4px 10px}
+.vs .ses{position:relative;padding:10px 10px 10px 14px!important;border-radius:6px}
+.vs .ses::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:3px;background:var(--sc,var(--dim))}
+.vr{position:relative}
+.vtop{display:flex;align-items:center;gap:14px;padding:14px 22px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.vtop h4{margin:0;font:700 17px var(--ui);color:#fff;flex:1;min-width:200px;line-height:1.25}
+.pill{font:700 10px var(--hud);letter-spacing:.2em;padding:5px 10px;border-radius:999px;border:1px solid currentColor}
+.pill.run{color:#3dffb0;animation:pendPulse 1.6s infinite}.pill.idle{color:var(--cyan)}.pill.off{color:var(--dim)}
+.spend{display:flex;flex-direction:column;gap:4px;min-width:170px;font:11px var(--mono);color:var(--muted)}
+.spend i{display:block;height:5px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}.spend i b{display:block;height:100%;background:linear-gradient(90deg,#3dffb0,#ffb547 70%,#ff4d6d)}
+.vtabs{display:flex;align-items:center;gap:6px;padding:8px 22px 0;border-bottom:1px solid var(--line)}
+.vtab{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);font:600 13px var(--ui);padding:8px 12px;cursor:pointer;letter-spacing:.04em}
+.vtab.on{color:#fff;border-bottom-color:var(--cyan)}.vtab:hover{color:#fff}
+.vbadge{display:inline-block;min-width:18px;padding:1px 6px;margin-left:4px;border-radius:9px;background:rgba(0,229,255,.18);color:var(--cyan);font:700 11px var(--mono)}
+.vbadge:empty{display:none}
+.vsteps{font:12px var(--mono);color:var(--dim);display:flex;gap:6px;align-items:center;cursor:pointer;padding-bottom:6px}
+.vtabs .sp{flex:1}
+#viewer .bub{display:flex;gap:10px;max-width:92%;animation:fadeIn .35s both;padding:0;background:none;border:0;white-space:normal;font-size:inherit;line-height:inherit}
+#viewer .bub.mine{align-self:flex-end;flex-direction:row-reverse}
+#viewer .av{flex:0 0 34px;height:34px;border-radius:50%;display:grid;place-items:center;font:800 14px var(--hud);color:#04121c;background:var(--ac,#00e5ff);box-shadow:0 0 14px -2px var(--ac,#00e5ff)}
+#viewer .bubc{border:1px solid var(--line);background:rgba(0,229,255,.06);padding:11px 15px;border-radius:4px 14px 14px 14px;min-width:0}
+#viewer .bub.mine .bubc{background:rgba(255,181,71,.08);border-color:rgba(255,181,71,.35);border-radius:14px 4px 14px 14px}
+#viewer .bubh{display:flex;gap:12px;justify-content:space-between;font:700 10px var(--hud);letter-spacing:.2em;color:var(--ac,#00e5ff);margin-bottom:6px}
+#viewer .bub.mine .bubh{color:var(--amber)}
+#viewer .bubh .tm{font:10px var(--mono);letter-spacing:0;color:var(--dim)}
+.md{font:15px/1.6 var(--ui);color:#dff7ff;word-break:break-word}
+.md h1,.md h2,.md h3{font:700 15px var(--hud);letter-spacing:.08em;color:#fff;margin:12px 0 6px}.md h1{font-size:17px}
+.md p{margin:0 0 8px}.md ul,.md ol{margin:4px 0 10px 20px;padding:0}.md li{margin:3px 0}
+.md code{font:13px var(--mono);background:rgba(0,229,255,.1);padding:1px 5px;border-radius:3px}
+.md pre{font:12.5px/1.5 var(--mono);background:rgba(0,0,0,.35);border:1px solid var(--line);padding:10px;overflow:auto;white-space:pre}
+.md a{color:var(--cyan)}.md strong{color:#fff}.md hr{border:0;border-top:1px solid var(--line);margin:10px 0}
+.md table{border-collapse:collapse;margin:6px 0 10px;font-size:13px}.md td,.md th{border:1px solid var(--line);padding:4px 8px;text-align:left}.md th{color:var(--cyan)}
+.more{display:inline-block;margin-top:6px;font:600 12px var(--mono);color:var(--amber);cursor:pointer}
+.steps{display:block;align-self:stretch;border:1px solid rgba(180,140,255,.25);background:rgba(180,140,255,.05);border-radius:8px}
+.steps>summary{list-style:none;cursor:pointer;padding:8px 12px;font:12px var(--mono);color:#cbb8ff;display:flex;gap:10px;align-items:center}
+.steps>summary::-webkit-details-marker{display:none}
+.steps>summary::before{content:"▸";transition:transform .2s}.steps[open]>summary::before{transform:rotate(90deg)}
+.steps>summary .tm{margin-left:auto;color:var(--dim)}
+.steps .inner{display:flex;flex-direction:column;gap:8px;padding:4px 12px 12px}
+.vfiles{padding:18px 22px;overflow-y:auto;flex:1;min-height:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;align-content:start}
+.hidden.vfiles,.vl.hidden{display:none}
+.fcard{border:1px solid var(--line);background:linear-gradient(160deg,rgba(10,48,76,.55),rgba(2,14,24,.6));border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;transition:.2s}
+.fcard:hover{border-color:var(--fc,#00e5ff);box-shadow:0 0 18px -6px var(--fc,#00e5ff)}
+.fct{display:flex;gap:10px;align-items:center;min-width:0}
+.fic{flex:0 0 40px;height:46px;border-radius:6px;display:grid;place-items:center;font:800 10px var(--hud);letter-spacing:.06em;color:#04121c;background:var(--fc,#00e5ff)}
+.fct b{font:600 13.5px var(--ui);color:#fff;word-break:break-all;line-height:1.3}
+.fcm{font:11px var(--mono);color:var(--muted)}
+.fca{display:flex;gap:8px}.fca button{flex:1;padding:7px 8px!important;font-size:11px!important;letter-spacing:.12em}
+.vprev{position:absolute;inset:0;z-index:5;background:#020b13;display:flex;flex-direction:column}
+.vprev.hidden{display:none}
+.vprevh{display:flex;gap:10px;align-items:center;padding:14px 22px;border-bottom:1px solid var(--line)}.vprevh b{font:600 15px var(--ui);color:#fff}.vprevh .sp{flex:1}
+.vprevb{padding:18px 26px;overflow:auto;flex:1}
+.ctab{border-collapse:collapse;font:12.5px var(--mono)}.ctab td,.ctab th{border:1px solid var(--line);padding:4px 8px;white-space:nowrap}.ctab th{color:var(--cyan);position:sticky;top:0;background:#04121c}
+#vAct .vrep{background:rgba(0,229,255,.04);border:1px solid var(--line);border-radius:10px;padding:6px}
+#vAct .vrep input{border:0;background:transparent}
 .vs .ses{padding:10px;border:1px solid transparent;cursor:pointer;margin-bottom:6px;transition:.2s}
 .vs .ses:hover{border-color:var(--line)}
 .vs .ses.on{border-color:var(--cyan);background:rgba(0,229,255,.08);box-shadow:inset 0 0 18px rgba(0,229,255,.08)}
@@ -561,8 +616,16 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
       <button class="hbtn" id="vRef">⟳ Refresh</button>
       <button class="hbtn" id="vClose">Close ✕</button>
     </div>
-    <div class="vs"><div id="vSessions"></div><div id="vFiles"></div></div>
-    <div class="vr"><div class="vl" id="vLog"><div class="empty">Select a session.</div></div><div id="vAct"></div></div>
+    <div class="vs"><div class="vsh">SESSIONS</div><div id="vSessions"></div></div>
+    <div class="vr">
+      <div class="vtop" id="vTop"></div>
+      <div class="vtabs"><button class="vtab on" data-tab="chat">💬 Conversation</button><button class="vtab" data-tab="files">📁 Files <span id="vFileN" class="vbadge"></span></button>
+        <span class="sp"></span><label class="vsteps"><input type="checkbox" id="vShowSteps"> show work steps</label></div>
+      <div class="vl" id="vLog"><div class="empty">Select a session.</div></div>
+      <div class="vfiles hidden" id="vFiles"></div>
+      <div id="vAct"></div>
+      <div class="vprev hidden" id="vPrev"><div class="vprevh"><b id="vPrevName"></b><span class="sp"></span><button class="hbtn" id="vPrevDl">⬇ Download</button><button class="hbtn" id="vPrevX">Close ✕</button></div><div class="vprevb" id="vPrevBody"></div></div>
+    </div>
   </div>
 </div>
 
@@ -704,11 +767,6 @@ function initScene(){
   const nebula=add(new T.Group());
   [[0x7c4dff,-38,10,-70,70],[0xff2bd6,42,-6,-80,60],[0x00e5ff,8,20,-95,80],[0x3dffb0,-55,-14,-60,45],[0xff8a3d,30,22,-110,55]].forEach(([c,x,y,z,s])=>{
     const g=add(glow(c,s,.22),nebula);g.position.set(x,y,z);g.userData.base=.22;});
-  const planet=add(new T.Group());planet.position.set(34,13,-60);
-  add(new T.Mesh(new T.SphereGeometry(5,32,24),new T.MeshBasicMaterial({color:0x7c4dff,wireframe:true,transparent:true,opacity:.16,blending:T.AdditiveBlending,depthWrite:false})),planet);
-  add(glow(0xb14dff,16,.35),planet);
-  const pRing=add(new T.Mesh(new T.RingGeometry(7,9.5,96),new T.MeshBasicMaterial({color:0xff9bf0,transparent:true,opacity:.14,side:T.DoubleSide,blending:T.AdditiveBlending,depthWrite:false})),planet);pRing.rotation.set(1.2,.3,0);
-  const moon=add(new T.Mesh(new T.SphereGeometry(.9,16,12),new T.MeshBasicMaterial({color:0x8ff6ff,wireframe:true,transparent:true,opacity:.35})),planet);
   const meteors=[0,1,2,3].map(()=>{const l=add(new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(),new T.Vector3()]),lineMat(0xffffff,0)));l.userData={t0:-99,a:new T.Vector3(),b:new T.Vector3(),dur:1};return l;});
   let meteorT=0;
   const RN=260,rPos=new Float32Array(RN*3),rSeed=Array.from({length:RN},()=>({x:(Math.random()<.5?-1:1)*(10+Math.random()*9),z:-6-Math.random()*14,o:Math.random(),v:.15+Math.random()*.3}));
@@ -721,54 +779,7 @@ function initScene(){
     for(let k=0;k<4;k++){const bar=add(new T.Mesh(new T.PlaneGeometry(w*.7*(.3+Math.random()*.7),.06),additive(i%2?0xff2bd6:0x00e5ff,.35)),pg);bar.position.set(-w*.12,h*.3-k*h*.2,0);}
     const a=i/7*Math.PI*2;pg.position.set(Math.cos(a)*16,(Math.random()-.3)*6,-14+Math.sin(a)*5);pg.lookAt(0,0,0);pg.userData={a,y:pg.position.y,ph:Math.random()*6};}
   // far-away scenery must not fade out in the fog
-  [nebula,planet,panels,...meteors].forEach(o=>o.traverse(m=>{if(m.material)m.material.fog=false;}));
-
-  // ===== 1) HOLOGRAM GLOBE – where visitors come from, beams fly into the reactor =====
-  const D2R=Math.PI/180,GR=2.1;
-  const GEO={NO:[60.5,8.5],SE:[62,15],DK:[56,10],FI:[64,26],IS:[65,-18],GB:[54,-2],IE:[53,-8],DE:[51,10],NL:[52.2,5.3],BE:[50.6,4.6],FR:[46.5,2.5],ES:[40,-4],PT:[39.5,-8],IT:[42.8,12.5],
-    PL:[52,19],CH:[46.8,8.2],AT:[47.5,14.5],CZ:[49.8,15.5],EE:[58.7,25.5],LV:[57,25],LT:[55.3,24],UA:[49,32],RU:[60,90],TR:[39,35],GR:[39,22],RO:[46,25],HU:[47,19.5],
-    US:[39,-98],CA:[56,-106],MX:[23,-102],BR:[-10,-52],AR:[-34,-64],CL:[-30,-71],CO:[4,-73],CN:[35,104],JP:[36,138],KR:[36,128],IN:[22,79],SG:[1.35,103.8],AU:[-25,134],NZ:[-41,174],
-    ZA:[-29,24],NG:[9,8],EG:[27,30],KE:[0,38],AE:[24,54],SA:[24,45],IL:[31,35],PH:[12,122],ID:[-2,118],VN:[16,107],TH:[15,101],MY:[4,102],HK:[22.3,114.2],TW:[23.7,121],PK:[30,70],BD:[24,90]};
-  const ll=(lat,lon,r)=>{const ph=(90-lat)*D2R,th=(lon+180)*D2R;return new T.Vector3(-r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph),r*Math.sin(ph)*Math.sin(th));};
-  const globe=add(new T.Group());globe.position.set(0,-1.35,4.4);globe.scale.setScalar(.5);
-  const gSpin=add(new T.Group(),globe);gSpin.rotation.z=.32;
-  add(new T.Mesh(new T.SphereGeometry(GR*.985,32,24),new T.MeshBasicMaterial({color:0x021626,transparent:true,opacity:.6})),gSpin);
-  add(new T.Mesh(new T.SphereGeometry(GR,28,18),new T.MeshBasicMaterial({color:0x00e5ff,wireframe:true,transparent:true,opacity:.07,blending:T.AdditiveBlending,depthWrite:false})),gSpin);
-  { // dotted continents (rough holographic land mask)
-    const LAND=[[15,72,-168,-55],[60,83,-72,-18],[-56,12,-81,-35],[8,15,-92,-77],[36,71,-10,42],[-35,36,-17,51],[5,77,42,180],[-10,22,95,125],[-44,-11,113,154],[50,60,-10,2],[63,67,-24,-13]];
-    const N=4200,pos=[];for(let i=0;i<N;i++){const y=1-2*(i+.5)/N,lat=Math.asin(y)/D2R,lon=((i*137.508)%360)-180;
-      if(LAND.some(([a,b,c,d])=>lat>=a&&lat<=b&&lon>=c&&lon<=d)){const v=ll(lat,lon,GR*1.003);pos.push(v.x,v.y,v.z);}}
-    const g=new T.BufferGeometry();g.setAttribute("position",new T.Float32BufferAttribute(pos,3));
-    add(new T.Points(g,new T.PointsMaterial({color:0x5ff3ff,size:.045,transparent:true,opacity:.75,blending:T.AdditiveBlending,depthWrite:false})),gSpin);}
-  add(glow(0x00e5ff,GR*3.6,.16),globe);
-  const gRing1=add(new T.Mesh(new T.TorusGeometry(GR*1.28,.008,4,160),additive(0x8ff6ff,.4)),globe);gRing1.rotation.x=Math.PI/2.3;
-  const gRing2=add(new T.Mesh(new T.RingGeometry(GR*1.4,GR*1.43,128,1,0,4.2),additive(0x00e5ff,.25)),globe);gRing2.rotation.x=Math.PI/2.1;
-  
-  const gTitle=document.createElement("div");gTitle.className="lbl globe-lbl";gTitle.style.setProperty("--lc","#ff2bd6");gTitle.innerHTML="VISITORS · 7D<small>where they come from</small>";$("labels").appendChild(gTitle);
-  let gMarks=[],gList=[],gToday=null;
-  const beams=[];
-  function fireBeam(code,strong){
-    const m=gMarks.find(x=>x.code===code)||gMarks[0];if(!m)return;
-    const col=new T.Color(strong?0xffe066:0xff2bd6);
-    const line=add(new T.Line(new T.BufferGeometry().setFromPoints(Array.from({length:48},()=>new T.Vector3())),lineMat(col,0)));line.frustumCulled=false;
-    const head=add(glow(col,strong?1.2:.8,0));head.material.fog=false;line.material.fog=false;
-    beams.push({m,line,head,t0:clock.getElapsedTime(),dur:strong?1.6:2.2,strong});
-  }
-  S.setCountries=function(list,today){
-    gMarks.forEach(x=>{gSpin.remove(x.g);});gMarks=[];
-    gList=(list||[]).filter(r=>GEO[String(r.label).toUpperCase()]);
-    const max=Math.max(1,...gList.map(r=>Number(r.visitors)||0));
-    gList.forEach((r,i)=>{const code=String(r.label).toUpperCase(),[la,lo]=GEO[code],n=Number(r.visitors)||0,k=.45+.55*Math.sqrt(n/max);
-      const g=add(new T.Group(),gSpin);const p=ll(la,lo,GR*1.01);g.position.copy(p);
-      const col=i===0?0xffe066:0xff2bd6;
-      add(glow(col,.55+k*.9,.95),g);
-      const sp=add(new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(),p.clone().normalize().multiplyScalar(.25+k*.9)]),lineMat(col,.9)),g);
-      const rg=add(new T.Mesh(new T.RingGeometry(.08,.11,24),additive(col,.8)),g);rg.lookAt(p.clone().multiplyScalar(2));
-      gMarks.push({code,g,rg,n});});
-    if(gToday===null){gMarks.forEach((m,i)=>setTimeout(()=>fireBeam(m.code,false),2600+i*500));}   // intro sweep
-    else if(today>gToday&&gMarks.length){fireBeam(gMarks[0].code,true);}                            // new visitor today
-    gToday=today;
-  };
+  [nebula,panels,...meteors].forEach(o=>o.traverse(m=>{if(m.material)m.material.fog=false;}));
 
   // ===== 2) WARP JUMP into an agent =====
   scene.add(cam);
@@ -892,7 +903,6 @@ function initScene(){
     heart.scale.setScalar(1+Math.sin(t*2.2)*.06);
     stars.rotation.y=t*.006;dust.rotation.y=-t*.04*k;
     nebula.rotation.z=t*.004;nebula.children.forEach((g,i)=>{g.material.opacity=g.userData.base*(.75+.25*Math.sin(t*.3+i*1.7));});
-    planet.rotation.y=t*.05;moon.position.set(Math.cos(t*.4)*11,Math.sin(t*.4)*2,Math.sin(t*.4)*11);
     panels.children.forEach(pg=>{pg.position.y=pg.userData.y+Math.sin(t*.5+pg.userData.ph)*.4;});
     for(let i=0;i<RN;i++){const q=rSeed[i],f=(q.o+t*q.v*k)%1;rPos[i*3]=q.x;rPos[i*3+1]=9-f*16;rPos[i*3+2]=q.z;}rGeo.attributes.position.needsUpdate=true;
     if(t-meteorT>1.6+Math.random()*2){meteorT=t;const m=meteors.find(x=>t-x.userData.t0>x.userData.dur);if(m){const u=m.userData;u.t0=t;u.dur=.7+Math.random()*.6;
@@ -901,19 +911,6 @@ function initScene(){
     meteors.forEach(m=>{const u=m.userData,f=(t-u.t0)/u.dur;if(f<0||f>1){m.material.opacity=0;return;}
       const p=m.geometry.attributes.position,h=new T.Vector3().lerpVectors(u.a,u.b,f),tl=new T.Vector3().lerpVectors(u.a,u.b,Math.max(0,f-.18));
       p.setXYZ(0,h.x,h.y,h.z);p.setXYZ(1,tl.x,tl.y,tl.z);p.needsUpdate=true;m.material.opacity=.9*Math.sin(f*Math.PI);});
-    // globe
-    gSpin.rotation.y=t*.18*k;gRing1.rotation.z=t*.3*k;gRing2.rotation.z=-t*.22*k;globe.position.y=-1.35+Math.sin(t*.6)*.08;
-    gMarks.forEach((m,i)=>{const f=(t*.7+i*.3)%1;m.rg.scale.setScalar(1+f*2.4);m.rg.material.opacity=.8*(1-f);});
-    {const gp=globe.position.clone().add(new T.Vector3(GR*.5+1.6,-.2,0)).project(cam);gTitle.style.left=((gp.x*.5+.5)*innerWidth)+"px";gTitle.style.top=((-gp.y*.5+.5)*innerHeight)+"px";gTitle.style.opacity=gp.z<1&&!narrow?1:0;}
-    if(gMarks.length&&Math.random()<.004*k)fireBeam(gMarks[(Math.random()*gMarks.length)|0].code,false);   // ambient traffic
-    for(let i=beams.length-1;i>=0;i--){const b=beams[i],f=(t-b.t0)/b.dur;
-      if(f>=1){scene.remove(b.line);scene.remove(b.head);b.line.geometry.dispose();beams.splice(i,1);
-        if(b.strong){heart.scale.setScalar(1.6);}continue;}
-      const A=b.m.g.getWorldPosition(new T.Vector3()),B=new T.Vector3(0,0,0),C=A.clone().add(B).multiplyScalar(.5).add(new T.Vector3(0,4.5,1.5));
-      const pts=b.line.geometry.attributes.position,head=Math.min(1,f*1.25),tail=Math.max(0,head-.4);
-      for(let j=0;j<48;j++){const u=tail+(head-tail)*j/47,w=1-u;pts.setXYZ(j,w*w*A.x+2*w*u*C.x+u*u*B.x,w*w*A.y+2*w*u*C.y+u*u*B.y,w*w*A.z+2*w*u*C.z+u*u*B.z);}
-      pts.needsUpdate=true;b.line.material.opacity=(b.strong?1:.75)*Math.sin(Math.min(1,f*1.1)*Math.PI);
-      const u=head,w=1-u;b.head.position.set(w*w*A.x+2*w*u*C.x+u*u*B.x,w*w*A.y+2*w*u*C.y+u*u*B.y,w*w*A.z+2*w*u*C.z+u*u*B.z);b.head.material.opacity=f<.8?1:(1-f)*5;}
     // sky
     if(aurora.visible)ribbons.forEach(m=>{const pa=m.geometry.attributes.position,bs=m.userData.base;for(let j=0;j<pa.count;j++){const x=bs[j*3];
       pa.setY(j,bs[j*3+1]+Math.sin(x*.09+t*.5+m.userData.ph)*2.2+Math.sin(x*.21-t*.3)*.8);pa.setZ(j,bs[j*3+2]+Math.cos(x*.07+t*.4+m.userData.ph)*3);}pa.needsUpdate=true;
@@ -1063,7 +1060,7 @@ function openAgentNow(agentId,sessionId){
   $("vName").textContent=a.name;
   $("vMeta").textContent=[a.model,a.version!=null?"v"+a.version:null,STX[st][1],a.description].filter(Boolean).join(" · ");
   $("vSessions").innerHTML=mine.length?mine.map(s=>{const t=STX[s.status]||STX.idle;
-    return `<div class="ses" data-s="${esc(s.id)}"><b>${esc(s.title||"Untitled session")}</b><small class="${t[0]}">● ${t[1]}</small> <small>· ${esc(ago(s.updated_at||s.created_at))}</small></div>`;}).join("")
+    return `<div class="ses" data-s="${esc(s.id)}" style="--sc:${COL[s.status]||"#3d6680"}"><b>${esc(s.title||"Untitled session")}</b><small class="${t[0]}">● ${t[1]}</small> <small>· ${esc(ago(s.updated_at||s.created_at))}</small></div>`;}).join("")
     :`<div class="empty">This agent has no sessions yet.</div>`;
   const first=sessionId||(mine[0]&&mine[0].id);
   if(first)openSession(first);else $("vLog").innerHTML=`<div class="empty">Nothing to show yet.</div>`;
@@ -1076,9 +1073,11 @@ async function openSession(id,quiet){
   const j=DEMO?demoLog(id):await api("/api/agents?session="+encodeURIComponent(id)).catch(e=>({error:e.message}));
   if(VIEW.session!==id)return;
   if(j.error){box.innerHTML=`<div class="erl">Could not load the work log: ${esc(j.error)}</div>`;return;}
-  renderFiles(j.files||[]);LASTPEND=j.pending||[];
+  renderFiles(j.files||[]);LASTPEND=j.pending||[];renderTop(j);VIEW.last=j;
   const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;
-  box.innerHTML=((j.truncated?`<div class="stl">— EARLIER EVENTS HIDDEN —</div>`:"")+(j.log||[]).map(renderEvent).join(""))||`<div class="empty">No events in this session.</div>`;
+  const openSteps=[...box.querySelectorAll("details.steps")].map(d=>d.open);
+  box.innerHTML=((j.truncated?`<div class="stl">— EARLIER EVENTS HIDDEN —</div>`:"")+renderLog(j.log||[]))||`<div class="empty">No events in this session.</div>`;
+  if(quiet)box.querySelectorAll("details.steps").forEach((d,i)=>{if(openSteps[i])d.open=true;});
   if(!quiet||atBottom)box.scrollTop=box.scrollHeight;
   renderAct(j);
   const waiting=j.session&&(j.session.status==="running"||(j.pending&&j.pending.length&&VIEW.auto));
@@ -1099,7 +1098,6 @@ function renderAct(j){
   if(j.stop_reason==="budget_reached")h+=`<div class="pend"><h4>⚠ ${esc(nm.toUpperCase())} HIT THE SPEND LIMIT${ss.budget_cents!=null?" ("+usd(ss.budget_cents)+")":""}</h4>
       <div style="font-size:14px;color:var(--muted)">The work is paused, nothing is lost. Give another $3 to let ${esc(nm)} finish, or leave it here.</div>
       <div class="row"><button class="talk" id="vBudget">+ $3 budget</button></div></div>`;
-  else if(ss.budget_cents!=null)h+=`<div style="font:12px var(--mono);color:var(--muted)">SPEND ${ss.spent_cents!=null?usd(ss.spent_cents):"–"} / ${usd(ss.budget_cents)} LIMIT</div>`;
   if(j.session&&!DEMO)h+=`<div class="vrep"><input id="vMsg" placeholder="${j.session.status==="running"?"Send ":"Reply to "}${esc(nm)} — e.g. &quot;continue&quot; or new instructions" maxlength="4000"><button class="hbtn" id="vSend">Send ➤</button></div>`;
   box.innerHTML=h;
   const inp=box.querySelector("#vMsg");if(inp&&draft)inp.value=draft;
@@ -1135,19 +1133,93 @@ async function sendFollowUp(){
 }
 function renderFiles(files){
   const fmtSize=b=>b==null?"":b>1e6?(b/1e6).toFixed(1)+" MB":Math.max(1,Math.round(b/1e3))+" KB";
-  const outs=files.filter(f=>!/^data\.xlsx$|^customer_data|^nora_report\.xlsx$/i.test(f.filename)||true);
+  const outs=files;
+  $("vFileN").textContent=outs.length||"";
+  const kind=n=>{const e=(String(n).split(".").pop()||"").toLowerCase();return({xlsx:["XLSX","#3dffb0"],xls:["XLS","#3dffb0"],csv:["CSV","#9be15d"],md:["MD","#00e5ff"],txt:["TXT","#8ff6ff"],pdf:["PDF","#ff4d6d"],docx:["DOCX","#5b8cff"],pptx:["PPTX","#ff8a3d"],json:["JSON","#ffb547"],png:["PNG","#b14dff"],jpg:["JPG","#b14dff"],html:["HTML","#ff2bd6"]})[e]||[e.toUpperCase().slice(0,4)||"FILE","#8ff6ff"];};
+  const prevOk=n=>/\.(md|txt|csv|json)$/i.test(n);
+  $("vFiles").innerHTML=outs.length?outs.map(f=>{const[k,c]=kind(f.filename);return `<div class="fcard" style="--fc:${c}"><div class="fct"><div class="fic">${k}</div><div style="min-width:0"><b>${esc(f.filename)}</b><div class="fcm">${esc(fmtSize(f.size))}${f.created_at?" · "+esc(ago(f.created_at)):""}</div></div></div>
+      <div class="fca">${prevOk(f.filename)?`<button class="hbtn" data-prev="${esc(f.id)}" data-name="${esc(f.filename)}">👁 Preview</button>`:""}<button class="talk" data-dl="${esc(f.id)}" data-name="${esc(f.filename)}">⬇ Download</button></div></div>`;}).join("")
+    :`<div class="empty" style="grid-column:1/-1">No files yet. Reports the agent saves show up here.</div>`;
+  return;
   $("vFiles").innerHTML=outs.length?`<div class="fh">FILES (${outs.length})</div>`+outs.map(f=>`<div class="fl" data-file="${esc(f.id)}" data-name="${esc(f.filename)}" title="Download">⬇ <b>${esc(f.filename)}</b><small>${esc(fmtSize(f.size))}</small></div>`).join(""):"";
 }
+async function fetchFile(id){
+  const r=await fetch("/api/agents?download="+encodeURIComponent(id),{headers:{Authorization:"Bearer "+(SESSION&&SESSION.access_token)}});
+  if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||("HTTP "+r.status));}return r.blob();
+}
+function saveBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);}
+let PREV=null;
 $("vFiles").addEventListener("click",async e=>{
-  const f=e.target.closest(".fl");if(!f)return;
-  if(DEMO)return say("Demo mode – no real files.",false);
-  say("Downloading "+f.dataset.name+" …",false);
-  try{
-    const r=await fetch("/api/agents?download="+encodeURIComponent(f.dataset.file),{headers:{Authorization:"Bearer "+(SESSION&&SESSION.access_token)}});
-    if(!r.ok){const j=await r.json().catch(()=>({}));return say("Download failed: "+(j.error||r.status),false);}
-    const url=URL.createObjectURL(await r.blob());const a=document.createElement("a");a.href=url;a.download=f.dataset.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
-  }catch(err){say("Download failed: "+err.message,false);}
+  const dl=e.target.closest("[data-dl]"),pv=e.target.closest("[data-prev]");if(!dl&&!pv)return;
+  if(DEMO){if(pv)return showPreview(pv.dataset.name,"# Demo report\n\n**61 of 412** lines were late.\n\n- Bergen Mek. Verksted: 14 late lines\n- Hydraflow Systems AB: 9\n\n| Supplier | Late | OTD |\n|---|---|---|\n| Bergen Mek. | 14 | 71 % |\n| Hydraflow | 9 | 80 % |",null);return say("Demo mode – no real files.",false);}
+  const el=dl||pv,name=el.dataset.name,id=el.dataset.dl||el.dataset.prev;
+  try{const blob=await fetchFile(id);if(dl){saveBlob(blob,name);say("Downloaded "+name+".",false);}else showPreview(name,await blob.text(),blob);}
+  catch(err){say("Could not get the file: "+err.message,false);}
 });
+function showPreview(name,text,blob){
+  PREV={name,blob};$("vPrevName").textContent=name;
+  const b=$("vPrevBody");
+  if(/\.csv$/i.test(name)){const rows=text.split(/\r?\n/).filter(Boolean).slice(0,300).map(r=>r.split(/[;,](?=(?:[^"]*"[^"]*")*[^"]*$)/).map(c=>c.replace(/^"|"$/g,"")));
+    b.innerHTML=`<table class="ctab">${rows.map((r,i)=>`<tr>${r.map(c=>i?`<td>${esc(c)}</td>`:`<th>${esc(c)}</th>`).join("")}</tr>`).join("")}</table>`;}
+  else if(/\.json$/i.test(name)){let t=text;try{t=JSON.stringify(JSON.parse(text),null,2);}catch(_){}b.innerHTML=`<div class="md"><pre>${esc(t)}</pre></div>`;}
+  else b.innerHTML=`<div class="md">${md(text)}</div>`;
+  $("vPrev").classList.remove("hidden");
+}
+$("vPrevX").addEventListener("click",()=>$("vPrev").classList.add("hidden"));
+$("vPrevDl").addEventListener("click",()=>{if(PREV&&PREV.blob)saveBlob(PREV.blob,PREV.name);else say("Demo mode – no real files.",false);});
+document.querySelector("#viewer .vtabs").addEventListener("click",e=>{const t=e.target.closest(".vtab");if(!t)return;setTab(t.dataset.tab);});
+function setTab(tab){document.querySelectorAll("#viewer .vtab").forEach(b=>b.classList.toggle("on",b.dataset.tab===tab));
+  $("vLog").classList.toggle("hidden",tab!=="chat");$("vFiles").classList.toggle("hidden",tab!=="files");document.querySelector("#viewer .vsteps").style.visibility=tab==="chat"?"visible":"hidden";}
+let SHOW_STEPS=false;try{SHOW_STEPS=localStorage.getItem("lc_steps")==="1";}catch(_){}
+$("vShowSteps").checked=SHOW_STEPS;
+$("vShowSteps").addEventListener("change",e=>{SHOW_STEPS=e.target.checked;try{localStorage.setItem("lc_steps",SHOW_STEPS?"1":"0");}catch(_){}
+  $("vLog").querySelectorAll("details.steps").forEach(d=>d.open=SHOW_STEPS);});
+/* tiny, safe markdown → HTML (escape first, then format) */
+function md(src){
+  const blocks=[];let t=esc(String(src||"")).replace(/```[\w-]*\n?([\s\S]*?)```/g,(_,c)=>{blocks.push(c);return "\u0000"+(blocks.length-1)+"\u0000";});
+  const inl=x=>x.replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<em>$2</em>")
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>')
+    .replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+  const lines=t.split("\n"),out=[];let list=null,para=[],tbl=[];
+  const flushP=()=>{if(para.length){out.push("<p>"+para.map(inl).join("<br>")+"</p>");para=[];}};
+  const flushL=()=>{if(list){out.push(`<${list.t}>`+list.items.map(i=>"<li>"+inl(i)+"</li>").join("")+`</${list.t}>`);list=null;}};
+  const flushT=()=>{if(tbl.length){const rows=tbl.filter(r=>!/^\s*\|?\s*:?-{2,}/.test(r)).map(r=>r.replace(/^\s*\||\|\s*$/g,"").split("|").map(c=>c.trim()));
+      out.push("<table>"+rows.map((r,i)=>"<tr>"+r.map(c=>i?`<td>${inl(c)}</td>`:`<th>${inl(c)}</th>`).join("")+"</tr>").join("")+"</table>");tbl=[];}};
+  for(const ln of lines){let m;
+    if(/^\s*\|.*\|\s*$/.test(ln)){flushP();flushL();tbl.push(ln);continue;}else flushT();
+    if((m=ln.match(/^(#{1,3})\s+(.*)/))){flushP();flushL();out.push(`<h${m[1].length}>${inl(m[2])}</h${m[1].length}>`);}
+    else if((m=ln.match(/^\s*[-*•]\s+(.*)/))){flushP();if(!list||list.t!=="ul"){flushL();list={t:"ul",items:[]};}list.items.push(m[1]);}
+    else if((m=ln.match(/^\s*\d+[.)]\s+(.*)/))){flushP();if(!list||list.t!=="ol"){flushL();list={t:"ol",items:[]};}list.items.push(m[1]);}
+    else if(/^\s*(-{3,}|_{3,})\s*$/.test(ln)){flushP();flushL();out.push("<hr>");}
+    else if(!ln.trim()){flushP();flushL();}
+    else{flushL();para.push(ln);}}
+  flushP();flushL();flushT();
+  return out.join("").replace(/\u0000(\d+)\u0000/g,(_,i)=>"<pre>"+blocks[+i]+"</pre>");
+}
+function renderTop(j){
+  const s=j.session||{},title=s.title||((AG&&AG.sessions||[]).find(x=>x.id===VIEW.session)||{}).title||"Session";
+  const st=s.status==="running"?["run","WORKING"]:s.status==="terminated"?["off","ENDED"]:["idle","STANDING BY"];
+  const usd=c=>"$"+(c/100).toFixed(2),pct=s.budget_cents?Math.min(100,Math.round((s.spent_cents||0)/s.budget_cents*100)):0;
+  $("vTop").innerHTML=`<h4>${esc(title)}</h4><span class="pill ${st[0]}">${st[1]}</span>`+
+    (s.budget_cents!=null?`<div class="spend"><span>SPEND ${s.spent_cents!=null?usd(s.spent_cents):"–"} of ${usd(s.budget_cents)}</span><i><b style="width:${pct}%"></b></i></div>`:"")+
+    (s.created_at?`<span class="fcm">started ${esc(ago(s.created_at))}</span>`:"");
+}
+function renderLog(log){
+  const nm=(VIEW.agent&&VIEW.agent.name)||"Agent",ac=COL[(VIEW.agent&&agentState(VIEW.agent).st)||"idle"]||"#00e5ff";
+  const chat=e=>e.kind==="user"||e.kind==="agent"||e.kind==="error";
+  let html="",buf=[];
+  const flush=()=>{if(!buf.length)return;if(buf.every(e=>e.kind==="status")){buf=[];return;}const tools=buf.filter(e=>e.kind==="tool"),cnt={};tools.forEach(t=>{cnt[t.name]=(cnt[t.name]||0)+1;});
+    const sum=Object.entries(cnt).slice(0,4).map(([k,v])=>esc(k)+(v>1?" ×"+v:"")).join(", ");
+    const waiting=tools.some(t=>t.id&&LASTPEND.some(p=>p.id===t.id));
+    html+=`<details class="steps"${SHOW_STEPS||waiting?" open":""}><summary>⚙ ${tools.length||buf.length} work step${(tools.length||buf.length)==1?"":"s"}${sum?" · "+sum:""}${waiting?' · <b style="color:var(--amber)">waiting for approval</b>':""}<span class="tm">${esc(fmtTime(buf[0].time))}</span></summary><div class="inner">${buf.map(renderEvent).join("")}</div></details>`;buf=[];};
+  for(const e of log){
+    if(!chat(e)){buf.push(e);continue;}flush();
+    if(e.kind==="error"){html+=renderEvent(e);continue;}
+    const me=e.kind==="user",txt=String(e.text||""),long=me&&txt.length>420;
+    const body=me?(long?`<div class="md">${md(txt.slice(0,380))}…</div><span class="more" data-full="1">Show full instruction ▾</span><div class="md hidden full">${md(txt)}</div>`:`<div class="md">${md(txt)}</div>`):`<div class="md">${md(txt)}</div>`;
+    html+=`<div class="bub ${me?"mine":""}" style="--ac:${me?"#ffb547":ac}"><div class="av">${me?"E":esc(nm[0]||"A")}</div><div class="bubc"><div class="bubh"><span>${me?"YOU":esc(nm.toUpperCase())}</span><span class="tm">${esc(fmtTime(e.time))}</span></div>${body}</div></div>`;}
+  flush();return html;
+}
 function renderEvent(e){
   const tm=`<span class="tm">${esc(fmtTime(e.time))}</span>`;
   switch(e.kind){
@@ -1163,8 +1235,9 @@ function renderEvent(e){
   }return"";
 }
 $("vSessions").addEventListener("click",e=>{const s=e.target.closest(".ses");if(s)openSession(s.dataset.s);});
-$("vLog").addEventListener("click",e=>{const r=e.target.closest(".res");if(r)r.classList.toggle("open");});
-function closeViewer(){$("viewer").classList.add("hidden");clearInterval(VIEW.timer);VIEW={agent:null,session:null,timer:null,auto:false};LASTPEND=[];$("vAct").innerHTML="";}
+$("vLog").addEventListener("click",e=>{const r=e.target.closest(".res");if(r)r.classList.toggle("open");
+  const m=e.target.closest(".more");if(m){const c=m.closest(".bubc");c.querySelector(".full").classList.toggle("hidden");c.querySelector(".md").classList.toggle("hidden");m.textContent=m.textContent.includes("▾")?"Show less ▴":"Show full instruction ▾";}});
+function closeViewer(){$("vPrev").classList.add("hidden");setTab("chat");$("viewer").classList.add("hidden");clearInterval(VIEW.timer);VIEW={agent:null,session:null,timer:null,auto:false};LASTPEND=[];$("vAct").innerHTML="";}
 $("vClose").addEventListener("click",closeViewer);
 $("vRef").addEventListener("click",()=>VIEW.session&&openSession(VIEW.session));
 $("viewer").addEventListener("click",e=>{if(e.target.id==="viewer")closeViewer();});
@@ -1854,7 +1927,6 @@ async function loadTraffic(){
     days=(a.data||[]).map(r=>({day:String(r.day).slice(0,10),visitors:Number(r.visitors)||0,views:Number(r.views)||0}));top=b.error?[]:(b.data||[]);
   }
   const n=days.length,tod=days[n-1]||{visitors:0,views:0},yest=days[n-2]||{visitors:0};
-  try{if(S.setCountries)S.setCountries(top.filter(r=>r.kind==="country").sort((a,b)=>b.visitors-a.visitors),tod.visitors);}catch(_){}
   const sum=k=>days.slice(-k).reduce((x,d)=>x+d.visitors,0);
   const last14=days.slice(-14),max=Math.max(1,...last14.map(d=>d.visitors));
   const fmtD=d=>new Date(d+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
@@ -1894,35 +1966,33 @@ async function checkIn(){
   finally{scheduleCheckIn(false);}
 }
 function boomSound(mini){
-  // sci-fi energy blast: reverse swell → sub thump + crack → metallic shimmer → stereo echo tail
+  // heavy blast: crack → deep double sub-drop → distorted rumble → dark echo tail
   if(MUTED)return;
   try{const A=new (window.AudioContext||window.webkitAudioContext)();if(A.state==="suspended")A.resume();
-    const t0=A.currentTime+(mini?0:.18),out=A.createGain();out.gain.value=mini?.25:.6;
-    const comp=A.createDynamicsCompressor();comp.threshold.value=-10;comp.ratio.value=6;out.connect(comp).connect(A.destination);
-    // echo tail (ping-pong)
-    const dl=A.createDelay(1),dr=A.createDelay(1),fb=A.createGain(),wet=A.createGain(),pl=A.createStereoPanner(),pr=A.createStereoPanner();
-    dl.delayTime.value=.19;dr.delayTime.value=.29;fb.gain.value=.38;wet.gain.value=mini?.18:.32;pl.pan.value=-.8;pr.pan.value=.8;
-    wet.connect(dl);dl.connect(pl).connect(comp);dl.connect(dr);dr.connect(pr).connect(comp);dr.connect(fb).connect(dl);
-    const send=n=>{n.connect(out);n.connect(wet);};
-    const noise=(dur,pow)=>{const len=Math.floor(A.sampleRate*dur),b=A.createBuffer(1,len,A.sampleRate),d=b.getChannelData(0);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,pow);const s=A.createBufferSource();s.buffer=b;return s;};
-    if(!mini){ // reverse swell before the hit
-      const sw=noise(.2,.0001),bp=A.createBiquadFilter(),g=A.createGain();bp.type="bandpass";bp.Q.value=2;bp.frequency.setValueAtTime(400,t0-.18);bp.frequency.exponentialRampToValueAtTime(5000,t0);
-      g.gain.setValueAtTime(.0001,t0-.18);g.gain.exponentialRampToValueAtTime(.5,t0-.01);g.gain.linearRampToValueAtTime(0,t0);sw.connect(bp).connect(g);send(g);sw.start(t0-.18);}
-    // sub thump
-    const o=A.createOscillator(),og=A.createGain();o.type="sine";o.frequency.setValueAtTime(95,t0);o.frequency.exponentialRampToValueAtTime(26,t0+1.1);
-    og.gain.setValueAtTime(.0001,t0);og.gain.exponentialRampToValueAtTime(1.2,t0+.01);og.gain.exponentialRampToValueAtTime(.0001,t0+1.5);o.connect(og).connect(out);o.start(t0);o.stop(t0+1.6);
-    // crack + debris
-    const n=noise(mini?.8:1.8,3),hp=A.createBiquadFilter(),lp=A.createBiquadFilter(),ng=A.createGain();
-    hp.type="highpass";hp.frequency.value=90;lp.type="lowpass";lp.frequency.setValueAtTime(9000,t0);lp.frequency.exponentialRampToValueAtTime(180,t0+(mini?.7:1.6));ng.gain.value=.65;
-    n.connect(hp).connect(lp).connect(ng);send(ng);n.start(t0);
-    // metallic shimmer (inharmonic partials)
-    [523,1307,2113,3391].forEach((f,i)=>{const m=A.createOscillator(),mg=A.createGain();m.type=i%2?"triangle":"sine";m.frequency.setValueAtTime(f,t0);m.frequency.exponentialRampToValueAtTime(f*.82,t0+1.4);
-      mg.gain.setValueAtTime(.0001,t0);mg.gain.exponentialRampToValueAtTime(.07/(i+1),t0+.02);mg.gain.exponentialRampToValueAtTime(.0001,t0+(mini?.6:1.5));m.connect(mg);send(mg);m.start(t0);m.stop(t0+1.6);});
-    // rising energy zap
-    const z=A.createOscillator(),zg=A.createGain(),zf=A.createBiquadFilter();z.type="square";zf.type="bandpass";zf.Q.value=6;
-    z.frequency.setValueAtTime(110,t0+.04);z.frequency.exponentialRampToValueAtTime(2400,t0+.45);zf.frequency.setValueAtTime(600,t0);zf.frequency.exponentialRampToValueAtTime(4000,t0+.45);
-    zg.gain.setValueAtTime(.0001,t0);zg.gain.exponentialRampToValueAtTime(.09,t0+.06);zg.gain.exponentialRampToValueAtTime(.0001,t0+.55);z.connect(zf).connect(zg);send(zg);z.start(t0);z.stop(t0+.6);
-    setTimeout(()=>A.close(),4000);}catch(_){}
+    const t0=A.currentTime+.02,L=mini?.45:1,out=A.createGain();out.gain.value=mini?.45:.95;
+    const comp=A.createDynamicsCompressor();comp.threshold.value=-14;comp.knee.value=6;comp.ratio.value=8;comp.attack.value=.002;comp.release.value=.4;out.connect(comp).connect(A.destination);
+    const noise=(dur,pow)=>{const len=Math.floor(A.sampleRate*dur),b=A.createBuffer(2,len,A.sampleRate);for(let c=0;c<2;c++){const d=b.getChannelData(c);let last=0;
+      for(let i=0;i<len;i++){const w=Math.random()*2-1;last=(last+.04*w)/1.04;d[i]=(w*.35+last*3.2)*Math.pow(1-i/len,pow);}}const s=A.createBufferSource();s.buffer=b;return s;};
+    const curve=k=>{const n=2048,c=new Float32Array(n);for(let i=0;i<n;i++){const x=i*2/n-1;c[i]=(1+k)*x/(1+k*Math.abs(x));}return c;};
+    // dark echo
+    const dl=A.createDelay(1.5),fb=A.createGain(),dlp=A.createBiquadFilter(),wet=A.createGain();dl.delayTime.value=.34;fb.gain.value=.32;dlp.type="lowpass";dlp.frequency.value=700;wet.gain.value=mini?.12:.28;
+    wet.connect(dl);dl.connect(dlp).connect(fb).connect(dl);dlp.connect(comp);
+    // 1) crack
+    const cr=noise(.14,4),chp=A.createBiquadFilter(),cg=A.createGain();chp.type="highpass";chp.frequency.value=1100;cg.gain.value=mini?.35:.6;cr.connect(chp).connect(cg).connect(out);cr.start(t0);
+    // 2) double sub-drop
+    [[62,19,1.5],[47,16,1.1]].forEach(([f0,f1,gv])=>{const o=A.createOscillator(),g=A.createGain();o.type="sine";o.frequency.setValueAtTime(f0,t0);o.frequency.exponentialRampToValueAtTime(f1,t0+2.4*L);
+      g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(gv,t0+.012);g.gain.setTargetAtTime(.0001,t0+.25*L,.55*L);o.connect(g).connect(out);o.start(t0);o.stop(t0+3.2*L);});
+    // punchy body (short low thump)
+    const th=A.createOscillator(),tg=A.createGain();th.type="triangle";th.frequency.setValueAtTime(150,t0);th.frequency.exponentialRampToValueAtTime(45,t0+.18);
+    tg.gain.setValueAtTime(.9,t0);tg.gain.exponentialRampToValueAtTime(.0001,t0+.35);th.connect(tg).connect(out);th.start(t0);th.stop(t0+.4);
+    // 3) distorted rumble
+    const rn=noise(3.6*L,1.5),rlp=A.createBiquadFilter(),ws=A.createWaveShaper(),rg=A.createGain(),rlp2=A.createBiquadFilter();
+    rlp.type="lowpass";rlp.frequency.setValueAtTime(1600,t0);rlp.frequency.exponentialRampToValueAtTime(70,t0+3*L);ws.curve=curve(30);ws.oversample="4x";
+    rlp2.type="lowpass";rlp2.frequency.value=2200;rg.gain.setValueAtTime(.0001,t0);rg.gain.exponentialRampToValueAtTime(.85,t0+.04);rg.gain.exponentialRampToValueAtTime(.0001,t0+3.6*L);
+    rn.connect(rlp).connect(ws).connect(rlp2).connect(rg);rg.connect(out);rg.connect(wet);rn.start(t0);
+    // 4) debris settling (low bandpassed crumble)
+    if(!mini){const dn=noise(2.8,2.2),bp=A.createBiquadFilter(),dg=A.createGain();bp.type="bandpass";bp.frequency.value=320;bp.Q.value=.8;dg.gain.setValueAtTime(.0001,t0+.3);dg.gain.exponentialRampToValueAtTime(.35,t0+.6);dg.gain.exponentialRampToValueAtTime(.0001,t0+3.1);dn.connect(bp).connect(dg);dg.connect(out);dg.connect(wet);dn.start(t0+.3);}
+    setTimeout(()=>A.close(),6000);}catch(_){}
 }
 window.introBoom=introBoom;
 function miniBoom(){
