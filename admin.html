@@ -719,6 +719,8 @@ function initScene(){
     add(new T.LineSegments(new T.EdgesGeometry(new T.PlaneGeometry(w,h)),lineMat(i%2?0xff2bd6:0x00e5ff,.35)),pg);
     for(let k=0;k<4;k++){const bar=add(new T.Mesh(new T.PlaneGeometry(w*.7*(.3+Math.random()*.7),.06),additive(i%2?0xff2bd6:0x00e5ff,.35)),pg);bar.position.set(-w*.12,h*.3-k*h*.2,0);}
     const a=i/7*Math.PI*2;pg.position.set(Math.cos(a)*16,(Math.random()-.3)*6,-14+Math.sin(a)*5);pg.lookAt(0,0,0);pg.userData={a,y:pg.position.y,ph:Math.random()*6};}
+  // far-away scenery must not fade out in the fog
+  [nebula,planet,panels,...meteors].forEach(o=>o.traverse(m=>{if(m.material)m.material.fog=false;}));
 
   // bloom post-processing (falls back to plain rendering if the scripts are missing)
   let composer=null,bloom=null;
