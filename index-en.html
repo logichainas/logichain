@@ -229,6 +229,16 @@ input[type=range]::-moz-range-thumb{width:24px;height:24px;border:0;border-radiu
 .cmp td.us::before{content:"✓ ";color:var(--green);font-weight:700}
 
 /* faq */
+.arts{padding-top:40px}
+.art-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.art{display:block;padding:26px;border-radius:var(--r);background:var(--card);border:1px solid var(--line);backdrop-filter:blur(12px);transition:border-color .25s,transform .25s}
+.art:hover{border-color:var(--line2);transform:translateY(-4px)}
+.art .eyebrow{font-size:11.5px}.art .eyebrow::before{display:none}
+.art h3{font-size:21px;margin:12px 0 10px}
+.art p{color:var(--muted);font-size:15.5px}
+.art .go{display:inline-block;margin-top:14px;color:var(--cyan);font-weight:600;font-size:14.5px}
+.art-all{text-align:center;margin-top:30px}
+@media(max-width:900px){.art-grid{grid-template-columns:1fr}}
 .faq{max-width:860px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
 .qa{border-radius:16px;border:1px solid var(--line);background:var(--card);overflow:hidden;transition:border-color .3s}
 .qa[open]{border-color:var(--line2)}
@@ -535,6 +545,15 @@ footer a:hover{color:#fff}
   </div>
 </section>
 
+<!-- ARTICLES -->
+<section id="artikler" class="arts">
+  <div class="wrap">
+    <div class="sec-head c rv"><span class="eyebrow">Articles</span><h2>Learn more about purchasing</h2><p>Practical guides on delivery performance, supplier follow-up and spend analysis (in Norwegian).</p></div>
+    <div class="art-grid"><a class="art rv" href="/artikler/nokkeltall-innkjop-kpi/"><span class="eyebrow">Innkjøpsstyring</span><h3>Nøkkeltall for innkjøp: 10 KPI-er som faktisk betyr noe</h3><p>Ti nøkkeltall for leveranse, kostnad, risiko og prosess – med definisjon og utregning.</p><span class="go">Read (Norwegian) →</span></a><a class="art rv" href="/artikler/leveringspresisjon-otd/"><span class="eyebrow">Leverandøroppfølging</span><h3>Leveringspresisjon (OTD): slik måler du det riktig</h3><p>Hvilken dato, hvilken toleranse og hvilke feil som får tallet til å lyve.</p><span class="go">Read (Norwegian) →</span></a><a class="art rv" href="/artikler/restordre-purring-leverandor/"><span class="eyebrow">Leverandøroppfølging</span><h3>Restordre og purring: slik får du kontroll</h3><p>En ukentlig metode for forsinkede leveranser – fra restordreliste til opprydding.</p><span class="go">Read (Norwegian) →</span></a></div>
+    <div class="art-all rv"><a class="btn btn-g" href="/artikler/">See all articles →</a></div>
+  </div>
+</section>
+
 <!-- FAQ -->
 <section id="faq">
   <div class="wrap">
@@ -586,13 +605,12 @@ footer a:hover{color:#fff}
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 (function(){
 "use strict";
 const T={"locale": "en-GB", "unit": "MNOK", "demo": "logichain-dashboard-demo-en.html", "mailSubject": "Logichain – enquiry from", "mailCompany": "Company", "yourDash": "Your dashboard", "signOut": "Log out", "loginBtn": "Log in", "loginDown": "Login is temporarily unavailable. Please try again shortly.", "loginWrong": "Wrong email or password.", "loginUnconfirmed": "Your email is not confirmed yet. Please contact us.", "pwTitle": "Set your password", "pwSub": "Invitation accepted – choose a password to finish.", "pwNew": "New password (min. 6 characters)", "pwRepeat": "Repeat the password", "pwSave": "Save password", "pwMismatch": "The passwords don't match.", "pwDone": "Password set!", "pwDoneSub": "You can now log in with your email and the new password."};
 const RM=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const loadJS=src=>new Promise((ok,no)=>{const s=document.createElement("script");s.src=src;s.async=true;s.onload=ok;s.onerror=no;document.head.appendChild(s);});
 
 /* ---------- header ---------- */
 const hdr=document.getElementById("hdr");
@@ -692,22 +710,26 @@ function net(){
     arcs.forEach(a=>{const f=(t*a.s+a.o)%1;a.p.position.copy(a.curve.getPoint(f));a.p.material.opacity=Math.sin(f*Math.PI);});
     R.render(scene,cam);})();
 }
-try{net();}catch(e){console.warn(e);}
+// load the 3D library only after the page has rendered, so text shows immediately
+if(!RM){const go=()=>loadJS("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js").then(()=>{try{net();}catch(e){console.warn(e);}}).catch(()=>{});
+  const idle=()=>("requestIdleCallback" in window)?requestIdleCallback(go,{timeout:2500}):setTimeout(go,600);
+  if(document.readyState==="complete")idle();else addEventListener("load",idle,{once:true});}
 
 /* ---------- login (Supabase) ---------- */
-const SUPABASE={url:"https://iksnoymoqvweudilfuzy.supabase.co",anonKey:"sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH"};let sb=null;
-try{if(window.supabase)sb=window.supabase.createClient(SUPABASE.url,SUPABASE.anonKey);}catch(_){}
-window.openLogin=function(){document.getElementById("loginBg").classList.add("show");setTimeout(()=>{const i=document.getElementById("lmail");i&&i.focus();},50);};
+const SUPABASE={url:"https://iksnoymoqvweudilfuzy.supabase.co",anonKey:"sb_publishable_hlieTwPa1c6v0I67KqXBng_pSnJ_iIH"};let sb=null,sbP=null;
+// Supabase is only needed for login, so it is loaded on demand
+function getSb(){if(sb)return Promise.resolve(sb);if(!sbP)sbP=loadJS("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js").then(()=>{sb=window.supabase.createClient(SUPABASE.url,SUPABASE.anonKey);return sb;}).catch(()=>{sbP=null;return null;});return sbP;}
+window.openLogin=function(){getSb();document.getElementById("loginBg").classList.add("show");setTimeout(()=>{const i=document.getElementById("lmail");i&&i.focus();},50);};
 window.closeLogin=function(){document.getElementById("loginBg").classList.remove("show");};
 addEventListener("keydown",e=>{if(e.key==="Escape")closeLogin();});
 
 // invitation links: #access_token=…&refresh_token=… → set a password
 (function(){
-  if(!location.hash||location.hash.indexOf("access_token")<0||!sb)return;
+  if(!location.hash||location.hash.indexOf("access_token")<0)return;
   const p=new URLSearchParams(location.hash.slice(1)),at=p.get("access_token"),rt=p.get("refresh_token");
   if(!at||!rt)return;
   history.replaceState(null,"",location.pathname+location.search);
-  sb.auth.setSession({access_token:at,refresh_token:rt}).then(({error})=>{
+  getSb().then(sb=>sb&&sb.auth.setSession({access_token:at,refresh_token:rt}).then(({error})=>{
     if(error)return;
     const m=document.getElementById("loginBg");
     m.querySelector(".modal").innerHTML=`<div class="mh"><div><h2>${T.pwTitle}</h2><small>${T.pwSub}</small></div></div>
@@ -722,15 +744,16 @@ addEventListener("keydown",e=>{if(e.key==="Escape")closeLogin();});
       if(error){err.textContent=error.message;err.style.display="block";return;}
       m.querySelector(".modal").innerHTML=`<div style="text-align:center;padding:10px"><div style="font-size:40px">✅</div><h2 style="margin:10px 0">${T.pwDone}</h2><p style="color:var(--muted);font-size:15px">${T.pwDoneSub}</p><button class="btn btn-p" style="margin-top:16px" onclick="location.reload()">${T.loginBtn}</button></div>`;
     });
-  });
+  }));
 })();
 
 document.getElementById("loginForm").addEventListener("submit",async e=>{
   e.preventDefault();
   const em=document.getElementById("lmail").value.trim(),pw=document.getElementById("lpass").value,err=document.getElementById("lerr");
   err.style.display="none";
-  if(!sb){err.textContent=T.loginDown;err.style.display="block";return;}
   const btn=e.submitter||e.target.querySelector("button");btn.disabled=true;
+  await getSb();
+  if(!sb){btn.disabled=false;err.textContent=T.loginDown;err.style.display="block";return;}
   const{data,error}=await sb.auth.signInWithPassword({email:em,password:pw});
   btn.disabled=false;
   if(error){err.textContent=error.message.toLowerCase().includes("confirm")?T.loginUnconfirmed:T.loginWrong;err.style.display="block";return;}
@@ -747,7 +770,7 @@ document.getElementById("loginForm").addEventListener("submit",async e=>{
   if(!s||!b)return;
   b.textContent=T.yourDash;b.onclick=function(){location.href=s.portal||T.demo;return false;};
   const out=document.createElement("a");out.className="btn btn-g";out.textContent=T.signOut;out.href="#";out.style.cssText="padding:10px 14px;font-size:14px";
-  out.onclick=async function(){try{if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");}catch(_){}location.reload();return false;};
+  out.onclick=async function(){try{await getSb();if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");}catch(_){}location.reload();return false;};
   b.parentNode.insertBefore(out,b);
   const d=document.querySelector(".nav .demo");if(d)d.style.display="none";
 })();
