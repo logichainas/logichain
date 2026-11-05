@@ -419,7 +419,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 
     <section class="side r">
       <div class="panel br" style="flex:1.1;min-height:0">
-        <div class="ph"><h2>AGENT ROSTER</h2><span><span id="aCount"></span> <button class="mini" id="briefBtn" title="Give an agent a task">+ BRIEF</button> <button class="mini" id="newAgentBtn" title="Create a new agent">+ AGENT</button></span></div>
+        <div class="ph"><h2>AGENT ROSTER</h2><span><span id="aCount"></span> <button class="mini" id="ceoBtn" title="Ask the CEO agent for this week's action plan">CEO PLAN</button> <button class="mini" id="briefBtn" title="Give an agent a task">+ BRIEF</button> <button class="mini" id="newAgentBtn" title="Create a new agent">+ AGENT</button></span></div>
         <div class="scroll" id="roster"><div class="empty">Scanning agent network …</div></div>
       </div>
       <div class="panel br" style="flex:0 0 auto" id="trPanel">
@@ -993,6 +993,82 @@ $("bfForm").addEventListener("submit",async e=>{
 });
 
 
+/* ================= CEO · WEEKLY ACTION PLAN ================= */
+// The CEO agent only works when briefed. Jarvis briefs him with this week's numbers once a week (first visit on/after Monday)
+// and on demand via the CEO PLAN button. He answers with a concrete action plan aimed at one goal: more customers.
+const CEO_TITLE="Handlingsplan";
+function ceoAgent(){return AG?liveAgents().find(a=>/ceo/i.test(a.name)):null;}
+function isoWeek(d){d=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=d.getUTCDay()||7;d.setUTCDate(d.getUTCDate()+4-n);
+  const y=new Date(Date.UTC(d.getUTCFullYear(),0,1));return Math.ceil(((d-y)/864e5+1)/7);}
+function lastCeoPlan(){const a=ceoAgent();if(!a||!AG)return null;
+  return (AG.sessions||[]).filter(x=>x.agent_id===a.id&&String(x.title||"").startsWith(CEO_TITLE)).sort((x,y)=>new Date(y.created_at)-new Date(x.created_at))[0]||null;}
+function ceoTask(){
+  const now=new Date(),wk=isoWeek(now),day=864e5;
+  const leads=LEADS.filter(x=>Date.now()-new Date(x.created_at)<30*day).map(x=>({firma:x.company,dato:String(x.created_at).slice(0,10),fulgt_opp:!!x.handled,land:x.country||null}));
+  const others=(AG?liveAgents():[]).filter(a=>!/ceo/i.test(a.name)).map(a=>{const{mine}=agentState(a);
+    return{agent:a.name,rolle:a.description||"",siste_oppdrag:mine.slice(0,4).map(x=>({tittel:x.title,status:x.status,sist_aktiv:String(x.updated_at||x.created_at||"").slice(0,10)}))};});
+  const data={
+    dato:now.toISOString().slice(0,10),uke:wk,
+    nettside_trafikk:TRAFFIC||"ikke tilgjengelig",
+    demo_registreringer_30d:leads,
+    apne_oppdrag_hos_einar:TODOS.filter(t=>!t.done).map(t=>({oppgave:t.text,prioritet:t.priority,frist:t.due||null})),
+    fullforte_oppdrag_nylig:TODOS.filter(t=>t.done).slice(0,8).map(t=>t.text),
+    agentene:others,
+    kundeleveranser_pipeline:RUNS.slice(0,6).map(r=>({status:r.status,oppdatert:String(r.updated_at||"").slice(0,10)})),
+    antall_aktive_kunder:Array.isArray(KUNDER)?KUNDER.length:null
+  };
+  return `Du er CEO-agenten for Logichain. Lag ukas HANDLINGSPLAN (uke ${wk}). Felles mål: FLERE BETALENDE KUNDER.
+
+OM LOGICHAIN (fakta – ikke finn på annet):
+- Norsk oppstartsselskap (ENK) i Arendal. Grunnlegger: Einar Fredriksen, som jobber med Logichain ved siden av fast jobb – han har begrenset tid, typisk kvelder og noen timer i helgene.
+- Produkt: innkjøpsanalyse og leverandøroppfølging. Kunden sender Excel-eksport fra ERP (SAP, Visma, Business Central m.fl.) eller leverandørrapporter; Logichain lager dashboard med spend, leveringspresisjon (OTD), leverandørrating, åpne ordrer og dokumentert sparepotensial. AI-analytiker (Nora) + kvalitetssikring før publisering. Ingen integrasjon/IT-prosjekt.
+- Pris (tilbudsmal): oppsett 30 000 kr + abonnement 12 500 kr/mnd (10 500 kr/mnd ved forhåndsbetaling av ett år). 12 mnd binding.
+- Inngangstilbud som anbefales: pilotanalyse av kundens innkjøpsdata siste 12 mnd, rapport innen en uke, gratis eller lav pris som trekkes fra ved videre avtale.
+- Målgruppe: industri, maritim og handel, 50–500 ansatte, innkjøpssjef / supply chain-leder / økonomisjef. Start i Agder og Vestlandet.
+- Markedsføring på plass: logichain.no med demo (krever navn/e-post/firma), 5 fagartikler og 3 landingssider (innkjøpsdashboard, leverandøroppfølging, spendanalyse), Google Search Console og Bing, Google Business-profil under bekreftelse, LinkedIn-bedriftsside. Einar har en liste med 40 målbedrifter med ferdige e-poster.
+- Agenter: Isak (leadgenerering/research), Anna (økonomi/admin), Nora og Lucas (kundedata-pipeline – ikke salg).
+- Regler: Ingen agent sender noe eksternt uten Einars godkjenning. Kunden MacGregor skal aldri nevnes i markedsføring eller utsendelser, og deres tall brukes ikke som referanse.
+
+UKAS DATA (fra Jarvis, ${data.dato}):
+${JSON.stringify(data,null,1)}
+
+LEVER (på norsk, kort og konkret – maks én side å lese):
+1. Status i tre setninger: hvor står vi mot målet, hva sier tallene. Ikke finn opp tall – mangler noe, si det.
+2. Ukas mål: 2–3 målbare mål (f.eks. «10 e-poster sendt», «2 møter booket»).
+3. Topp 3 prioriteringer med kort begrunnelse – det som gir flest kunder raskest.
+4. Einars oppgaveliste for uka: maks 6 punkter, hver med estimert tidsbruk, sortert etter verdi. Realistisk for noen timer i uka.
+5. Lead-oppfølging: hvilke demo-registreringer som skal følges opp nå og hvordan (ett kort forslag til første setning per lead).
+6. Oppdrag til agentene: ferdig formulerte brief-tekster til Isak og/eller Anna som Einar kan lime rett inn. Ikke send noe selv.
+7. Hva vi skal SLUTTE med eller vente med.
+8. KPI-er å sjekke neste mandag.
+Bruk gjerne nettsøk for konkrete ting (arrangementer for innkjøpere i Agder/Vestlandet de neste ukene, nye målbedrifter), og oppgi kilde.
+Lagre planen også som fil /mnt/session/outputs/handlingsplan-uke-${wk}.md og avslutt med planen i svaret ditt.`;
+}
+async function startCeoPlan(auto){
+  const a=ceoAgent();
+  if(!a){if(!auto)say("I can't find a CEO agent in the roster boss.",false);return;}
+  if(DEMO){if(!auto)say("Demo mode – CEO plan not sent.",false);return;}
+  if(!auto)say("Briefing the CEO with this week's numbers boss. Plan coming up.",false);
+  let j;
+  try{const r=await fetch("/api/agents",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(SESSION&&SESSION.access_token)},
+      body:JSON.stringify({agent_id:a.id,task:ceoTask(),title:CEO_TITLE+" uke "+isoWeek(new Date())})});
+    j=await r.json().catch(()=>({error:"HTTP "+r.status}));if(!r.ok&&!j.error)j.error="HTTP "+r.status;}catch(e){j={error:e.message};}
+  if(j.error){if(!auto)say("CEO brief failed: "+j.error,false);return;}
+  try{localStorage.setItem("lc_ceo_week",String(isoWeek(new Date())));}catch(_){}
+  if(auto)say("Fresh week boss. I've asked the CEO for this week's action plan – it'll be in his log shortly.",false);
+  await loadAgents();if(!auto)openAgent(j.session.agent_id,j.session.id);
+}
+async function maybeAutoCeoPlan(){
+  // once per ISO week, after the data panels have loaded
+  if(DEMO||!AG)return;
+  const wk=String(isoWeek(new Date()));let seen=null;try{seen=localStorage.getItem("lc_ceo_week");}catch(_){}
+  if(seen===wk)return;
+  const last=lastCeoPlan();
+  if(last&&String(last.title||"").endsWith(" uke "+wk)){try{localStorage.setItem("lc_ceo_week",wk);}catch(_){}return;}
+  await startCeoPlan(true);
+}
+$("ceoBtn").addEventListener("click",e=>{e.stopPropagation();startCeoPlan(false);});
+
 /* ================= CREATE AN AGENT ================= */
 const AGENT_TEMPLATES=[
   {key:"anna",label:"Anna · Finance & Admin",name:"Anna",model:"claude-sonnet-5-5",
@@ -1180,6 +1256,7 @@ const CMDS={
   agents:()=>{if(!AG)return say("The agent network is offline.");const a=liveAgents();say(a.length?a.map(x=>x.name+" ("+STX[agentState(x).st][1].toLowerCase()+")").join(", ")+".":"No agents registered.");},
   missions:()=>{const o=TODOS.filter(t=>!t.done);say(o.length?o.slice(0,6).map((t,i)=>(i+1)+". "+t.text).join("   "):"No open missions.");},
   refresh:()=>{refresh();say("Refreshing all systems.");},
+  "ceo plan":()=>startCeoPlan(false),
   voice:()=>toggleVoice(),
   "sign out":()=>logout(),
 };
@@ -1189,7 +1266,7 @@ $("cForm").addEventListener("submit",e=>{e.preventDefault();const raw=$("cIn").v
   if((m=raw.match(/^(open|show)\s+(.+)/i))){const a=findAgent(m[2]);return a?openAgent(a.id):say("I couldn't find an agent called "+m[2]+".",false);}
   if((m=raw.match(/^(link|go to|goto)\s+(.+)/i))){const q=m[2].toLowerCase();const l=LINKS.find(x=>x.title.toLowerCase().includes(q));
     if(!l||!safeUrl(l.url))return say("No link matching "+m[2]+".",false);say("Opening "+l.title+".");return window.open(safeUrl(l.url),/^https?:/i.test(l.url)?"_blank":"_self");}
-  const alias={"?":"help",report:"status",hello:"status",hi:"status",agent:"agents",todo:"missions",todos:"missions",tasks:"missions",logout:"sign out","log out":"sign out",reload:"refresh"};
+  const alias={"?":"help",report:"status",hello:"status",hi:"status",agent:"agents",todo:"missions",todos:"missions",tasks:"missions",logout:"sign out","log out":"sign out",reload:"refresh",ceo:"ceo plan",plan:"ceo plan",handlingsplan:"ceo plan"};
   const key=CMDS[v]?v:alias[v];if(key&&key!=="status")return CMDS[key]();
   const a=findAgent(v);if(a&&v.split(/\s+/).length<=2)return openAgent(a.id);
   askJarvis(raw,false);
@@ -1625,6 +1702,7 @@ function start(){
   setTimeout(introBoom,bootWait);
   setTimeout(greetOnLogin,bootWait+1100);
   scheduleCheckIn(true);
+  setTimeout(()=>{maybeAutoCeoPlan().catch(()=>{});},12000);
 
 }
 async function verify(){
