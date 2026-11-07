@@ -78,6 +78,9 @@ button,input,select{font-family:var(--ui)}
 .lead a{color:var(--cyan);text-decoration:none}
 .lead .ld-ok{margin-left:auto;flex:none}
 .lead.done{opacity:.55}
+.ld-cp{background:none;border:1px solid var(--line);color:var(--cyan);font:11px var(--mono);padding:1px 6px;margin-left:6px;cursor:pointer;border-radius:3px;vertical-align:1px}
+.ld-cp:hover{border-color:var(--cyan);box-shadow:var(--glow)}.ld-cp.ok{color:var(--green);border-color:var(--green)}
+#ldCopyAll{margin-left:8px}
 .tr-top{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
 .tr-big{font:700 34px/1 var(--hud);color:var(--cyan2);text-shadow:0 0 14px rgba(0,229,255,.6)}
 .tr-big small{display:block;font:600 10px var(--hud);letter-spacing:.2em;color:var(--muted);margin-top:6px;text-shadow:none}
@@ -461,7 +464,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
         <div class="scroll" id="approvals"><div class="empty">Loading pipeline …</div></div>
       </div>
       <div class="panel br" style="flex:.7;min-height:0">
-        <div class="ph"><h2>DEMO LEADS</h2><span id="ldCount"></span></div>
+        <div class="ph"><h2>DEMO LEADS</h2><span id="ldCount"></span><button class="mini" id="ldCopyAll" title="Copy the e-mail addresses of everyone not followed up yet">⧉ COPY ALL</button></div>
         <div class="scroll" id="leads"><div class="empty">Loading …</div></div>
       </div>
       <div class="panel br" style="flex:1">
@@ -1904,11 +1907,25 @@ function renderLeads(){
   const day=864e5,now=Date.now(),today=LEADS.filter(x=>now-new Date(x.created_at)<day).length,week=LEADS.filter(x=>now-new Date(x.created_at)<7*day).length;
   $("ldCount").textContent=LEADS.length?`${today} today · ${week} 7d`:"";
   $("leads").innerHTML=LEADS.length?LEADS.slice(0,30).map(x=>`<div class="lead ${x.handled?"done":""}" data-id="${x.id}"><i class="ld-dot"></i>
-      <div style="min-width:0"><b>${esc(x.name)}</b> · ${esc(x.company)}<small><a href="mailto:${esc(x.email)}?subject=${encodeURIComponent("Logichain – takk for at du så demoen")}">${esc(x.email)}</a> · ${esc(ago(x.created_at))}${x.country?" · "+esc(x.country):""}</small></div>
+      <div style="min-width:0"><b>${esc(x.name)}</b> · ${esc(x.company)}<small><a href="mailto:${esc(x.email)}?subject=${encodeURIComponent("Logichain – takk for at du så demoen")}">${esc(x.email)}</a><button class="ld-cp" data-cp="${esc(x.email)}" title="Copy e-mail address">⧉ copy</button> · ${esc(ago(x.created_at))}${x.country?" · "+esc(x.country):""}</small></div>
       <button class="mini ld-ok" data-ld="${x.id}" title="${x.handled?"Mark as not followed up":"Mark as followed up"}">${x.handled?"↺":"✓"}</button></div>`).join("")
     :`<div class="empty">No demo sign-ups yet. Everyone who opens the demo on logichain.no shows up here.</div>`;
 }
+async function copyText(t){
+  try{await navigator.clipboard.writeText(t);return true;}catch(_){
+    const ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();
+    let ok=false;try{ok=document.execCommand("copy");}catch(__){}ta.remove();return ok;}
+}
+function flashCopied(btn,label){const old=btn.textContent;btn.textContent="✓ copied";btn.classList.add("ok");setTimeout(()=>{btn.textContent=label||old;btn.classList.remove("ok");},1400);}
+$("ldCopyAll").addEventListener("click",async e=>{
+  const btn=e.currentTarget,list=LEADS.filter(x=>!x.handled).map(x=>x.email);
+  if(!list.length)return say("Everyone is followed up already boss.",false);
+  if(await copyText(list.join("; "))){flashCopied(btn,"⧉ COPY ALL");say(`Copied ${list.length} e-mail address${list.length>1?"es":""} – paste them into the To or Bcc field.`,false);}
+  else say("Couldn't copy – your browser blocked it.",false);
+});
 $("leads").addEventListener("click",async e=>{
+  const cp=e.target.closest("[data-cp]");
+  if(cp){e.preventDefault();if(await copyText(cp.dataset.cp))flashCopied(cp,"⧉ copy");else say("Couldn't copy – your browser blocked it.",false);return;}
   const b=e.target.closest("[data-ld]");if(!b)return;const x=LEADS.find(l=>String(l.id)===b.dataset.ld);if(!x)return;
   x.handled=!x.handled;renderLeads();
   if(!DEMO){const r=await sb.from("demo_leads").update({handled:x.handled}).eq("id",x.id);if(r.error){x.handled=!x.handled;renderLeads();say("Couldn't save: "+r.error.message,false);}}
