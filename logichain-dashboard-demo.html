@@ -6,6 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Logichain Dashboard – Demo</title>
+<link rel="canonical" href="https://logichain.no/logichain-dashboard-demo">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
 :root{
@@ -143,8 +144,8 @@ rect.clickable:hover{fill:#6db3ff}
     <input type="text" id="globalSearch" placeholder="🔍 Søk leverandør, materiale, PO ..." oninput="doSearch()" onfocus="doSearch()">
     <div class="sdd" id="searchDD"></div>
   </div>
-  <a class="home-btn" href="logichain-dashboard-demo-en.html" title="Switch to English" aria-label="Switch to English"><svg aria-hidden="true" style="display:block;border-radius:2px" width="21" height="11" viewBox="0 0 60 30"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="2.5"/><rect x="27" width="6" height="30" fill="#fff"/><rect y="12" width="60" height="6" fill="#fff"/><rect x="28.5" width="3" height="30" fill="#C8102E"/><rect y="13.5" width="60" height="3" fill="#C8102E"/></svg></a>
-  <a class="home-btn" href="index.html">← Tilbake til nettsiden</a>
+  <a class="home-btn" href="/logichain-dashboard-demo-en" title="Switch to English" aria-label="Switch to English"><svg aria-hidden="true" style="display:block;border-radius:2px" width="21" height="11" viewBox="0 0 60 30"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="2.5"/><rect x="27" width="6" height="30" fill="#fff"/><rect y="12" width="60" height="6" fill="#fff"/><rect x="28.5" width="3" height="30" fill="#C8102E"/><rect y="13.5" width="60" height="3" fill="#C8102E"/></svg></a>
+  <a class="home-btn" href="/">← Tilbake til nettsiden</a>
   <a class="home-btn" id="logoutBtn" href="#" onclick="doLogout();return false" style="display:none">Logg ut</a>
   <span class="demo-badge">DEMO DATA</span>
   <span class="online">● Online</span>
@@ -1080,7 +1081,7 @@ goto(document.querySelector(".tabs button.active").dataset.tab);
   const lb=document.getElementById("logoutBtn");
   if(lb&&window.__SESS)lb.style.display="inline-block";
 })();
-window.doLogout=async function(){if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");location.href="index.html";};
+window.doLogout=async function(){if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");location.href="/";};
 
 /* ================= OCTOPART-FANE ================= */
 window.renderOctoTab=function(){
@@ -1153,7 +1154,7 @@ __render();
     <div class="dg-err" id="dgErr" role="alert"></div>
     <button type="submit" id="dgBtn">Åpne demoen →</button>
     <p class="dg-legal">Vi bruker opplysningene bare til å følge opp interessen din for Logichain. Ingen nyhetsbrev uten at du ber om det.</p>
-    <a class="dg-back" href="index.html">← Tilbake til logichain.no</a>
+    <a class="dg-back" href="/">← Tilbake til logichain.no</a>
   </form>
 </div>
 <script>

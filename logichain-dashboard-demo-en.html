@@ -6,6 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Logichain Dashboard – Demo</title>
+<link rel="canonical" href="https://logichain.no/logichain-dashboard-demo-en">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <style>
 :root{
@@ -143,8 +144,8 @@ rect.clickable:hover{fill:#6db3ff}
     <input type="text" id="globalSearch" placeholder="🔍 Search supplier, material, PO ..." oninput="doSearch()" onfocus="doSearch()">
     <div class="sdd" id="searchDD"></div>
   </div>
-  <a class="home-btn" href="logichain-dashboard-demo.html" title="Bytt til norsk" aria-label="Switch to Norwegian"><svg aria-hidden="true" style="display:block;border-radius:2px" width="20" height="15" viewBox="0 0 22 16"><rect width="22" height="16" fill="#BA0C2F"/><rect x="6" width="4" height="16" fill="#fff"/><rect y="6" width="22" height="4" fill="#fff"/><rect x="7" width="2" height="16" fill="#00205B"/><rect y="7" width="22" height="2" fill="#00205B"/></svg></a>
-  <a class="home-btn" href="index-en.html">← Back to website</a>
+  <a class="home-btn" href="/logichain-dashboard-demo" title="Bytt til norsk" aria-label="Switch to Norwegian"><svg aria-hidden="true" style="display:block;border-radius:2px" width="20" height="15" viewBox="0 0 22 16"><rect width="22" height="16" fill="#BA0C2F"/><rect x="6" width="4" height="16" fill="#fff"/><rect y="6" width="22" height="4" fill="#fff"/><rect x="7" width="2" height="16" fill="#00205B"/><rect y="7" width="22" height="2" fill="#00205B"/></svg></a>
+  <a class="home-btn" href="/index-en">← Back to website</a>
   <a class="home-btn" id="logoutBtn" href="#" onclick="doLogout();return false" style="display:none">Log out</a>
   <span class="demo-badge">DEMO DATA</span>
   <span class="online">● Online</span>
@@ -1080,7 +1081,7 @@ goto(document.querySelector(".tabs button.active").dataset.tab);
   const lb=document.getElementById("logoutBtn");
   if(lb&&window.__SESS)lb.style.display="inline-block";
 })();
-window.doLogout=async function(){if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");location.href="index-en.html";};
+window.doLogout=async function(){if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");location.href="/index-en";};
 
 /* ================= OCTOPART-FANE ================= */
 window.renderOctoTab=function(){
@@ -1152,7 +1153,7 @@ __render();
     <div class="dg-err" id="dgErr" role="alert"></div>
     <button type="submit" id="dgBtn">Open the demo →</button>
     <p class="dg-legal">We only use your details to follow up on your interest in Logichain. No newsletters unless you ask for them.</p>
-    <a class="dg-back" href="index-en.html">← Back to logichain.no</a>
+    <a class="dg-back" href="/index-en">← Back to logichain.no</a>
   </form>
 </div>
 <script>

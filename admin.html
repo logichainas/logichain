@@ -438,7 +438,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
     <input class="field" type="password" id="gPass" placeholder="Password" autocomplete="current-password" required>
     <div class="err" id="gErr"></div>
     <button class="hbtn" style="width:100%;padding:12px" type="submit">Authenticate</button>
-    <p style="margin:16px 0 0;font-size:13px"><a href="index-en.html">← Back to logichain.no</a></p>
+    <p style="margin:16px 0 0;font-size:13px"><a href="/index-en">← Back to logichain.no</a></p>
   </form>
 </div>
 
@@ -1724,7 +1724,7 @@ function openVoicePicker(){
 }
 $("voicePick").addEventListener("click",openVoicePicker);
 $("refBtn").addEventListener("click",()=>CMDS.refresh());
-async function logout(){try{localStorage.removeItem("logichain_session");if(sb)await sb.auth.signOut();}catch(_){}location.href="index-en.html";}
+async function logout(){try{localStorage.removeItem("logichain_session");if(sb)await sb.auth.signOut();}catch(_){}location.href="/index-en";}
 $("outBtn").addEventListener("click",logout);
 document.addEventListener("keydown",e=>{if(e.key==="/"&&!/input|textarea/i.test(document.activeElement.tagName)){e.preventDefault();showCommsFocus();}});
 

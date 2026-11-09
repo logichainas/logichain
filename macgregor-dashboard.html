@@ -29,7 +29,7 @@ window.__ERRS.push("PROMISE-FEIL: "+(r&&r.message?r.message:String(r))+s);__show
      '<div id="mgErr" class="mg-err" style="display:none"></div>'+
      '<button type="submit">Logg inn →</button>'+
      (msg?'<p class="mg-err">'+msg+'</p>':'')+
-     '<a class="mg-back" href="index.html">← Tilbake til logichain.no</a>'+
+     '<a class="mg-back" href="/">← Tilbake til logichain.no</a>'+
      '</form></div></div>';
     document.body.addEventListener("submit",async function(e){
       if(e.target.id!=="mgForm")return;e.preventDefault();
@@ -197,7 +197,7 @@ rect.clickable:hover{fill:#6db3ff}
     <div class="sdd" id="searchDD"></div>
   </div>
   
-  <a class="home-btn" href="index.html">← Tilbake til nettsiden</a>
+  <a class="home-btn" href="/">← Tilbake til nettsiden</a>
   <a class="home-btn" id="logoutBtn" href="#" onclick="doLogout();return false" style="display:none">Logg ut</a>
   <a class="home-btn" id="upBtn" href="#" onclick="openSend();return false" style="display:none">📤 Send data til Logichain</a>
   <span class="demo-badge" id="dataBadge">GENERERT DEMODATA</span>
