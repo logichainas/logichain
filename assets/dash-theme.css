@@ -255,3 +255,48 @@ body.dg-lock>.topbar,body.dg-lock>.tabs,body.dg-lock>main{filter:blur(6px) satur
   color:#e8ecf8;background:rgba(10,14,30,.97);border:1px solid rgba(129,140,248,.45);box-shadow:0 12px 32px -8px rgba(0,0,0,.7),0 0 18px -6px rgba(129,140,248,.6);
   pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
 .lc-tip.show{opacity:1;transform:none}
+
+/* ===== Compact mode: show headlines first, details on click ===== */
+.hint-line{display:none!important}
+#tab-forside .hero p,#tab-forside .feature p{display:none}
+#tab-forside .feature{padding:16px 18px;cursor:pointer}
+#tab-forside .feature h4{margin:10px 0 6px}
+/* collapsible cards */
+.ccard>h3.sect{cursor:pointer;user-select:none;margin-bottom:14px}
+.ccard>h3.sect .cchev{margin-left:auto;font-size:14px;color:var(--muted);transition:transform .2s;letter-spacing:0}
+.ccard.collapsed{padding-top:16px;padding-bottom:16px}
+.ccard.collapsed>h3.sect{margin-bottom:0}
+.ccard.collapsed>h3.sect .cchev{transform:rotate(-90deg)}
+.ccard.collapsed>.cbody{display:none}
+.ccard>h3.sect:hover{color:#fff}
+.grid2:has(.ccard),.grid3:has(.ccard){align-items:start}
+/* long tables: first rows, then "show all" */
+tr.lc-more{display:none}
+table.lc-all tr.lc-more{display:table-row}
+.lc-showall{display:block;margin:10px auto 0;background:rgba(129,140,248,.1);border:1px solid rgba(129,140,248,.35);color:#c7ccff;
+  font:600 12.5px var(--body);padding:7px 16px;border-radius:999px;cursor:pointer}
+.lc-showall:hover{background:rgba(129,140,248,.2);color:#fff}
+/* disclaimer: one line until clicked */
+.disclaimer{position:relative;cursor:pointer}
+.disclaimer.lc-clamp{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:110px}
+.disclaimer.lc-clamp::after{content:"Les mer ▾";position:absolute;right:14px;top:50%;transform:translateY(-50%);font-weight:700;color:#fde68a}
+html[lang=en] .disclaimer.lc-clamp::after{content:"Read more ▾"}
+/* actions: title + value, details on click */
+.tiltak{cursor:pointer;margin-bottom:10px!important;padding:10px 12px 10px 16px!important;border-radius:0 10px 10px 0;transition:background .15s}
+.tiltak:hover{background:rgba(129,140,248,.06)}
+.tiltak h4{margin:4px 0 0!important;display:flex;gap:10px;align-items:center}
+.tiltak h4::after{content:"▸";margin-left:auto;color:var(--muted);font-size:12px;transition:transform .2s}
+.tiltak.open h4::after{transform:rotate(90deg)}
+.tiltak>p,.tiltak>div:last-child:not(:first-child){display:none}
+.tiltak.open>p{display:block;margin-top:8px}
+.tiltak.open>div:last-child{display:block}
+.tiltak.open{background:rgba(129,140,248,.07)}
+/* FAQ: tighter */
+.faq{padding:12px 16px!important;margin-bottom:6px!important}
+.faq h4{font-size:14px!important}
+#tab-forside .hero{min-height:0!important;padding:26px 30px!important}
+#tab-forside .hero h1{margin:10px 0 0}
+#tab-forside .feature{display:flex;align-items:center;gap:14px;padding:14px 18px}
+#tab-forside .feature>div:first-child{margin:0;flex:none}
+#tab-forside .feature h4{margin:0;flex:1;font-size:16px}
+#tab-forside .feature a{white-space:nowrap}

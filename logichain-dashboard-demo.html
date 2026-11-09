@@ -128,7 +128,7 @@ rect.clickable:hover{fill:#6db3ff}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/dash-theme.css?v=6">
+<link rel="stylesheet" href="assets/dash-theme.css?v=7">
 </head>
 <body>
 
@@ -1128,7 +1128,7 @@ const FAQ=[
 ["Kan jeg laste opp egne Excel-filer?","Ja – i produksjonsversjonen laster du opp leverandørenes Excel-rapporter, og dashboardet oppdateres automatisk med fast mal og validering."],
 ["Kan jeg eksportere data?","Ja, alle tabeller kan eksporteres til Excel for videre analyse."],
 ["Hvor ofte oppdateres tallene?","Så ofte nye leverandørrapporter lastes opp – i produksjonen typisk ukentlig."]];
-document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" onclick="this.classList.toggle('open')"><h4>❓ ${q}</h4><div class="ans">${a}</div></div>`).join("");
+document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" onclick="this.classList.toggle('open')"><h4>${q}</h4><div class="ans">${a}</div></div>`).join("");
 
 /* deep-link support: logichain-dashboard-demo.html#spend opens that module */
 (function(){const h=window.__BOOTED?(window.__TAB||"forside"):location.hash.slice(1);
@@ -1140,7 +1140,7 @@ window.setMonth=function(i){window.__MONTH=i;const y=window.scrollY;__render();w
 __render();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
-<script src="assets/dash-fx.js?v=2" defer></script>
+<script src="assets/dash-fx.js?v=3" defer></script>
 <script>try{if(/[?&]notrack=1/.test(location.search))localStorage.setItem("lc_notrack","1");if(!localStorage.getItem("lc_notrack")&&navigator.sendBeacon)navigator.sendBeacon("/api/hit",new Blob([JSON.stringify({p:location.pathname,r:document.referrer})],{type:"text/plain"}))}catch(e){}</script>
 <div id="demoGate" class="dg" role="dialog" aria-modal="true" aria-labelledby="dgH" hidden>
   <form class="dg-card" id="dgForm" novalidate>

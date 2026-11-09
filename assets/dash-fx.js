@@ -154,3 +154,57 @@
   document.addEventListener("click",e=>{const el=e.target.closest&&e.target.closest(".kpi-help");if(el){e.stopPropagation();if(cur===el&&tip.classList.contains("show")&&Date.now()-hoverAt>500)hide();else show(el);}else hide();},true);
   addEventListener("scroll",hide,{passive:true});addEventListener("resize",hide);
 })();
+
+/* ===== Compact mode: collapsible cards, short tables, click-to-expand actions ===== */
+(function(){
+  const EN=document.documentElement.lang==="en";
+  function setup(){
+    document.querySelectorAll("main section").forEach(sec=>{
+      let first=true,firstGrid=null;
+      sec.querySelectorAll(".card").forEach(card=>{
+        if(card.dataset.cc||card.classList.contains("hero"))return;
+        const h=card.querySelector(":scope > h3.sect");if(!h)return;
+        card.dataset.cc="1";card.classList.add("ccard");
+        const body=document.createElement("div");body.className="cbody";
+        while(h.nextSibling)body.appendChild(h.nextSibling);
+        card.appendChild(body);
+        const chev=document.createElement("span");chev.className="cchev";chev.textContent="▾";h.appendChild(chev);
+        const hasInput=!!body.querySelector("input,select");
+        if(first&&sec.id!=="tab-forside"){firstGrid=card.parentElement.matches(".grid2,.grid3,.grid4")?card.parentElement:card;}
+        const inFirst=firstGrid&&(firstGrid===card||firstGrid.contains(card));
+        const open=card.hasAttribute("data-open")||hasInput||inFirst;
+        first=false;
+        if(!open)card.classList.add("collapsed");
+        h.addEventListener("click",()=>card.classList.toggle("collapsed"));
+      });
+    });
+    document.querySelectorAll(".disclaimer").forEach(d=>{if(d.dataset.cl)return;d.dataset.cl="1";d.classList.add("lc-clamp");
+      d.addEventListener("click",()=>d.classList.toggle("lc-clamp"));});
+    document.querySelectorAll("#tab-forside .feature").forEach(f=>{if(f.dataset.cl)return;f.dataset.cl="1";const a=f.querySelector("a[onclick]");
+      if(a)f.addEventListener("click",e=>{if(!e.target.closest("a"))a.click();});});
+  }
+  // long tables: show the first rows, then a "show all" button
+  const LIMIT=8;
+  function limitTable(t){
+    const rows=[...t.querySelectorAll("tr")].filter(r=>!r.querySelector("th"));
+    rows.forEach((r,i)=>r.classList.toggle("lc-more",i>=LIMIT));
+    let btn=t.parentElement.querySelector(":scope > .lc-showall");
+    if(rows.length<=LIMIT){if(btn)btn.remove();return;}
+    if(!btn){btn=document.createElement("button");btn.type="button";btn.className="lc-showall";t.parentElement.appendChild(btn);
+      btn.addEventListener("click",()=>{t.classList.toggle("lc-all");label();});}
+    function label(){btn.textContent=t.classList.contains("lc-all")?(EN?"Show fewer ▴":"Vis færre ▴"):(EN?`Show all ${rows.length} ▾`:`Vis alle ${rows.length} ▾`);}
+    label();
+  }
+  function watchTables(){
+    document.querySelectorAll("main table[id]").forEach(t=>{
+      if(t.dataset.lw)return;t.dataset.lw="1";limitTable(t);
+      new MutationObserver(()=>limitTable(t)).observe(t,{childList:true,subtree:false});
+    });
+  }
+  // actions (tiltak): click the card to see description and evidence
+  document.addEventListener("click",e=>{const c=e.target.closest(".tiltak");if(!c||e.target.closest("a,button,select,input"))return;c.classList.toggle("open");});
+  function run(){setup();watchTables();}
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",run);else run();
+  // dashboards that load data later (portal) re-render; re-check a few times
+  [800,2500,6000].forEach(ms=>setTimeout(run,ms));
+})();
