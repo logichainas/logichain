@@ -300,3 +300,5 @@ html[lang=en] .disclaimer.lc-clamp::after{content:"Read more ▾"}
 #tab-forside .feature>div:first-child{margin:0;flex:none}
 #tab-forside .feature h4{margin:0;flex:1;font-size:16px}
 #tab-forside .feature a{white-space:nowrap}
+/* no period filter on the Q&A tab */
+main:has(#tab-faq:not([style*="none"])) .monthbar{display:none!important}
