@@ -247,3 +247,11 @@ body.dg-lock>.topbar,body.dg-lock>.tabs,body.dg-lock>main{filter:blur(6px) satur
 .dg-card button:hover{transform:translateY(-2px)}.dg-card button:disabled{opacity:.6;transform:none;cursor:wait}
 .dg-legal{font-size:11.5px;color:var(--muted);margin-top:12px;line-height:1.5}
 .dg-back{display:inline-block;margin-top:10px;color:var(--muted);font-size:12.5px;text-decoration:none}.dg-back:hover{color:var(--cyan)}
+
+/* KPI help tooltips (i) - work on hover, click and touch */
+.kpi-help{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;border:1px solid rgba(148,163,255,.35);font-style:normal;line-height:1;transition:.15s}
+.kpi-help:hover,.kpi-help.on{color:#fff;border-color:#818cf8;background:rgba(129,140,248,.25)}
+.lc-tip{position:fixed;z-index:9999;max-width:300px;padding:10px 13px;border-radius:10px;font:500 13px/1.5 Inter,system-ui,sans-serif;letter-spacing:0;text-transform:none;
+  color:#e8ecf8;background:rgba(10,14,30,.97);border:1px solid rgba(129,140,248,.45);box-shadow:0 12px 32px -8px rgba(0,0,0,.7),0 0 18px -6px rgba(129,140,248,.6);
+  pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s}
+.lc-tip.show{opacity:1;transform:none}

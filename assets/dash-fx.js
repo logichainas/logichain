@@ -138,3 +138,19 @@
   }
   document.querySelectorAll(".card.hero").forEach(function(h, i){ if (i < 2) core(h); });
 })();
+
+/* KPI help tooltips: the (i) icons carry their text in title=""; show it in a styled bubble on hover, click or tap */
+(function(){
+  const tip=document.createElement("div");tip.className="lc-tip";tip.setAttribute("role","tooltip");document.body.appendChild(tip);
+  let cur=null,hoverAt=0;
+  const text=el=>{if(el.title){el.dataset.tip=el.title;el.removeAttribute("title");}return el.dataset.tip||"";};
+  function show(el){const t=text(el);if(!t)return;if(cur)cur.classList.remove("on");cur=el;el.classList.add("on");tip.textContent=t;tip.classList.add("show");
+    const r=el.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;
+    const x=Math.min(Math.max(8,r.left+r.width/2-w/2),innerWidth-w-8);let y=r.bottom+8;if(y+h>innerHeight-8)y=r.top-h-8;
+    tip.style.left=x+"px";tip.style.top=y+"px";}
+  function hide(){tip.classList.remove("show");if(cur)cur.classList.remove("on");cur=null;}
+  document.addEventListener("mouseover",e=>{const el=e.target.closest&&e.target.closest(".kpi-help");if(el&&el!==cur){hoverAt=Date.now();show(el);}});
+  document.addEventListener("mouseout",e=>{const el=e.target.closest&&e.target.closest(".kpi-help");if(el&&!el.contains(e.relatedTarget))hide();});
+  document.addEventListener("click",e=>{const el=e.target.closest&&e.target.closest(".kpi-help");if(el){e.stopPropagation();if(cur===el&&tip.classList.contains("show")&&Date.now()-hoverAt>500)hide();else show(el);}else hide();},true);
+  addEventListener("scroll",hide,{passive:true});addEventListener("resize",hide);
+})();

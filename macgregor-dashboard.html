@@ -153,7 +153,7 @@ tr.click{cursor:pointer} tr.click:hover{background:rgba(61,139,255,.07)}
 .hint-line{background:rgba(61,139,255,.08);border:1px solid rgba(61,139,255,.25);border-radius:10px;padding:9px 14px;font-size:12.5px;color:var(--accent2);margin-bottom:14px}
 .cellink{color:var(--accent2);cursor:pointer;text-decoration:none;font-weight:600}
 .cellink:hover{text-decoration:underline}
-.kpi-help{font-size:10px;color:var(--muted);cursor:help;margin-left:4px}
+.kpi-help{font-size:12px;color:var(--muted);cursor:pointer;margin-left:4px}
 .btn{display:inline-block;padding:11px 22px;border-radius:10px;font-weight:700;font-size:14px;text-decoration:none;cursor:pointer;border:none;font-family:inherit;transition:transform .15s,box-shadow .15s}
 .btn-demo{background:linear-gradient(135deg,#2e7cf6,#1a5fd0);color:#fff;box-shadow:0 6px 24px rgba(46,124,246,.35)}
 .btn:hover{transform:translateY(-2px)}
@@ -181,7 +181,7 @@ rect.clickable:hover{fill:#6db3ff}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/dash-theme.css?v=5">
+<link rel="stylesheet" href="assets/dash-theme.css?v=6">
 </head>
 <body>
 
@@ -776,7 +776,7 @@ document.getElementById("kpi-forside").innerHTML=
   kpi("Totalt innkjøp 2026",fmtM(totVal),`${fmt(lines.length)} PO-linjer · ${new Set(lines.map(l=>l.sup.id)).size} leverandører`,"","Summen av alle linjeverdier i perioden")+
   kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad","On-Time Delivery: andel leveringer levert innen ±"+OTD_TOL+" dager fra love-datoen")+
   kpi("Aktive leverandører",new Set(lines.map(l=>l.sup.id)).size,"med leveringer i perioden","","Leverandører med minst én PO-linje i perioden")+
-  kpi("Top 5-konsentrasjon",top5Share+"%","andel av total spend hos topp 5","","Hvor stor del av innkjøpet som går til de fem største leverandørene – høy andel betyr leverandøravhengighet")+
+  kpi("Leverandøravhengighet",top5Share+"%","av spend hos de 5 største leverandørene","","Hvor stor del av innkjøpet som går til de fem største leverandørene. Jo høyere andel, jo mer avhengige er dere av få leverandører – det gir forhandlingsstyrke, men også risiko.")+
   kpi("Single-source materialer",singleSource.length,"uten alternativ leverandør",singleSource.length>3?"warn":"","Materialer som kun leveres av én leverandør – se Spend Intelligence")+
   kpi("Identifisert sparepotensial",fmtM(savTotal),"per år – se dokumentasjon","good","Summen av fire kilder. Klikk deg inn i Sparingspotensial for dokumentasjon bak tallet");
 
@@ -890,7 +890,7 @@ function hbars(el,rows,fmtV){
 document.getElementById("kpi-spend").innerHTML=
   kpi("Total spend 2026",fmtM(totVal),fmt(lines.length)+" PO-linjer","","Summen av alle PO-linjene i perioden")+
   (window.__MONTH!=null?kpi("Spend i "+MONTHS[window.__MONTH],fmtM(totVal),"valgt måned","","Innkjøpsvolum i valgt måned"):kpi("Spend per måned (snitt)",fmtM(totVal/Math.max(1,MONTHS.length)),MONTHS.length?MONTHS[0]+" – "+MONTHS[MONTHS.length-1]:"–","","Gjennomsnittlig månedlig innkjøpsvolum"))+
-  kpi("Top 5-konsentrasjon",top5Share+"%","av total spend hos topp 5 leverandører",top5Share>60?"warn":"","Leverandøravhengighet: andel av spenden hos de fem største – klikk på listen under for å se dem")+
+  kpi("Leverandøravhengighet",top5Share+"%","av spend hos de 5 største leverandørene",top5Share>60?"warn":"","Andel av innkjøpet hos de fem største leverandørene. Jo høyere andel, jo mer avhengige er dere av få leverandører. Se listen under for hvem det gjelder.")+
   kpi("Tail spend",tailShare+"%",tailSup.length+" leverandører står for andel > 80 %-kutten","","De små leverandørene etter 80 %-kutten – ofte mye administrasjon per krone")+
   kpi("Single-source materialer",singleSource.length,"uten dokumentert alternativ",singleSource.length>2?"warn":"","Materialer som kun én leverandør kan levere – forsyningssrisiko")+
   kpi("Snitt prisutvikling",(avgPriceTrend>0?"+":"")+avgPriceTrend.toFixed(1).replace(".",",")+"%","vekta snitt per materiale, Jan→Sep",avgPriceTrend>2?"bad":"good","Gjennomsnittlig prisendring fra januar til september, vektet per materiale");
@@ -1354,7 +1354,7 @@ renderOctoTab();
 
 /* ================= FAQ ================= */
 const FAQ=[
-["Hva er Spend Intelligence?","Spend Intelligence viser hvor pengene går: total spend, spend per leverandør/kategori/måned, topp 10-leverandører, konsentrasjon (topp 5), prisutvikling per materiale, volumutvikling, tail spend og single-source-risiko."],
+["Hva er Spend Intelligence?","Spend Intelligence viser hvor pengene går: total spend, spend per leverandør/kategori/måned, topp 10-leverandører, leverandøravhengighet (andel hos topp 5), prisutvikling per materiale, volumutvikling, tail spend og single-source-risiko."],
 
 ["Hvor kommer tallene fra?","Leverandørene leverer rapporter i Excel. Logichain validerer og samler dataene automatisk i én modell. I denne demoen er alt generert som demodata."],
 ["Hva betyr OTD?","OTD (On-Time Delivery) er andel leveringer som skjer innen ±5 dager fra love-datoen. «I tide» = levert inntil 5 dager før eller etter avtalt dato."],
@@ -1471,6 +1471,6 @@ boot();
 })();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
-<script src="assets/dash-fx.js?v=1" defer></script>
+<script src="assets/dash-fx.js?v=2" defer></script>
 </body>
 </html>
