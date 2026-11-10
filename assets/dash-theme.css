@@ -17,7 +17,7 @@ body::before{content:"";position:fixed;inset:0;z-index:-2;pointer-events:none;
 body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.35;
   background-image:linear-gradient(rgba(148,163,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(148,163,255,.05) 1px,transparent 1px);
   background-size:56px 56px;mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 75%);-webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 30%,transparent 75%)}
-#lcFx{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.55}
+#lcFx{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.8}
 ::selection{background:rgba(129,140,248,.35)}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:rgba(148,163,255,.18);border-radius:10px}::-webkit-scrollbar-track{background:transparent}
 
