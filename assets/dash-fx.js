@@ -111,8 +111,8 @@
     });
     // floating wireframe shapes near the edges
     var shapes=[];
-    [[new T.IcosahedronGeometry(60,1),0x818cf8,-620,180,-120],[new T.OctahedronGeometry(46,0),0x22d3ee,640,-170,-80],[new T.TorusKnotGeometry(34,8,90,8),0xa78bfa,580,240,-260],
-     [new T.DodecahedronGeometry(40,0),0x38bdf8,-560,-250,-200],[new T.TorusGeometry(70,1.2,8,90),0x22d3ee,-700,-60,-300],[new T.IcosahedronGeometry(26,0),0xc4b5fd,720,40,-40]].forEach(function(o,k){
+    [[new T.IcosahedronGeometry(42,1),0x818cf8,-620,180,-120],[new T.OctahedronGeometry(46,0),0x22d3ee,640,-170,-80],[new T.TorusKnotGeometry(34,8,90,8),0xa78bfa,580,240,-260],
+     [new T.DodecahedronGeometry(40,0),0x38bdf8,-560,-250,-200],[new T.TorusGeometry(48,1,8,90),0x22d3ee,-700,-60,-300],[new T.IcosahedronGeometry(26,0),0xc4b5fd,720,40,-40]].forEach(function(o,k){
       var m=new T.Mesh(o[0],new T.MeshBasicMaterial({color:o[1],wireframe:true,transparent:true,opacity:.22,depthWrite:false}));
       m.position.set(o[2],o[3],o[4]); m.userData={sp:.2+Math.random()*.4,ph:k*1.7,y:o[3]}; S.add(m); shapes.push(m);
     });
@@ -145,8 +145,70 @@
     // meteors
     var met=[]; for (var m3=0;m3<3;m3++){ var mg=new T.BufferGeometry(); mg.setAttribute("position",new T.BufferAttribute(new Float32Array(6),3));
       var ml=new T.Line(mg,new T.LineBasicMaterial({color:0xbfefff,transparent:true,opacity:0,blending:T.AdditiveBlending})); S.add(ml); met.push({l:ml,life:0,next:2000+Math.random()*6000}); }
+    /* ---- MacGregor: wireframe offshore knuckle-boom crane, slewing 360° (body[data-fx~=crane] or ?crane=1) ---- */
+    var crane=null;
+    if (/(^|\s)crane(\s|$)/.test(document.body.getAttribute("data-fx")||"") || /[?&]crane=1/.test(location.search)) (function(){
+      var CY=0x5eead4, CB=0x38bdf8, CP=0xa5b4fc;
+      function L(arr,col,op){ var g=new T.BufferGeometry(); g.setAttribute("position",new T.BufferAttribute(new Float32Array(arr),3));
+        return new T.LineSegments(g,new T.LineBasicMaterial({color:col,transparent:true,opacity:op||.6,depthWrite:false,blending:T.AdditiveBlending})); }
+      function E(geo,col,op){ return new T.LineSegments(new T.EdgesGeometry(geo),new T.LineBasicMaterial({color:col,transparent:true,opacity:op||.6,depthWrite:false,blending:T.AdditiveBlending})); }
+      function truss(len,w0,w1,n,col){
+        var v=[],P=function(x,k){ var w=w0+(w1-w0)*x/len,h=w*.5; return [[x,h,w/2],[x,h,-w/2],[x,-h,-w/2],[x,-h,w/2]][k]; },seg=function(a,b){ v.push(a[0],a[1],a[2],b[0],b[1],b[2]); };
+        for(var k=0;k<4;k++) seg(P(0,k),P(len,k));
+        for(var i=0;i<=n;i++){ var x=len*i/n; for(var k2=0;k2<4;k2++) seg(P(x,k2),P(x,(k2+1)%4));
+          if(i<n){ var x2=len*(i+1)/n; for(var k3=0;k3<4;k3++) seg(P(i%2?x:x2,k3),P(i%2?x2:x,(k3+1)%4)); } }
+        return L(v,col,.7);
+      }
+      var root=new T.Group();
+      var deck=[],dw=360,dd=180;
+      for(var gx=-dw;gx<=dw;gx+=40) deck.push(gx,0,-dd,gx,0,dd);
+      for(var gz=-dd;gz<=dd;gz+=40) deck.push(-dw,0,gz,dw,0,gz);
+      var dk=L(deck,CP,.16); dk.position.y=-1; root.add(dk);
+      var hull=[],hp=[[-dw,-dd],[dw-60,-dd],[dw+60,0],[dw-60,dd],[-dw,dd]];
+      for(var h=0;h<hp.length;h++){ var A=hp[h],B=hp[(h+1)%hp.length]; hull.push(A[0],0,A[1],B[0],0,B[1], A[0],-50,A[1]*.85,B[0],-50,B[1]*.85, A[0],0,A[1],A[0],-50,A[1]*.85); }
+      root.add(L(hull,CB,.35));
+      var ped=E(new T.CylinderGeometry(26,34,150,12,3),CY,.55); ped.position.y=75; root.add(ped);
+      var ring=E(new T.CylinderGeometry(38,38,10,24),CY,.7); ring.position.y=155; root.add(ring);
+      var slew=new T.Group(); slew.position.y=160; root.add(slew);
+      var house=E(new T.BoxGeometry(110,56,70),CY,.65); house.position.set(-15,28,0); slew.add(house);
+      var cab=E(new T.BoxGeometry(34,40,30),CB,.8); cab.position.set(40,62,42); slew.add(cab);
+      var win=E(new T.PlaneGeometry(26,16),0x7ef3ff,.9); win.position.set(57.5,66,42); win.rotation.y=Math.PI/2; slew.add(win);
+      var cw=E(new T.BoxGeometry(30,46,60),CP,.5); cw.position.set(-80,30,0); slew.add(cw);
+      slew.add(L([-40,56,30,-5,130,0, -40,56,-30,-5,130,0, 20,56,30,-5,130,0, 20,56,-30,-5,130,0],CY,.6));
+      var boomP=new T.Group(); boomP.position.set(30,50,0); slew.add(boomP);
+      boomP.add(truss(250,36,26,10,CY));
+      var cyl=L([0,0,0,1,0,0],CB,.9); slew.add(cyl);
+      var jibP=new T.Group(); jibP.position.set(250,0,0); boomP.add(jibP);
+      jibP.add(truss(170,24,14,7,CB));
+      var tip=new T.Object3D(); tip.position.set(170,0,0); jibP.add(tip);
+      var sheave=E(new T.TorusGeometry(9,2,6,16),0x7ef3ff,.9); sheave.position.set(170,0,0); jibP.add(sheave);
+      var wire=L([0,0,0,0,-1,0],0xe0f2fe,.7); S.add(wire);
+      var hook=new T.Group(); hook.add(E(new T.BoxGeometry(16,22,12),0x7ef3ff,.9));
+      var hk=E(new T.TorusGeometry(7,1.6,6,12,Math.PI*1.4),0x7ef3ff,.9); hk.position.y=-18; hk.rotation.z=Math.PI*.8; hook.add(hk);
+      var load=E(new T.BoxGeometry(46,30,46),CP,.6); load.position.y=-58; hook.add(load);
+      hook.add(L([0,-24,0,-23,-43,-23, 0,-24,0,23,-43,-23, 0,-24,0,-23,-43,23, 0,-24,0,23,-43,23],0xe0f2fe,.5));
+      S.add(hook);
+      root.rotation.y=-.5; S.add(root);
+      var hp2=new T.Vector3(), tp=new T.Vector3(), sw={x:0,z:0,vx:0,vz:0}, lastSlew=0;
+      crane={root:root,update:function(s){
+        var slewA=s*0.18; slew.rotation.y=slewA;
+        var luff=.62+Math.sin(s*.23)*.16; boomP.rotation.z=luff;
+        jibP.rotation.z=-1.35+Math.sin(s*.31+1)*.28;
+        var a=cyl.geometry.attributes.position.array, bx=30+Math.cos(luff)*95, by=50+Math.sin(luff)*95; a[0]=20;a[1]=8;a[2]=0;a[3]=bx;a[4]=by;a[5]=0; cyl.geometry.attributes.position.needsUpdate=true;
+        root.updateMatrixWorld(true); tip.getWorldPosition(tp);
+        var dv=(slewA-lastSlew); lastSlew=slewA; if(dv>.1)dv=0;
+        sw.vx+=(-sw.x*.004)-dv*.9*Math.sin(slewA); sw.vz+=(-sw.z*.004)-dv*.9*Math.cos(slewA); sw.vx*=.985; sw.vz*=.985; sw.x+=sw.vx; sw.z+=sw.vz;
+        var drop=150+Math.sin(s*.4)*60, sc=root.scale.x;
+        hp2.set(tp.x+sw.x*40*sc,tp.y-drop*sc,tp.z+sw.z*40*sc);
+        hook.position.copy(hp2); hook.scale.setScalar(sc); hook.rotation.y=slewA*.5;
+        var w=wire.geometry.attributes.position.array; w[0]=tp.x;w[1]=tp.y;w[2]=tp.z;w[3]=hp2.x;w[4]=hp2.y+11*sc;w[5]=hp2.z; wire.geometry.attributes.position.needsUpdate=true;
+      }};
+    })();
+    function placeCrane(){ if(!crane) return; var z=-60, half=Math.tan(Math.PI/6)*(C.position.z-z), wHalf=half*C.aspect, big=innerWidth>1500;
+      crane.root.scale.setScalar(big?1.0:.75); crane.root.position.set(wHalf*(big?.72:.6), -half*.7, z); }
     function fx(t){
       var s=t*0.001;
+      if (crane) crane.update(s);
       far.rotation.z = s*0.004;
       nebs.forEach(function(m,k){ m.material.opacity=.26+Math.sin(s*.25+k)*.07; });
       shapes.forEach(function(m){ var u=m.userData; m.rotation.x=s*u.sp*.6; m.rotation.y=s*u.sp; m.position.y=u.y+Math.sin(s*.4+u.ph)*14; });
@@ -159,7 +221,7 @@
         o.l.geometry.attributes.position.needsUpdate=true; o.l.material.opacity=Math.max(0,o.life)*.8; if(o.life<=0){ o.l.material.opacity=0; o.next=t+3000+Math.random()*9000; } });
     }
     var mx=0,my=0; addEventListener("pointermove",function(e){ mx=e.clientX/innerWidth-.5; my=e.clientY/innerHeight-.5; },{passive:true});
-    function size(){ R.setSize(innerWidth,innerHeight,false); C.aspect=innerWidth/innerHeight; C.updateProjectionMatrix(); }
+    function size(){ R.setSize(innerWidth,innerHeight,false); C.aspect=innerWidth/innerHeight; C.updateProjectionMatrix(); placeCrane(); }
     size(); addEventListener("resize",size);
     var sy = 0; addEventListener("scroll",function(){ sy = scrollY; },{passive:true});
     (function loop(t){
