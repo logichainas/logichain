@@ -78,6 +78,12 @@ button,input,select{font-family:var(--ui)}
 .lead a{color:var(--cyan);text-decoration:none}
 .lead .ld-ok{margin-left:auto;flex:none}
 .lead.done{opacity:.55}
+.ku{display:flex;gap:10px;align-items:center;padding:8px 2px;border-bottom:1px solid rgba(0,229,255,.08);cursor:pointer}
+.ku b{font-weight:600;color:var(--text);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ku small{display:block;font:11.5px var(--mono);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ku .sv{margin-left:auto;text-align:right;flex:none}.ku .sv b{font:600 12px var(--mono);color:#7ef3ff}
+.kustep{display:flex;gap:12px;margin:10px 0;align-items:flex-start}.kustep i{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font:700 12px var(--mono);color:#001018;background:#7ef3ff}
+.kustep a{color:#7ef3ff}
 .sub{display:flex;gap:10px;align-items:center;padding:8px 2px;border-bottom:1px solid rgba(0,229,255,.08);cursor:pointer}
 .sub:last-child{border-bottom:0}.sub:hover{background:rgba(0,229,255,.05)}
 .sub b{font-weight:600;color:var(--text);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -138,7 +144,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .side .panel:hover .ph h2::after{opacity:1;transform:translateX(4px)}
 .side .panel .scroll,.side .panel #traffic{max-height:78px!important;flex:none!important;overflow:hidden!important;pointer-events:none;
   -webkit-mask-image:linear-gradient(#000 35%,transparent);mask-image:linear-gradient(#000 35%,transparent)}
-#maxWrap{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:rgba(1,6,12,.62);backdrop-filter:blur(6px);animation:fadeIn .2s both}
+#maxWrap{position:fixed;inset:0;z-index:45;display:grid;place-items:center;background:rgba(1,6,12,.62);backdrop-filter:blur(6px);animation:fadeIn .2s both}
 #maxWrap.hidden{display:none}
 #maxBox{display:grid;grid-template-columns:210px 1fr;gap:14px;width:min(1160px,95vw);height:min(86vh,880px)}
 #maxNav{display:flex;flex-direction:column;gap:6px;overflow:auto;padding:4px}
@@ -307,7 +313,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .vprow:hover{border-color:var(--line2)}
 .vprow.on{border-color:var(--cyan);background:rgba(0,229,255,.08);box-shadow:var(--glow)}
 .vprow small{display:block;font:11px var(--mono);color:var(--muted)}
-#subM,#ceoM,#briefM,#newM{position:fixed;inset:0;z-index:56;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.6);backdrop-filter:blur(3px)}
+#kuM,#subM,#ceoM,#briefM,#newM{position:fixed;inset:0;z-index:56;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.6);backdrop-filter:blur(3px)}
 .bf{width:min(760px,100%);max-height:100%;display:flex!important;flex-direction:column;padding:0!important;animation:holoIn .5s cubic-bezier(.2,.9,.25,1) both}
 .bfbody{padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
 .bfbody label{display:flex;flex-direction:column;gap:6px;font:600 11px var(--hud);letter-spacing:.2em;color:var(--cyan)}
@@ -505,6 +511,10 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
         <div class="ph"><h2>DEMO LEADS</h2><span id="ldCount"></span><button class="mini" id="ldCopyAll" title="Copy the e-mail addresses of everyone not followed up yet">⧉ COPY ALL</button></div>
         <div class="scroll" id="leads"><div class="empty">Loading …</div></div>
       </div>
+      <div class="panel br" style="flex:.6;min-height:0">
+        <div class="ph"><h2>CUSTOMERS</h2><span><span id="kuCount"></span> <button class="mini" id="kuAdd" title="Add a new customer">+ NEW</button></span></div>
+        <div class="scroll" id="kunder"><div class="empty">Loading …</div></div>
+      </div>
       <div class="panel br" style="flex:1">
         <div class="ph"><h2>MISSIONS</h2><span id="mCount"></span></div>
         <form class="mform" id="mForm" autocomplete="off">
@@ -604,6 +614,15 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
       <label class="bfl" style="margin-top:10px">Note</label><input class="field" id="subNote" maxlength="200" placeholder="optional – plan, card, who to cancel with …">
     </div>
     <div class="rvfoot"><button type="button" class="hbtn" id="subDel" style="margin-right:auto">Delete</button><button type="submit" class="talk">Save</button></div>
+  </form>
+</div>
+
+<!-- CUSTOMER EDITOR -->
+<div id="kuM" class="hidden">
+  <form class="holo panel br bf" id="kuForm" autocomplete="off">
+    <div class="vh"><div class="orb" style="--c:#7ef3ff"></div><div><h3 id="kuH">Customer</h3><p id="kuSub">Each customer only sees their own data</p></div><div class="sp"></div><button type="button" class="hbtn" id="kuClose">Close ✕</button></div>
+    <div class="bfbody" id="kuBody"></div>
+    <div class="rvfoot" id="kuFoot"></div>
   </form>
 </div>
 
@@ -928,9 +947,9 @@ function initScene(){
   addEventListener("resize",resize);resize();
   addEventListener("mousemove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1;mouse.set(mx,-my);
     document.body.style.setProperty("--mx",mx.toFixed(3));document.body.style.setProperty("--my",my.toFixed(3));});
-  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,#subM,#maxWrap"))return;if(S.hover)openAgent(S.hover.agent.id);});
+  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,#subM,#kuM,#maxWrap"))return;if(S.hover)openAgent(S.hover.agent.id);});
   // double-click the reactor core → mini explosion
-  addEventListener("dblclick",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,#subM,#maxWrap,input,textarea,button,select"))return;
+  addEventListener("dblclick",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,#subM,#kuM,#maxWrap,input,textarea,button,select"))return;
     const c=new T.Vector3(0,0,0).project(cam),cx=(c.x*.5+.5)*innerWidth,cy=(-c.y*.5+.5)*innerHeight;
     if(Math.hypot(e.clientX-cx,e.clientY-cy)<Math.min(innerWidth,innerHeight)*.2){window.getSelection&&window.getSelection().removeAllRanges();miniBoom();}});
 
@@ -2111,7 +2130,51 @@ addEventListener("keydown",e=>{if(!MAXP||e.target.matches("input,textarea,select
   if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();const i=PANELS.indexOf(MAXP.panel);openPanel(PANELS[(i+(e.key==="ArrowDown"?1:PANELS.length-1))%PANELS.length]);}});
 setInterval(()=>{if(MAXP)buildNav();},5000);
 
-function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();loadTraffic();loadLeads();loadSubs();}
+/* ================= CUSTOMERS ================= */
+let CUSTS=[],KU_EDIT=null;
+const SUPA_USERS="https://supabase.com/dashboard/project/iksnoymoqvweudilfuzy/auth/users";
+async function loadKunder(){
+  if(DEMO){CUSTS=CUSTS.length?CUSTS:[{id:"d1",firma:"MacGregor Norway",epost:"kontakt@kunde.no",portal:"macgregor-dashboard.html",po_linjer:660,spend:111500000,sist_innlogget:new Date(Date.now()-36e5).toISOString()},{id:"d2",firma:"Ny Kunde AS",epost:"innkjop@nykunde.no",portal:"kunde-dashboard.html",po_linjer:0,spend:0,sist_innlogget:null}];return renderKunder();}
+  const r=await sb.rpc("admin_overview");
+  if(r.error){$("kunder").innerHTML=`<div class="empty">Could not load customers.<br><small>${esc(r.error.message)}</small></div>`;return;}
+  CUSTS=((r.data&&r.data.kunder)||[]).filter(k=>!k.admin&&k.portal!=="admin.html");renderKunder();
+}
+const kuUrl=k=>k.portal&&k.portal!=="kunde-dashboard.html"?"/"+k.portal:"/kunde-dashboard.html?kunde="+encodeURIComponent(k.id);
+const kuK=n=>n>=1e6?(n/1e6).toFixed(1).replace(".",",")+" M":n>=1e3?Math.round(n/1e3)+" k":String(Math.round(n||0));
+function renderKunder(){
+  $("kuCount").textContent=CUSTS.length?CUSTS.length+" active":"";
+  $("kunder").innerHTML=CUSTS.length?CUSTS.map(k=>`<div class="ku" data-ku="${esc(k.id)}"><span class="sd" style="background:${Number(k.po_linjer)?"#3dffb0":"#ffb84d"}"></span><div style="min-width:0"><b>${esc(k.firma)}</b><small>${esc(k.epost)}</small></div>
+    <div class="sv"><b>${Number(k.po_linjer)?esc(kuK(Number(k.spend)))+" kr":"no data"}</b><small>${k.sist_innlogget?"seen "+esc(ago(k.sist_innlogget)):"never signed in"}</small></div></div>`).join("")
+    :`<div class="empty">No customers yet. Click + NEW.</div>`;
+}
+function kuModal(h,sub,body,foot){$("kuH").textContent=h;$("kuSub").textContent=sub;$("kuBody").innerHTML=body;$("kuFoot").innerHTML=foot;$("kuM").classList.remove("hidden");}
+function closeKu(){$("kuM").classList.add("hidden");KU_EDIT=null;}
+function openKu(id){const k=CUSTS.find(x=>String(x.id)===String(id));if(!k)return;KU_EDIT=k;
+  kuModal(k.firma,k.epost,`<label class="bfl">Company name (shown in their dashboard)</label><input class="field" id="kuFirma" maxlength="120" required value="${esc(k.firma)}">
+    <label class="bfl" style="margin-top:10px">Dashboard</label><select class="field" id="kuPortal"><option value="kunde-dashboard.html">Customer portal (standard)</option><option value="macgregor-dashboard.html">MacGregor portal</option></select>
+    <p class="bfl" style="margin-top:12px;line-height:1.6">${Number(k.po_linjer)?`${esc(Number(k.po_linjer).toLocaleString("no-NO"))} PO lines · ${esc(kuK(Number(k.spend)))} kr`:"No data uploaded yet."} · ${k.sist_innlogget?"last sign-in "+esc(ago(k.sist_innlogget)):"has never signed in"}<br>
+    They can only see their own data. Remove access by deleting the user in <a href="${SUPA_USERS}" target="_blank" rel="noopener" style="color:#7ef3ff">Supabase → Users</a>.</p>`,
+    `<a class="hbtn" href="/last-opp.html" target="_blank" rel="noopener" style="margin-right:auto">⬆ Upload data</a><a class="hbtn" href="${esc(kuUrl(k))}" target="_blank" rel="noopener">Open dashboard ↗</a><button type="submit" class="talk">Save</button>`);
+  $("kuPortal").value=k.portal==="macgregor-dashboard.html"?"macgregor-dashboard.html":"kunde-dashboard.html";setTimeout(()=>$("kuFirma").focus(),50);}
+function openKuNew(){KU_EDIT=null;
+  kuModal("New customer","Access only exists when you create the user yourself",`
+    <div class="kustep"><i>1</i><div>Open <a href="${SUPA_USERS}" target="_blank" rel="noopener">Supabase → Authentication → Users</a> → <b>Add user</b> → <b>Create new user</b>. Type their e-mail and a strong password, tick <b>Auto Confirm User</b>.</div></div>
+    <div class="kustep"><i>2</i><div>Come back here and press <b>Refresh</b>. The customer shows up in this list – click it and type the company name.</div></div>
+    <div class="kustep"><i>3</i><div>Upload their Excel/CSV on <a href="/last-opp.html" target="_blank" rel="noopener">the upload page</a> (choose the customer in the list).</div></div>
+    <div class="kustep"><i>4</i><div>Send them the login: <b>logichain.no → Logg inn</b> with the e-mail and password. They land in their own dashboard and only see their own data.</div></div>`,
+    `<button type="button" class="hbtn" id="kuRefresh" style="margin-left:auto">↻ Refresh list</button>`);}
+$("kuAdd").addEventListener("click",e=>{e.stopPropagation();openKuNew();});
+$("kunder").addEventListener("click",e=>{const r=e.target.closest("[data-ku]");if(r)openKu(r.dataset.ku);});
+$("kuClose").addEventListener("click",closeKu);
+$("kuM").addEventListener("click",e=>{if(e.target.id==="kuM")closeKu();if(e.target.id==="kuRefresh"){closeKu();loadKunder();}});
+$("kuForm").addEventListener("submit",async e=>{e.preventDefault();if(!KU_EDIT)return;
+  const firma=$("kuFirma").value.trim(),portal=$("kuPortal").value;if(firma.length<2)return;
+  if(DEMO){Object.assign(KU_EDIT,{firma,portal});closeKu();return renderKunder();}
+  const r=await sb.rpc("admin_update_kunde",{p_id:KU_EDIT.id,p_firma:firma,p_portal:portal});
+  if(r.error)return say(/admin_update_kunde|function/i.test(r.error.message)?"Run supabase/kunder-portal.sql in Supabase first boss.":"Couldn't save: "+r.error.message,false);
+  closeKu();say(`Saved ${firma}.`,false);loadKunder();});
+
+function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();loadTraffic();loadLeads();loadSubs();loadKunder();}
 /* ---- Jarvis speaks up on his own now and then ---- */
 let LAST_ACTIVE=Date.now(),PRO_TIMER=null;
 ["pointerdown","keydown"].forEach(ev=>addEventListener(ev,()=>{LAST_ACTIVE=Date.now();},{passive:true}));
