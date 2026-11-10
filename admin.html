@@ -127,6 +127,18 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .side.l{transform-origin:left center;transform:rotateY(calc(14deg + var(--mx)*3deg)) rotateX(calc(var(--my)*-2deg))}
 .side.r{transform-origin:right center;transform:rotateY(calc(-14deg + var(--mx)*3deg)) rotateX(calc(var(--my)*-2deg))}
 .side .panel{animation:rise .8s both}
+/* click a panel title to blow it up */
+.side .ph h2{cursor:zoom-in;display:flex;align-items:center;gap:8px}
+.side .ph h2::after{content:"⤢";font-size:12px;opacity:0;transition:opacity .2s;letter-spacing:0}
+.side .panel:hover .ph h2::after{opacity:.7}
+#maxWrap{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:rgba(1,6,12,.62);backdrop-filter:blur(6px);animation:fadeIn .2s both}
+#maxWrap.hidden{display:none}
+#maxWrap .panel{width:min(980px,94vw);height:min(84vh,860px);flex:none!important;animation:none;display:flex;flex-direction:column;box-shadow:0 0 0 1px rgba(0,229,255,.25),0 30px 80px -20px rgba(0,229,255,.35)}
+#maxWrap .panel .scroll{flex:1;min-height:0;max-height:none!important}
+#maxWrap .ph h2{cursor:zoom-out;font-size:15px}
+#maxWrap .ph h2::after{content:"✕";opacity:.8;margin-left:10px}
+#maxWrap .lead,#maxWrap .sub{padding:12px 4px}
+#maxWrap #traffic .tr-bars,#maxWrap #traffic svg{max-height:none}
 .side .panel:nth-child(2){animation-delay:.12s}
 @keyframes rise{from{opacity:0;transform:translateZ(-120px) translateY(20px)}}
 
@@ -560,6 +572,8 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
   </form>
 </div>
 
+<div id="maxWrap" class="hidden"></div>
+
 <!-- SUBSCRIPTION EDITOR -->
 <div id="subM" class="hidden">
   <form class="holo panel br bf" id="subForm" autocomplete="off">
@@ -899,9 +913,9 @@ function initScene(){
   addEventListener("resize",resize);resize();
   addEventListener("mousemove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1;mouse.set(mx,-my);
     document.body.style.setProperty("--mx",mx.toFixed(3));document.body.style.setProperty("--my",my.toFixed(3));});
-  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,#subM"))return;if(S.hover)openAgent(S.hover.agent.id);});
+  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,#subM,#maxWrap"))return;if(S.hover)openAgent(S.hover.agent.id);});
   // double-click the reactor core → mini explosion
-  addEventListener("dblclick",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,#subM,input,textarea,button,select"))return;
+  addEventListener("dblclick",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,#subM,#maxWrap,input,textarea,button,select"))return;
     const c=new T.Vector3(0,0,0).project(cam),cx=(c.x*.5+.5)*innerWidth,cy=(-c.y*.5+.5)*innerHeight;
     if(Math.hypot(e.clientX-cx,e.clientY-cy)<Math.min(innerWidth,innerHeight)*.2){window.getSelection&&window.getSelection().removeAllRanges();miniBoom();}});
 
@@ -2057,6 +2071,18 @@ Ikke kontakt leverandører eller endre noe – bare oversikt og forslag. Lagre s
     j=await r.json().catch(()=>({error:"HTTP "+r.status}));if(!r.ok&&!j.error)j.error="HTTP "+r.status;}catch(err){j={error:err.message};}
   if(j.error)return say("Couldn't brief Anna: "+j.error,false);
   say("Sent the subscription list to Anna boss. She'll have the overview ready in her log.",false);await loadAgents();openAgent(j.session.agent_id,j.session.id);});
+
+/* ================= ZOOM A PANEL (click its title) ================= */
+let MAXP=null;
+function maxPanel(panel){
+  if(MAXP)return unmaxPanel();
+  const ph=document.createElement("div");ph.className="panel-ph";ph.style.cssText=panel.getAttribute("style")||"";ph.style.visibility="hidden";
+  panel.parentNode.insertBefore(ph,panel);MAXP={panel,ph};$("maxWrap").appendChild(panel);$("maxWrap").classList.remove("hidden");
+}
+function unmaxPanel(){if(!MAXP)return;MAXP.ph.parentNode.insertBefore(MAXP.panel,MAXP.ph);MAXP.ph.remove();MAXP=null;$("maxWrap").classList.add("hidden");}
+document.querySelectorAll(".side .panel .ph h2").forEach(h=>{h.title="Click to enlarge";h.addEventListener("click",e=>{e.stopPropagation();const p=h.closest(".panel");MAXP&&MAXP.panel===p?unmaxPanel():maxPanel(p);});});
+$("maxWrap").addEventListener("click",e=>{if(e.target.id==="maxWrap")unmaxPanel();});
+addEventListener("keydown",e=>{if(e.key==="Escape"&&MAXP)unmaxPanel();});
 
 function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();loadTraffic();loadLeads();loadSubs();}
 /* ---- Jarvis speaks up on his own now and then ---- */
