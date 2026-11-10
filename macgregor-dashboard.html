@@ -37,7 +37,8 @@ window.__ERRS.push("PROMISE-FEIL: "+(r&&r.message?r.message:String(r))+s);__show
       var err=document.getElementById("mgErr");
       var r=await sb.auth.signInWithPassword({email:em,password:pw});
       if(r.error){err.textContent=r.error.message;err.style.display="block";return;}
-      await verify();
+      // the login card replaced the dashboard markup, so load the page again with the new session
+      location.reload();
     });
     reveal();
   }
@@ -699,6 +700,8 @@ suppliers.forEach(s=>{
 
 
   }
+/* not signed in: the login card has replaced the dashboard, so there is nothing to draw */
+if(!document.getElementById("tabs"))return;
 /* ================= MONTH FILTER (whole page follows the selected month) ================= */
 const ALL_LINES=lines;
 if(window.__MONTH!=null&&window.__MONTH>=0&&window.__MONTH<MONTHS.length)lines=lines.filter(l=>l.month===window.__MONTH);else window.__MONTH=null;
