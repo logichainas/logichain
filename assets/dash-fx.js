@@ -82,7 +82,7 @@
     var R;
     try { R = new T.WebGLRenderer({canvas:cv, alpha:true, antialias:true}); } catch(_) { cv.remove(); return; }
     R.setPixelRatio(Math.min(devicePixelRatio,1.5));
-    var S = new T.Scene(), C = new T.PerspectiveCamera(60,1,1,2000); C.position.z = 520;
+    var S = new T.Scene(), C = new T.PerspectiveCamera(60,1,1,2000); C.position.z = 520; window.__lcCam=C;
     var G = new T.Group(); S.add(G);
     var n = innerWidth < 800 ? 70 : 140, pos = [], pts = new Float32Array(n*3);
     for (var i=0;i<n;i++){ var v=[(Math.random()-.5)*1300,(Math.random()-.5)*800,(Math.random()-.5)*700]; pos.push(v); pts.set(v,i*3); }
@@ -188,7 +188,7 @@
       var load=E(new T.BoxGeometry(46,30,46),CP,.6); load.position.y=-58; hook.add(load);
       hook.add(L([0,-24,0,-23,-43,-23, 0,-24,0,23,-43,-23, 0,-24,0,-23,-43,23, 0,-24,0,23,-43,23],0xe0f2fe,.5));
       S.add(hook);
-      root.rotation.y=-.5; S.add(root);
+      root.rotation.y=-.5; S.add(root); window.__lcCrane=root;
       var hp2=new T.Vector3(), tp=new T.Vector3(), sw={x:0,z:0,vx:0,vz:0}, lastSlew=0;
       crane={root:root,update:function(s){
         var slewA=s*0.18; slew.rotation.y=slewA;
