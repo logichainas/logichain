@@ -3,7 +3,7 @@
 <head>
 <meta name="robots" content="noindex,nofollow">
 <script>(function(){var V="v20261103a";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 window.__ERRS=[];
 function __showErr(){try{var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.3 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap;max-height:45vh;overflow:auto";(document.body||document.documentElement).appendChild(b);}b.textContent=window.__ERRS.slice(0,4).join("\n————\n");}catch(_){}}
@@ -453,7 +453,7 @@ rect.clickable:hover{fill:#6db3ff}
   <div class="modal" id="modalBox"></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <div id="upModal" style="display:none;position:fixed;inset:0;background:rgba(4,8,20,.8);z-index:80;overflow:auto;padding:40px 16px">
   <div style="max-width:560px;margin:0 auto;background:#101830;border:1px solid #24407a;border-radius:14px;padding:26px;color:#dbe4f5;font-family:Segoe UI,Arial,sans-serif">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
@@ -609,8 +609,11 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
         DIAG+="po="+(poE?("FEIL: "+poE):String(po.length))+" | ";
         if(!levE&&!matE&&!poE&&po.length){
           REAL=true;
-          suppliers=lev.map(r=>({id:r.id,num:r.nummer||"",name:r.navn,group:r.gruppe||"\u2013",country:r.land||"\u2013",rating:r.rating||"C",otdBase:50}));
-          MATS=mat.map(r=>[r.kode,r.beskrivelse,r.kategori||"\u2013",Number(r.standardpris)||0]);
+          // Customer data comes from their ERP export: neutralise characters that could inject HTML or break inline handlers
+          const SAFE=v=>String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"\u2039").replace(/>/g,"\u203a").replace(/"/g,"\u201d").replace(/'/g,"\u2019").replace(/`/g,"\u02bc").replace(/\\/g,"/");
+          const RATING=v=>/^[A-D]$/.test(v||"")?v:"C";
+          suppliers=lev.map(r=>({id:Number(r.id),num:SAFE(r.nummer),name:SAFE(r.navn),group:SAFE(r.gruppe||"\u2013"),country:SAFE(r.land||"\u2013"),rating:RATING(r.rating),otdBase:50}));
+          MATS=mat.map(r=>[SAFE(r.kode),SAFE(r.beskrivelse),SAFE(r.kategori||"\u2013"),Number(r.standardpris)||0]);
           const matIdIdx={};mat.forEach((r2,i2)=>matIdIdx[r2.id]=i2);
           lines=po.map(r=>{
             const sup=suppliers.find(x=>x.id===r.leverandor_id)||suppliers[0];
@@ -621,7 +624,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
             let dev=0,status="Ikke levert";
             if(dd&&pd){dev=Math.round((dd-pd)/864e5);status=dev<-OTD_TOL?"For tidlig":dev<=OTD_TOL?"I tide":"For sent";}
             const od2=od||pd||dd||new Date();
-            return {po:r.po,line:r.linjenr||1,sup,mat:mi,proj:r.prosjekt||"\u2013",qty:Number(r.antall)||1,order:od2,prom:pd||od2,del:dd,dev,status,value:Number(r.verdi)||0,month:(pd||od2).getFullYear()*12+(pd||od2).getMonth()};
+            return {po:SAFE(r.po),line:Number(r.linjenr)||1,sup,mat:mi,proj:SAFE(r.prosjekt)||"\u2013",qty:Number(r.antall)||1,order:od2,prom:pd||od2,del:dd,dev,status,value:Number(r.verdi)||0,month:(pd||od2).getFullYear()*12+(pd||od2).getMonth()};
           });
           // Reporting window: delivered from 1 January of the last complete month's year up to the end of the last complete month.
           // Months the customer has not sent data for yet (current month and later) and leftovers from earlier years are left out.
@@ -1479,7 +1482,7 @@ document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" 
     let html=`<div class="mh"><div><h2>📝 Notater – PO Performance</h2><div style="font-size:12px;color:var(--muted)">Lagres automatisk og deles med alle som har tilgang til portalen</div></div>
       <button class="mclose" onclick="hideModal()">Lukk ✕</button></div>`+window.noteBox("*",0,"Generelle notater");
     html+=`<h3 class="sect" style="margin-top:18px">Notater på PO-linjer (${list.length})</h3>`+(list.length?`<table><tr><th>PO</th><th>Linje</th><th>Notat</th><th>Sist endret</th></tr>`+
-      list.map(n=>`<tr class="click" onclick="showLine('${esc(n.po)}',${n.linjenr})"><td><b>${esc(n.po)}</b></td><td>${n.linjenr}</td><td>${esc(n.tekst.length>140?n.tekst.slice(0,140)+"…":n.tekst)}</td><td>${when(n.updated_at)}${n.updated_email?"<br><small>"+esc(n.updated_email)+"</small>":""}</td></tr>`).join("")+`</table>`
+      list.map(n=>`<tr class="click" onclick="showLine(${esc(JSON.stringify(String(n.po)))},${Number(n.linjenr)||0})"><td><b>${esc(n.po)}</b></td><td>${n.linjenr}</td><td>${esc(n.tekst.length>140?n.tekst.slice(0,140)+"…":n.tekst)}</td><td>${when(n.updated_at)}${n.updated_email?"<br><small>"+esc(n.updated_email)+"</small>":""}</td></tr>`).join("")+`</table>`
       :`<p class="note">Ingen linjenotater ennå. Klikk på en PO-linje i tabellen for å skrive et notat på den.</p>`);
     document.getElementById("modalBox").innerHTML=html;document.getElementById("modalBg").classList.add("show");
   };

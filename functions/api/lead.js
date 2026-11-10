@@ -30,7 +30,9 @@ export async function onRequestPost({ request, env }) {
       headers: { apikey: SUPABASE_ANON, Authorization: `Bearer ${SUPABASE_ANON}`, "Content-Type": "application/json" },
       body: JSON.stringify({ p_name: name, p_email: email, p_company: company, p_lang: lang, p_page: page, p_referrer: ref, p_country: country }),
     });
+    const id = r.ok ? await r.json().catch(() => null) : null;
     stored = r.ok;
+    if (r.ok && id == null) return json({ ok: true }); // flood guard hit: accept quietly, no e-mail
   } catch (_) {}
 
   if (env.LEAD_FLOW_URL) {
