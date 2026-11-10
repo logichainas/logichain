@@ -129,7 +129,7 @@ rect.clickable:hover{fill:#6db3ff}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/dash-theme.css?v=8">
+<link rel="stylesheet" href="assets/dash-theme.css?v=9">
 </head>
 <body>
 
@@ -155,6 +155,7 @@ rect.clickable:hover{fill:#6db3ff}
   <button data-tab="forside" class="active">📊 Executive Overview</button>
   <button data-tab="spend">💠 Spend Intelligence</button>
   <button data-tab="lev">🏢 Suppliers</button>
+  <button data-tab="proj">📁 Projects</button>
   <button data-tab="po">📦 PO Performance</button>
   <button data-tab="spar">💰 Savings Potential</button>
   <button data-tab="tiltak">🛠️ Actions</button>
@@ -264,9 +265,18 @@ rect.clickable:hover{fill:#6db3ff}
 <section id="tab-lev" style="display:none">
   <div class="card">
     <h3 class="sect">Supplier overview – click a row for details</h3>
-    <input type="text" id="levSearch" placeholder="Search supplier name ..." oninput="renderLev()" style="margin-bottom:14px">
+    <input type="text" id="levSearch" placeholder="Search supplier name or supplier no. ..." oninput="renderLev()" style="margin-bottom:14px">
     <div style="overflow-x:auto"><table id="levTable"></table></div>
     <div class="detail" id="levDetail"></div>
+  </div>
+</section>
+
+<!-- ============ PROJECT LOOKUP ============ -->
+<section id="tab-proj" style="display:none">
+  <div class="card" data-open>
+    <h3 class="sect">Search by project number</h3>
+    <input type="text" id="projSearch" placeholder="Type a project no., e.g. 2188 …" oninput="renderProj()" autocomplete="off" style="margin-bottom:14px">
+    <div id="projOut"></div>
   </div>
 </section>
 
@@ -413,7 +423,7 @@ const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep"];
 const MW=[0.8,0.9,1.1,1.2,1.3,1.0,0.7,0.9,1.1];
 
 const suppliers=NAMES.map((n,i)=>({
-  id:i,name:n,group:pick(GROUPS),country:pick(["NO","SE","DK"]),
+  id:i,num:String(100200+i*37),name:n,group:pick(GROUPS),country:pick(["NO","SE","DK"]),
   rating:rnd()<.16?"A":rnd()<.45?"B":rnd()<.75?"C":"D",
   otdBase:Math.round(20+rnd()*68)
 }));
@@ -528,7 +538,7 @@ const avgPriceTrend=(matTrend.reduce((a,t)=>a+t,0)/matTrend.length*100);
 
 /* ================= TABS ================= */
 function goto(t){window.__TAB=t;document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
-  ["forside","spend","lev","po","octo","spar","tiltak","faq"].forEach(x=>document.getElementById("tab-"+x).style.display=x===t?"":"none");
+  ["forside","spend","lev","proj","po","octo","spar","tiltak","faq"].forEach(x=>document.getElementById("tab-"+x).style.display=x===t?"":"none");
   const h=document.getElementById("hintline");if(h)h.textContent=HINTS[t]||"";
   setCrumbs([["Logichain","goto('forside')"],[TABNAMES[t]||t]]);
   window.scrollTo(0,0);}
@@ -607,9 +617,9 @@ document.getElementById("kpi-po").innerHTML=
 /* ================= LEVERANDØR ================= */
 function renderLev(){
   const q=(document.getElementById("levSearch").value||"").toLowerCase();
-  const rows=suppliers.filter(s=>!q||s.name.toLowerCase().includes(q)).sort((a,b)=>b.spend-a.spend);
+  const rows=suppliers.filter(s=>!q||s.name.toLowerCase().includes(q)||String(s.num||"").toLowerCase().includes(q)).sort((a,b)=>b.spend-a.spend);
   document.getElementById("levTable").innerHTML=`<tr><th>Supplier</th><th>Group</th><th>Rating</th><th>OTD</th><th>Deliveries</th><th>Late</th><th>Avg |dev|</th><th style="text-align:right">Spend</th><th style="text-align:right">Identified potential</th></tr>`+
-    rows.map(s=>`<tr class="click" onclick="levDetail(${s.id})"><td><b>${s.name}</b></td><td>${s.group}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.otd}%</td><td>${s.lines}</td><td>${s.latePct}%</td><td>${s.avgAbs} days</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${savPer[s.id]>5000?fmt(savPer[s.id])+" NOK":"–"} ${savPer[s.id]>5000?`<a class="evlink" onclick="event.stopPropagation();showEvidence('sup',${s.id})">[dok]</a>`:""}</td></tr>`).join("");
+    rows.map(s=>`<tr class="click" onclick="levDetail(${s.id})"><td><b>${s.name}</b>${s.num?`<div style="font-size:11px;color:var(--muted)">Supp. no. ${s.num}</div>`:""}</td><td>${s.group}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.otd}%</td><td>${s.lines}</td><td>${s.latePct}%</td><td>${s.avgAbs} days</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${savPer[s.id]>5000?fmt(savPer[s.id])+" NOK":"–"} ${savPer[s.id]>5000?`<a class="evlink" onclick="event.stopPropagation();showEvidence('sup',${s.id})">[dok]</a>`:""}</td></tr>`).join("");
 }
 renderLev();
 window.levDetail=function(id){
@@ -632,6 +642,49 @@ window.levDetail=function(id){
   setCrumbs([["Logichain","goto('forside')"],["Suppliers","goto('lev')"],[s.name]]);
   el.scrollIntoView({behavior:"smooth",block:"nearest"});
 };
+/* ================= PROJECT LOOKUP ================= */
+window.renderProj=function(sel){
+  const src=(typeof ALL_LINES!=="undefined"?ALL_LINES:lines),out=document.getElementById("projOut"),inp=document.getElementById("projSearch");
+  if(typeof sel==="string")inp.value=sel;
+  const q=(inp.value||"").trim().toLowerCase();
+  const by={};src.forEach(l=>{if(!l.proj||l.proj==="\u2013")return;(by[l.proj]=by[l.proj]||[]).push(l);});
+  const all=Object.keys(by);
+  if(!all.length){out.innerHTML=`<div class="empty-state" style="padding:24px;text-align:center;color:var(--muted)">No project numbers in the data yet – include the "Project no." column in the next upload.</div>`;return;}
+  const stat=ls=>{const d=ls.filter(l=>l.status!=="Not delivered"),ok=d.filter(l=>l.status==="On time").length;
+    return {n:ls.length,pos:new Set(ls.map(l=>l.po)).size,sups:new Set(ls.map(l=>l.sup.id)).size,spend:ls.reduce((a,l)=>a+l.value,0),
+      otd:d.length?Math.round(ok/d.length*100):0,late:ls.filter(l=>l.status==="Late").length,del:d.length,ok};};
+  const hits=all.filter(p=>!q||p.toLowerCase().includes(q));
+  const exact=hits.find(p=>p.toLowerCase()===q);
+  const one=exact||(hits.length===1&&q?hits[0]:null);
+  const stc=st=>st==="On time"?"st-ok":st==="Late"?"st-late":"st-early";
+  if(!one){
+    if(!hits.length){out.innerHTML=`<p style="color:var(--muted);padding:12px 0">No projects match the search.</p>`;return;}
+    const rows=hits.map(p=>[p,stat(by[p])]).sort((a,b)=>b[1].spend-a[1].spend);
+    out.innerHTML=`<h3 class="sect" style="margin-top:4px">All projects – click for details</h3><div style="overflow-x:auto"><table><tr><th>Project</th><th>PO lines</th><th>Purchase orders</th><th>Suppliers</th><th>OTD</th><th>Late</th><th style="text-align:right">Spend</th></tr>`+
+      rows.map(([p,t])=>`<tr class="click" onclick="renderProj('${p.replace(/'/g,"\\'")}')"><td><b>${p}</b></td><td>${t.n}</td><td>${t.pos}</td><td>${t.sups}</td><td class="${t.otd>=80?"good":t.otd<50?"bad":""}">${t.otd}%</td><td>${t.late}</td><td style="text-align:right">${fmt(t.spend)}</td></tr>`).join("")+`</table></div>`;
+    try{setCrumbs([["Logichain","goto('forside')"],["Project lookup"]]);}catch(_){}return;
+  }
+  const ls=by[one].slice().sort((a,b)=>String(a.po).localeCompare(String(b.po))||a.line-b.line),t=stat(ls);
+  const sp={};ls.forEach(l=>{const o=sp[l.sup.id]=sp[l.sup.id]||{s:l.sup,n:0,v:0,late:0};o.n++;o.v+=l.value;if(l.status==="Late")o.late++;});
+  out.innerHTML=`<p style="margin:0 0 10px"><a class="evlink" onclick="renderProj('')">← All projects</a></p>
+  <h3 class="sect">Project ${one}</h3>
+  <div class="kpis" style="margin-bottom:14px">
+    ${kpi("Spend",fmt(t.spend)+" kr",t.n+" PO lines")}
+    ${kpi("Purchase orders",t.pos,"")}
+    ${kpi("Suppliers",t.sups,"")}
+    ${kpi("OTD",t.otd+"%",t.ok+" on time of "+t.del+" deliveries",t.otd>=80?"good":t.otd<50?"bad":"warn")}
+    ${kpi("Late",t.late,"PO lines",t.late?"bad":"good")}
+  </div>
+  <h3 class="sect">Suppliers in the project</h3>
+  <div style="overflow-x:auto;margin-bottom:16px"><table><tr><th>Supplier</th><th>PO lines</th><th>Late</th><th style="text-align:right">Spend</th></tr>
+  ${Object.values(sp).sort((a,b)=>b.v-a.v).map(o=>`<tr class="click" onclick="openSup(${o.s.id})"><td><b>${o.s.name}</b></td><td>${o.n}</td><td>${o.late}</td><td style="text-align:right">${fmt(o.v)}</td></tr>`).join("")}</table></div>
+  <h3 class="sect">All purchase orders in the project</h3>
+  <div style="overflow-x:auto"><table><tr><th>PO</th><th>Line</th><th>Supplier</th><th>Material</th><th>Qty</th><th>Promised</th><th>Delivered</th><th>Deviation</th><th>Status</th><th style="text-align:right">Value</th></tr>
+  ${ls.map(l=>`<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.line}</td><td><a class="cellink" onclick="event.stopPropagation();openSup(${l.sup.id})">${l.sup.name}</a></td><td><a class="cellink" onclick="event.stopPropagation();showMat(${l.mat})">${matName(l.mat)}</a></td><td>${l.qty}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.status==="Not delivered"?"–":(l.dev>0?"+":"")+l.dev+" days"}</td><td class="${stc(l.status)}">${l.status}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")}</table></div>`;
+  try{setCrumbs([["Logichain","goto('forside')"],["Project lookup","renderProj('')"],["Project "+one]]);}catch(_){}
+};
+renderProj();
+
 
 /* ================= SPEND INTELLIGENCE ================= */
 function vbars(data,fmtY,fmtL,clickFn){
@@ -846,8 +899,9 @@ function renderTiltak(){
 renderTiltak();
 
 /* ================= CROSS-NAVIGATION ================= */
-const TABNAMES={forside:"Executive Overview",spend:"Spend Intelligence",lev:"Suppliers",po:"PO Performance",octo:"Market (Octopart)",spar:"Savings Potential",tiltak:"Actions",faq:"FAQ"};
+const TABNAMES={forside:"Executive Overview",spend:"Spend Intelligence",lev:"Suppliers",proj:"Project lookup",po:"PO Performance",octo:"Market (Octopart)",spar:"Savings Potential",tiltak:"Actions",faq:"FAQ"};
 const HINTS={
+  proj:"Search by project number to see every purchase order, supplier and material in the project.",
  forside:"Click through the cards below – or use the search at the top right to find suppliers, materials and POs directly.",
  spend:"Click a month in the charts for that month's details – or a supplier/material to dig deeper.",
  lev:"Click a row for supplier details. The potential figure has a «doc» link with full documentation.",
@@ -1132,7 +1186,7 @@ document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" 
 
 /* deep-link support: logichain-dashboard-demo.html#spend opens that module */
 (function(){const h=window.__BOOTED?(window.__TAB||"forside"):location.hash.slice(1);
-  if(["forside","spend","lev","po","octo","spar","tiltak","faq"].indexOf(h)>=0)goto(h);})();
+  if(["forside","spend","lev","proj","po","octo","spar","tiltak","faq"].indexOf(h)>=0)goto(h);})();
 window.goto=goto;window.renderPO=renderPO;window.renderLev=renderLev;window.renderTiltak=renderTiltak;
 window.__BOOTED=true;
 }

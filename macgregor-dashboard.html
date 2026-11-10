@@ -181,7 +181,7 @@ rect.clickable:hover{fill:#6db3ff}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/dash-theme.css?v=8">
+<link rel="stylesheet" href="assets/dash-theme.css?v=9">
 </head>
 <body>
 
@@ -208,6 +208,7 @@ rect.clickable:hover{fill:#6db3ff}
   <button data-tab="forside" class="active">📊 Executive Overview</button>
   <button data-tab="spend">💠 Spend Intelligence</button>
   <button data-tab="lev">🏢 Leverandører</button>
+  <button data-tab="proj">📁 Prosjekter</button>
   <button data-tab="po">📦 PO Performance</button>
   <button data-tab="spar">💰 Sparingspotensial</button>
   <button data-tab="tiltak">🛠️ Tiltak</button>
@@ -319,9 +320,18 @@ rect.clickable:hover{fill:#6db3ff}
 <section id="tab-lev" style="display:none">
   <div class="card">
     <h3 class="sect">Leverandøroversikt – klikk på raden for detaljer</h3>
-    <input type="text" id="levSearch" placeholder="Søk på leverandørnavn ..." oninput="renderLev()" style="margin-bottom:14px">
+    <input type="text" id="levSearch" placeholder="Søk på leverandørnavn eller leverandørnr ..." oninput="renderLev()" style="margin-bottom:14px">
     <div style="overflow-x:auto"><table id="levTable"></table></div>
     <div class="detail" id="levDetail"></div>
+  </div>
+</section>
+
+<!-- ============ PROJECT LOOKUP ============ -->
+<section id="tab-proj" style="display:none">
+  <div class="card" data-open>
+    <h3 class="sect">Søk etter prosjektnummer</h3>
+    <input type="text" id="projSearch" placeholder="Tast prosjektnr., f.eks. 2188 …" oninput="renderProj()" autocomplete="off" style="margin-bottom:14px">
+    <div id="projOut"></div>
   </div>
 </section>
 
@@ -599,7 +609,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
         DIAG+="po="+(poE?("FEIL: "+poE):String(po.length))+" | ";
         if(!levE&&!matE&&!poE&&po.length){
           REAL=true;
-          suppliers=lev.map(r=>({id:r.id,name:r.navn,group:r.gruppe||"\u2013",country:r.land||"\u2013",rating:r.rating||"C",otdBase:50}));
+          suppliers=lev.map(r=>({id:r.id,num:r.nummer||"",name:r.navn,group:r.gruppe||"\u2013",country:r.land||"\u2013",rating:r.rating||"C",otdBase:50}));
           MATS=mat.map(r=>[r.kode,r.beskrivelse,r.kategori||"\u2013",Number(r.standardpris)||0]);
           const matIdIdx={};mat.forEach((r2,i2)=>matIdIdx[r2.id]=i2);
           lines=po.map(r=>{
@@ -644,7 +654,7 @@ MONTHS=["Jan","Feb","Mar","Apr","Mai","Jun","Jul","Aug","Sep"];
 const MW=[0.8,0.9,1.1,1.2,1.3,1.0,0.7,0.9,1.1];
 
 suppliers=NAMES.map((n,i)=>({
-  id:i,name:n,group:pick(GROUPS),country:pick(["NO","SE","DK"]),
+  id:i,num:String(100200+i*37),name:n,group:pick(GROUPS),country:pick(["NO","SE","DK"]),
   rating:rnd()<.16?"A":rnd()<.45?"B":rnd()<.75?"C":"D",
   otdBase:Math.round(20+rnd()*68)
 }));
@@ -763,7 +773,7 @@ const avgPriceTrend=(matTrend.reduce((a,t)=>a+t,0)/matTrend.length*100);
 
 /* ================= TABS ================= */
 function goto(t){window.__TAB=t;document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
-  ["forside","spend","lev","po","octo","spar","tiltak","faq"].forEach(x=>document.getElementById("tab-"+x).style.display=x===t?"":"none");
+  ["forside","spend","lev","proj","po","octo","spar","tiltak","faq"].forEach(x=>document.getElementById("tab-"+x).style.display=x===t?"":"none");
   const h=document.getElementById("hintline");if(h)h.textContent=HINTS[t]||"";
   setCrumbs([["Logichain","goto('forside')"],[TABNAMES[t]||t]]);
   window.scrollTo(0,0);}
@@ -842,9 +852,9 @@ document.getElementById("kpi-po").innerHTML=
 /* ================= LEVERANDØR ================= */
 function renderLev(){
   const q=(document.getElementById("levSearch").value||"").toLowerCase();
-  const rows=suppliers.filter(s=>!q||s.name.toLowerCase().includes(q)).sort((a,b)=>b.spend-a.spend);
+  const rows=suppliers.filter(s=>!q||s.name.toLowerCase().includes(q)||String(s.num||"").toLowerCase().includes(q)).sort((a,b)=>b.spend-a.spend);
   document.getElementById("levTable").innerHTML=`<tr><th>Leverandør</th><th>Gruppe</th><th>Rating</th><th>OTD</th><th>Leveringer</th><th>For sent</th><th>Snitt |avvik|</th><th style="text-align:right">Spend</th><th style="text-align:right">Identifisert potensial</th></tr>`+
-    rows.map(s=>`<tr class="click" onclick="levDetail(${s.id})"><td><b>${s.name}</b></td><td>${s.group}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.otd}%</td><td>${s.lines}</td><td>${s.latePct}%</td><td>${s.avgAbs} dgr</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${savPer[s.id]>5000?fmt(savPer[s.id])+" kr":"–"} ${savPer[s.id]>5000?`<a class="evlink" onclick="event.stopPropagation();showEvidence('sup',${s.id})">[dok]</a>`:""}</td></tr>`).join("");
+    rows.map(s=>`<tr class="click" onclick="levDetail(${s.id})"><td><b>${s.name}</b>${s.num?`<div style="font-size:11px;color:var(--muted)">Lev.nr ${s.num}</div>`:""}</td><td>${s.group}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.otd}%</td><td>${s.lines}</td><td>${s.latePct}%</td><td>${s.avgAbs} dgr</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${savPer[s.id]>5000?fmt(savPer[s.id])+" kr":"–"} ${savPer[s.id]>5000?`<a class="evlink" onclick="event.stopPropagation();showEvidence('sup',${s.id})">[dok]</a>`:""}</td></tr>`).join("");
 }
 renderLev();
 window.levDetail=function(id){
@@ -867,6 +877,49 @@ window.levDetail=function(id){
   setCrumbs([["Logichain","goto('forside')"],["Leverandører","goto('lev')"],[s.name]]);
   el.scrollIntoView({behavior:"smooth",block:"nearest"});
 };
+/* ================= PROJECT LOOKUP ================= */
+window.renderProj=function(sel){
+  const src=(typeof ALL_LINES!=="undefined"?ALL_LINES:lines),out=document.getElementById("projOut"),inp=document.getElementById("projSearch");
+  if(typeof sel==="string")inp.value=sel;
+  const q=(inp.value||"").trim().toLowerCase();
+  const by={};src.forEach(l=>{if(!l.proj||l.proj==="\u2013")return;(by[l.proj]=by[l.proj]||[]).push(l);});
+  const all=Object.keys(by);
+  if(!all.length){out.innerHTML=`<div class="empty-state" style="padding:24px;text-align:center;color:var(--muted)">Ingen prosjektnumre i dataene ennå – ta med kolonnen «Prosjektnr» i neste opplasting.</div>`;return;}
+  const stat=ls=>{const d=ls.filter(l=>l.status!=="Ikke levert"),ok=d.filter(l=>l.status==="I tide").length;
+    return {n:ls.length,pos:new Set(ls.map(l=>l.po)).size,sups:new Set(ls.map(l=>l.sup.id)).size,spend:ls.reduce((a,l)=>a+l.value,0),
+      otd:d.length?Math.round(ok/d.length*100):0,late:ls.filter(l=>l.status==="For sent").length,del:d.length,ok};};
+  const hits=all.filter(p=>!q||p.toLowerCase().includes(q));
+  const exact=hits.find(p=>p.toLowerCase()===q);
+  const one=exact||(hits.length===1&&q?hits[0]:null);
+  const stc=st=>st==="I tide"?"st-ok":st==="For sent"?"st-late":"st-early";
+  if(!one){
+    if(!hits.length){out.innerHTML=`<p style="color:var(--muted);padding:12px 0">Ingen prosjekter matcher søket.</p>`;return;}
+    const rows=hits.map(p=>[p,stat(by[p])]).sort((a,b)=>b[1].spend-a[1].spend);
+    out.innerHTML=`<h3 class="sect" style="margin-top:4px">Alle prosjekter – klikk for detaljer</h3><div style="overflow-x:auto"><table><tr><th>Prosjekt</th><th>PO-linjer</th><th>Innkjøpsordrer</th><th>Leverandører</th><th>OTD</th><th>For sent</th><th style="text-align:right">Spend</th></tr>`+
+      rows.map(([p,t])=>`<tr class="click" onclick="renderProj('${p.replace(/'/g,"\\'")}')"><td><b>${p}</b></td><td>${t.n}</td><td>${t.pos}</td><td>${t.sups}</td><td class="${t.otd>=80?"good":t.otd<50?"bad":""}">${t.otd}%</td><td>${t.late}</td><td style="text-align:right">${fmt(t.spend)}</td></tr>`).join("")+`</table></div>`;
+    try{setCrumbs([["Logichain","goto('forside')"],["Prosjektoppslag"]]);}catch(_){}return;
+  }
+  const ls=by[one].slice().sort((a,b)=>String(a.po).localeCompare(String(b.po))||a.line-b.line),t=stat(ls);
+  const sp={};ls.forEach(l=>{const o=sp[l.sup.id]=sp[l.sup.id]||{s:l.sup,n:0,v:0,late:0};o.n++;o.v+=l.value;if(l.status==="For sent")o.late++;});
+  out.innerHTML=`<p style="margin:0 0 10px"><a class="evlink" onclick="renderProj('')">← Alle prosjekter</a></p>
+  <h3 class="sect">Prosjekt ${one}</h3>
+  <div class="kpis" style="margin-bottom:14px">
+    ${kpi("Spend",fmt(t.spend)+" kr",t.n+" PO-linjer")}
+    ${kpi("Innkjøpsordrer",t.pos,"")}
+    ${kpi("Leverandører",t.sups,"")}
+    ${kpi("OTD",t.otd+"%",t.ok+" i tide av "+t.del+" leveringer",t.otd>=80?"good":t.otd<50?"bad":"warn")}
+    ${kpi("For sent",t.late,"PO-linjer",t.late?"bad":"good")}
+  </div>
+  <h3 class="sect">Leverandører i prosjektet</h3>
+  <div style="overflow-x:auto;margin-bottom:16px"><table><tr><th>Leverandør</th><th>PO-linjer</th><th>For sent</th><th style="text-align:right">Spend</th></tr>
+  ${Object.values(sp).sort((a,b)=>b.v-a.v).map(o=>`<tr class="click" onclick="openSup(${o.s.id})"><td><b>${o.s.name}</b></td><td>${o.n}</td><td>${o.late}</td><td style="text-align:right">${fmt(o.v)}</td></tr>`).join("")}</table></div>
+  <h3 class="sect">Alle innkjøpsordrer i prosjektet</h3>
+  <div style="overflow-x:auto"><table><tr><th>PO</th><th>Linje</th><th>Leverandør</th><th>Materiale</th><th>Antall</th><th>Love-dato</th><th>Levert</th><th>Avvik</th><th>Status</th><th style="text-align:right">Verdi</th></tr>
+  ${ls.map(l=>`<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.line}</td><td><a class="cellink" onclick="event.stopPropagation();openSup(${l.sup.id})">${l.sup.name}</a></td><td><a class="cellink" onclick="event.stopPropagation();showMat(${l.mat})">${matName(l.mat)}</a></td><td>${l.qty}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.status==="Ikke levert"?"–":(l.dev>0?"+":"")+l.dev+" dgr"}</td><td class="${stc(l.status)}">${l.status}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")}</table></div>`;
+  try{setCrumbs([["Logichain","goto('forside')"],["Prosjektoppslag","renderProj('')"],["Prosjekt "+one]]);}catch(_){}
+};
+renderProj();
+
 
 /* ================= SPEND INTELLIGENCE ================= */
 function vbars(data,fmtY,fmtL,clickFn){
@@ -1081,8 +1134,9 @@ function renderTiltak(){
 renderTiltak();
 
 /* ================= CROSS-NAVIGATION ================= */
-const TABNAMES={forside:"Executive Overview",spend:"Spend Intelligence",lev:"Leverandører",po:"PO Performance",octo:"Marked (Octopart)",spar:"Sparingspotensial",tiltak:"Tiltak",faq:"Spørsmål og svar"};
+const TABNAMES={forside:"Executive Overview",spend:"Spend Intelligence",lev:"Leverandører",proj:"Prosjektoppslag",po:"PO Performance",octo:"Marked (Octopart)",spar:"Sparingspotensial",tiltak:"Tiltak",faq:"Spørsmål og svar"};
 const HINTS={
+  proj:"Søk på prosjektnummer for å se alle innkjøpsordrer, leverandører og materialer i prosjektet.",
  forside:"Klikk deg videre via kortene nedenfor – eller bruk søket oppe til høyre for å finne leverandører, materialer og PO-er direkte.",
  spend:"Klikk på en måned i grafene for månedens detaljer – eller på en leverandør/et materiale for å grave dypere.",
  lev:"Klikk på en rad for leverandørdetaljer. Potensialstallet har «dok»-lenke med full dokumentasjon.",
@@ -1369,7 +1423,7 @@ document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" 
 
 /* deep-link support: logichain-dashboard-demo.html#spend opens that module */
 (function(){const h=window.__BOOTED?(window.__TAB||"forside"):location.hash.slice(1);
-  if(["forside","spend","lev","po","octo","spar","tiltak","faq"].indexOf(h)>=0)goto(h);})();
+  if(["forside","spend","lev","proj","po","octo","spar","tiltak","faq"].indexOf(h)>=0)goto(h);})();
 
   const bEl=document.getElementById("dataBadge");if(bEl)bEl.textContent=REAL?"\u2713 EKTE DATA":"GENERERT DEMODATA";
   try{const u=document.querySelector(".updated");if(u&&REAL){const P=window.__PERIOD,f=d=>d.toLocaleDateString("no-NO",{month:"short",year:"numeric"});u.textContent="Sist oppdatert: "+new Date().toLocaleDateString("no-NO")+" \u00b7 Periode: "+(P?f(P.from)+" – "+f(P.to):"–")+" \u00b7 Datakilde: MacGregor (ekte data)";}}catch(_){}

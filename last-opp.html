@@ -154,7 +154,7 @@ document.getElementById("file").addEventListener("change",async e=>{
       if(seen[key])E("Duplikat PO+linje");else seen[key]=1;}
     else errs.push({row,t:"Feil",m:"Ufullstendig rad"});
     if(!isNaN(val))spend+=val;
-    valid.push({po,line:parseInt(get(r,"linjenr"))||1,supName:sup,matCode:mat,
+    valid.push({po,line:parseInt(get(r,"linjenr"))||1,supName:sup,supNo:String(get(r,"leverandørnr")||"").trim(),matCode:mat,
       desc:get(r,"materialebeskrivelse"),cat:get(r,"kategori"),proj:get(r,"prosjektnr"),
       qty,unit:get(r,"enhet")||"stk",up:isNaN(up)?0:up,val:isNaN(val)?0:val,
       order:bd&&bd!=="BAD"?bd:null,prom:ld&&ld!=="BAD"?ld:null,del:dd&&dd!=="BAD"?dd:null});
@@ -192,12 +192,18 @@ document.getElementById("importBtn").addEventListener("click",async ()=>{
     const supMap={};exL.forEach(r=>supMap[r.navn.toLowerCase()]=r.id);
     // behold leverandørnavnet slik det står i filen (første forekomst)
     const supName={};PENDING.valid.forEach(r=>{const k=r.supName.toLowerCase();if(!supName[k])supName[k]=r.supName.trim();});
+    const supNo={};PENDING.valid.forEach(r=>{const k=r.supName.toLowerCase();if(r.supNo&&!supNo[k])supNo[k]=r.supNo;});
     const missingSup=Object.keys(supName).filter(n=>!supMap[n]);
     if(missingSup.length){
-      const ins=await sb.from("leverandorer").insert(missingSup.map(n=>({kunde_id:KID,navn:supName[n]}))).select("id,navn");
+      // supplier number (Leverandørnr) is stored when the database has the column; older databases fall back to name only
+      let ins=await sb.from("leverandorer").insert(missingSup.map(n=>({kunde_id:KID,navn:supName[n],...(supNo[n]?{nummer:supNo[n]}:{})}))).select("id,navn");
+      if(ins.error&&/nummer/i.test(ins.error.message||""))ins=await sb.from("leverandorer").insert(missingSup.map(n=>({kunde_id:KID,navn:supName[n]}))).select("id,navn");
       if(ins.error)throw ins.error;
       (ins.data||[]).forEach(r=>supMap[r.navn.toLowerCase()]=r.id);
     }
+    // fill in supplier numbers for suppliers that already existed (ignored if the column is missing)
+    for(const n of Object.keys(supNo).filter(n=>supMap[n]&&!missingSup.includes(n))){
+      const u=await sb.from("leverandorer").update({nummer:supNo[n]}).eq("id",supMap[n]);if(u.error)break;}
     const exM=await fetchAll("materialer","id,kode");
     const matMap={};exM.forEach(r=>matMap[r.kode.toLowerCase()]=r.id);
     const seenMat={};const missingMat=[];
