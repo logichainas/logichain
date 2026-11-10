@@ -19,7 +19,6 @@ begin
   return new;
 end;
 $$;
-revoke execute on function public.handle_new_kunde() from public, anon, authenticated;
 
 -- 3) Visitors without a login (the public "anon" key) never need direct table access:
 --    the website only uses log_visit() and log_demo_lead(). Remove the default grants
