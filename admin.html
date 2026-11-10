@@ -78,6 +78,16 @@ button,input,select{font-family:var(--ui)}
 .lead a{color:var(--cyan);text-decoration:none}
 .lead .ld-ok{margin-left:auto;flex:none}
 .lead.done{opacity:.55}
+.sub{display:flex;gap:10px;align-items:center;padding:8px 2px;border-bottom:1px solid rgba(0,229,255,.08);cursor:pointer}
+.sub:last-child{border-bottom:0}.sub:hover{background:rgba(0,229,255,.05)}
+.sub b{font-weight:600;color:var(--text);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub small{display:block;font:11.5px var(--mono);color:var(--muted)}
+.sub .sv{margin-left:auto;text-align:right;flex:none}
+.sub .sv b{font:600 13px var(--mono);color:var(--text)}
+.sub .sd{width:8px;height:8px;border-radius:50%;flex:none;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.sub.soon .sd{background:var(--amber);box-shadow:0 0 8px var(--amber)}.sub.soon .sv small{color:var(--amber)}
+.sub.miss .sv b{color:var(--amber);font-size:11px}
+#subTot{font:11px var(--mono);color:var(--muted)}
 .ld-cp{background:none;border:1px solid var(--line);color:var(--cyan);font:11px var(--mono);padding:1px 6px;margin-left:6px;cursor:pointer;border-radius:3px;vertical-align:1px}
 .ld-cp:hover{border-color:var(--cyan);box-shadow:var(--glow)}.ld-cp.ok{color:var(--green);border-color:var(--green)}
 #ldCopyAll{margin-left:8px}
@@ -270,10 +280,11 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .vprow:hover{border-color:var(--line2)}
 .vprow.on{border-color:var(--cyan);background:rgba(0,229,255,.08);box-shadow:var(--glow)}
 .vprow small{display:block;font:11px var(--mono);color:var(--muted)}
-#ceoM,#briefM,#newM{position:fixed;inset:0;z-index:56;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.6);backdrop-filter:blur(3px)}
+#subM,#ceoM,#briefM,#newM{position:fixed;inset:0;z-index:56;display:flex;align-items:center;justify-content:center;padding:28px;perspective:1600px;background:rgba(0,4,8,.6);backdrop-filter:blur(3px)}
 .bf{width:min(760px,100%);max-height:100%;display:flex!important;flex-direction:column;padding:0!important;animation:holoIn .5s cubic-bezier(.2,.9,.25,1) both}
 .bfbody{padding:18px 22px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
 .bfbody label{display:flex;flex-direction:column;gap:6px;font:600 11px var(--hud);letter-spacing:.2em;color:var(--cyan)}
+.bfbody label.bfl{display:block;margin-bottom:6px}
 .bfbody textarea{resize:vertical;font:500 15px/1.45 var(--ui);min-height:160px}
 .bfbody select{font-size:16px}
 .bfhint{font-size:13px;color:var(--muted)}
@@ -491,6 +502,10 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
         <div class="ph"><h2>SITE TRAFFIC</h2><span id="trRange">logichain.no</span></div>
         <div id="traffic"><div class="empty">Loading …</div></div>
       </div>
+      <div class="panel br" style="flex:.8;min-height:0">
+        <div class="ph"><h2>SUBSCRIPTIONS</h2><span><span id="subTot"></span> <button class="mini" id="subAnna" title="Send the list to Anna for a cost overview">ANNA</button> <button class="mini" id="subAdd" title="Add a subscription">+ ADD</button></span></div>
+        <div class="scroll" id="subs"><div class="empty">Loading …</div></div>
+      </div>
       <div class="panel br" style="flex:1;min-height:0">
         <div class="ph"><h2>LIVE ACTIVITY</h2><span id="sCount"></span></div>
         <div class="scroll" id="activity"><div class="empty">—</div></div>
@@ -542,6 +557,24 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
       <button type="button" class="hbtn" id="bfCancel">Cancel</button>
       <button class="talk" id="bfSend">➤ Send to agent</button>
     </div>
+  </form>
+</div>
+
+<!-- SUBSCRIPTION EDITOR -->
+<div id="subM" class="hidden">
+  <form class="holo panel br bf" id="subForm" autocomplete="off">
+    <div class="vh"><div class="orb" style="--c:#3dffb0"></div><div><h3 id="subH">Subscription</h3><p>What Logichain pays for – Anna uses this list</p></div><div class="sp"></div><button type="button" class="hbtn" id="subClose">Close ✕</button></div>
+    <div class="bfbody">
+      <label class="bfl">Name</label><input class="field" id="subName" maxlength="120" required placeholder="e.g. Supabase Pro">
+      <div style="display:grid;grid-template-columns:1.2fr .8fr 1fr;gap:10px;margin-top:10px">
+        <div><label class="bfl">Price</label><input class="field" id="subPrice" type="number" step="0.01" min="0" placeholder="0.00"></div>
+        <div><label class="bfl">Currency</label><select class="field" id="subCur"><option>NOK</option><option>USD</option><option>EUR</option><option>SEK</option><option>DKK</option><option>GBP</option></select></div>
+        <div><label class="bfl">Billed</label><select class="field" id="subCycle"><option value="month">Monthly</option><option value="year">Yearly</option></select></div>
+      </div>
+      <label class="bfl" style="margin-top:10px">Next payment</label><input class="field" id="subDate" type="date">
+      <label class="bfl" style="margin-top:10px">Note</label><input class="field" id="subNote" maxlength="200" placeholder="optional – plan, card, who to cancel with …">
+    </div>
+    <div class="rvfoot"><button type="button" class="hbtn" id="subDel" style="margin-right:auto">Delete</button><button type="submit" class="talk">Save</button></div>
   </form>
 </div>
 
@@ -866,9 +899,9 @@ function initScene(){
   addEventListener("resize",resize);resize();
   addEventListener("mousemove",e=>{mx=e.clientX/innerWidth*2-1;my=e.clientY/innerHeight*2-1;mouse.set(mx,-my);
     document.body.style.setProperty("--mx",mx.toFixed(3));document.body.style.setProperty("--my",my.toFixed(3));});
-  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM"))return;if(S.hover)openAgent(S.hover.agent.id);});
+  addEventListener("click",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,#subM"))return;if(S.hover)openAgent(S.hover.agent.id);});
   // double-click the reactor core → mini explosion
-  addEventListener("dblclick",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,input,textarea,button"))return;
+  addEventListener("dblclick",e=>{if(e.target.closest("header,.side,.dock,#cmd,#viewer,#gate,#comms,#review,#briefM,#newM,#vpM,#ceoM,#subM,input,textarea,button,select"))return;
     const c=new T.Vector3(0,0,0).project(cam),cx=(c.x*.5+.5)*innerWidth,cy=(-c.y*.5+.5)*innerHeight;
     if(Math.hypot(e.clientX-cx,e.clientY-cy)<Math.min(innerWidth,innerHeight)*.2){window.getSelection&&window.getSelection().removeAllRanges();miniBoom();}});
 
@@ -1614,6 +1647,7 @@ function jarvisContext(){
       sessions:mine.slice(0,4).map(s=>({title:s.title,status:s.status,last_activity:loc(s.updated_at||s.created_at)}))};}),
     quick_links:LINKS.map(l=>l.title),
     website_traffic:TRAFFIC||"not available",
+    subscriptions:SUBS.map(s=>({name:s.name,price:s.price,currency:s.currency,cycle:s.cycle,next_payment:(nextDue(s.next_date,s.cycle)||{toISOString:()=>null}).toISOString()&&nextDue(s.next_date,s.cycle)?nextDue(s.next_date,s.cycle).toISOString().slice(0,10):null})),
     demo_leads_recent:LEADS.slice(0,10).map(x=>({name:x.name,company:x.company,email:x.email,when:loc(x.created_at),followed_up:!!x.handled})),
     pipeline:RUNS.slice(0,8).map(r=>({run:r.id,file:r.file_name,status:r.status,updated:loc(r.updated_at),summary:r.proposal_summary||null}))
   };
@@ -1958,7 +1992,73 @@ async function loadTraffic(){
     <div class="tr-src">Sources (7d): ${pick("source")}<br>Top pages: ${pick("page")}</div>`;
 }
 
-function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();loadTraffic();loadLeads();}
+/* ================= SUBSCRIPTIONS (what Logichain pays for) ================= */
+let SUBS=[],SUB_EDIT=null;
+const FX={NOK:1,USD:11,EUR:11.7,SEK:1,DKK:1.57,GBP:13.8};   // rough rates for the monthly total only
+function nextDue(d,cycle){if(!d)return null;const x=new Date(d+"T12:00:00"),t=new Date();t.setHours(0,0,0,0);
+  while(x<t){if(cycle==="year")x.setFullYear(x.getFullYear()+1);else x.setMonth(x.getMonth()+1);}return x;}
+function monthlyNok(s){if(s.price==null)return 0;const p=Number(s.price)*(FX[s.currency]||1);return s.cycle==="year"?p/12:p;}
+async function loadSubs(){
+  if(DEMO){SUBS=SUBS.length?SUBS:[{id:1,name:"Claude Pro",price:240,currency:"NOK",cycle:"month",next_date:new Date(Date.now()+3*864e5).toISOString().slice(0,10)},{id:2,name:"Supabase Pro",price:25,currency:"USD",cycle:"month",next_date:new Date(Date.now()+12*864e5).toISOString().slice(0,10)},{id:3,name:"logichain.no – domene.no",price:199,currency:"NOK",cycle:"year",next_date:"2027-03-01"},{id:4,name:"Microsoft 365",price:null,currency:"NOK",cycle:"month",next_date:null}];return renderSubs();}
+  const r=await sb.from("subscriptions").select("*").eq("active",true).order("name");
+  if(r.error){$("subs").innerHTML=`<div class="empty">Not set up yet. Run <code>supabase/subscriptions.sql</code> in Supabase.<br><small>${esc(r.error.message)}</small></div>`;return;}
+  SUBS=r.data||[];renderSubs();
+}
+function renderSubs(){
+  const day=864e5,rows=SUBS.map(s=>({...s,due:nextDue(s.next_date,s.cycle)})).sort((a,b)=>(a.due?a.due.getTime():9e15)-(b.due?b.due.getTime():9e15));
+  const tot=rows.reduce((a,s)=>a+monthlyNok(s),0),miss=rows.filter(s=>s.price==null||!s.next_date).length;
+  $("subTot").textContent=rows.length?`≈ ${Math.round(tot).toLocaleString("no-NO")} kr/mnd`:"";
+  $("subs").innerHTML=rows.length?rows.map(s=>{const dd=s.due?Math.round((s.due-new Date().setHours(0,0,0,0))/day):null,soon=dd!==null&&dd<=7;
+    const price=s.price==null?"price missing":`${Number(s.price).toLocaleString("no-NO",{maximumFractionDigits:2})} ${s.currency}/${s.cycle==="year"?"yr":"mo"}`;
+    const when=s.due?(dd===0?"today":dd===1?"tomorrow":`in ${dd} d`)+" · "+s.due.toLocaleDateString("no-NO",{day:"2-digit",month:"2-digit",year:"2-digit"}):"date missing";
+    return `<div class="sub${soon?" soon":""}${s.price==null?" miss":""}" data-sub="${s.id}"><span class="sd"></span><div style="min-width:0"><b>${esc(s.name)}</b><small>${esc(s.note||"")}</small></div><div class="sv"><b>${esc(price)}</b><small>${esc(when)}</small></div></div>`;}).join("")+
+    (miss?`<div class="empty" style="padding:8px 2px;text-align:left">${miss} need price or date – click to fill in.</div>`:"")
+    :`<div class="empty">No subscriptions yet. Click + ADD.</div>`;
+  const soon=rows.filter(s=>s.due&&s.price!=null&&(s.due-new Date().setHours(0,0,0,0))/day<=2);
+  if(soon.length&&!renderSubs.told){renderSubs.told=true;say(`Heads up boss: ${soon.map(s=>s.name).join(", ")} ${soon.length>1?"renew":"renews"} in the next two days.`,false);}
+}
+function openSub(id){SUB_EDIT=SUBS.find(s=>String(s.id)===String(id))||null;const s=SUB_EDIT||{};
+  $("subH").textContent=SUB_EDIT?"Edit subscription":"New subscription";$("subName").value=s.name||"";$("subPrice").value=s.price??"";
+  $("subCur").value=s.currency||"NOK";$("subCycle").value=s.cycle||"month";$("subDate").value=s.next_date||"";$("subNote").value=s.note||"";
+  $("subDel").style.visibility=SUB_EDIT?"visible":"hidden";$("subM").classList.remove("hidden");setTimeout(()=>$("subName").focus(),50);}
+function closeSub(){$("subM").classList.add("hidden");}
+$("subAdd").addEventListener("click",e=>{e.stopPropagation();openSub(null);});
+$("subs").addEventListener("click",e=>{const r=e.target.closest("[data-sub]");if(r)openSub(r.dataset.sub);});
+$("subClose").addEventListener("click",closeSub);
+$("subM").addEventListener("click",e=>{if(e.target.id==="subM")closeSub();});
+$("subForm").addEventListener("submit",async e=>{e.preventDefault();
+  const row={name:$("subName").value.trim(),price:$("subPrice").value===""?null:Number($("subPrice").value),currency:$("subCur").value,cycle:$("subCycle").value,next_date:$("subDate").value||null,note:$("subNote").value.trim()||null};
+  if(!row.name)return;
+  if(DEMO){if(SUB_EDIT)Object.assign(SUB_EDIT,row);else SUBS.push({id:Date.now(),...row});closeSub();return renderSubs();}
+  const r=SUB_EDIT?await sb.from("subscriptions").update(row).eq("id",SUB_EDIT.id):await sb.from("subscriptions").insert(row);
+  if(r.error)return say("Couldn't save: "+r.error.message,false);
+  closeSub();say(`Saved ${row.name}.`,false);loadSubs();});
+$("subDel").addEventListener("click",async()=>{if(!SUB_EDIT)return;
+  if(DEMO){SUBS=SUBS.filter(s=>s!==SUB_EDIT);closeSub();return renderSubs();}
+  const r=await sb.from("subscriptions").update({active:false}).eq("id",SUB_EDIT.id);if(r.error)return say("Couldn't remove: "+r.error.message,false);
+  closeSub();say(`Removed ${SUB_EDIT.name} from the list.`,false);loadSubs();});
+$("subAnna").addEventListener("click",async e=>{e.stopPropagation();
+  const anna=AG?liveAgents().find(a=>/anna/i.test(a.name)):null;if(!anna)return say("I can't find Anna in the roster boss.",false);
+  if(DEMO)return say("Demo mode – nothing sent to Anna.",false);
+  const list=SUBS.map(s=>{const d=nextDue(s.next_date,s.cycle);return{navn:s.name,pris:s.price,valuta:s.currency,fakturering:s.cycle==="year"?"årlig":"månedlig",neste_betaling:d?d.toISOString().slice(0,10):null,notat:s.note||null};});
+  const task=`Lag en oversikt over abonnementene Logichain betaler for (dato i dag: ${new Date().toISOString().slice(0,10)}).
+
+ABONNEMENTER (fra Jarvis – Einar har lagt dem inn):
+${JSON.stringify(list,null,1)}
+
+LEVER (norsk, kort):
+1. Tabell sortert etter neste betalingsdato: navn, pris, fakturering, neste betaling, kostnad per måned i NOK.
+2. Sum faste kostnader per måned og per år i NOK (bruk dagens omtrentlige valutakurs, oppgi kursen du brukte).
+3. Betalinger de neste 30 dagene, med dato og beløp.
+4. Hva som mangler pris eller dato – og hvor Einar typisk finner det (faktura-e-post, innstillinger hos leverandøren).
+5. Forslag til hva som kan kuttes, nedgraderes eller byttes til årlig betaling for å spare – med begrunnelse.
+Ikke kontakt leverandører eller endre noe – bare oversikt og forslag. Lagre som /mnt/session/outputs/abonnementer-oversikt.md og en Excel-versjon abonnementer-oversikt.xlsx.`;
+  let j;try{const r=await fetch("/api/agents",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+(SESSION&&SESSION.access_token)},body:JSON.stringify({agent_id:anna.id,task,title:"Abonnementer – oversikt"})});
+    j=await r.json().catch(()=>({error:"HTTP "+r.status}));if(!r.ok&&!j.error)j.error="HTTP "+r.status;}catch(err){j={error:err.message};}
+  if(j.error)return say("Couldn't brief Anna: "+j.error,false);
+  say("Sent the subscription list to Anna boss. She'll have the overview ready in her log.",false);await loadAgents();openAgent(j.session.agent_id,j.session.id);});
+
+function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();loadTraffic();loadLeads();loadSubs();}
 /* ---- Jarvis speaks up on his own now and then ---- */
 let LAST_ACTIVE=Date.now(),PRO_TIMER=null;
 ["pointerdown","keydown"].forEach(ev=>addEventListener(ev,()=>{LAST_ACTIVE=Date.now();},{passive:true}));
