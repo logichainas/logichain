@@ -45,10 +45,10 @@ window.__ERRS.push("PROMISE-FEIL: "+(r&&r.message?r.message:String(r))+s);__show
   async function verify(){
     var r=await sb.auth.getSession();var s=r&&r.data&&r.data.session;
     if(!s){loginCard("");return;}
-    var p=await sb.from("kunder").select("firma,seed,admin").eq("user_id",s.user.id).maybeSingle();
+    var p=await sb.from("kunder").select("firma,seed,admin,portal").eq("user_id",s.user.id).maybeSingle();
     var row=p&&p.data;
     if(!row||((row.seed+"")!=="4211"&&!row.admin)){await sb.auth.signOut();loginCard("Ingen tilgang for denne brukeren.");return;}
-    try{localStorage.setItem("logichain_session",JSON.stringify({id:s.user.id,firma:row.firma,seed:4211,src:"supabase"}));}catch(e){}
+    try{localStorage.setItem("logichain_session",JSON.stringify({id:s.user.id,firma:row.firma,seed:row.seed,portal:row.portal||"macgregor-dashboard.html",src:"supabase"}));}catch(e){}
     var ub=document.getElementById("upBtn");if(ub)ub.style.display="inline-block";
     reveal();
   }

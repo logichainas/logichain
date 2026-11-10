@@ -769,7 +769,15 @@ document.getElementById("loginForm").addEventListener("submit",async e=>{
   let s=null;try{s=JSON.parse(localStorage.getItem("logichain_session")||"null");}catch(_){}
   const b=document.getElementById("loginBtn");
   if(!s||!b)return;
-  b.textContent=T.yourDash;b.onclick=function(){location.href=s.portal||T.demo;return false;};
+  b.textContent=T.yourDash;b.onclick=function(){
+    // look up the portal from the live login (the saved copy can be old or missing the portal)
+    (async function(){let dest=s.portal||null;
+      try{await getSb();if(sb){const{data:ss}=await sb.auth.getSession();const u=ss&&ss.session&&ss.session.user;
+        if(!u){localStorage.removeItem("logichain_session");location.reload();return;}
+        const{data:p}=await sb.from("kunder").select("firma,seed,portal").eq("user_id",u.id).maybeSingle();
+        if(p){dest=p.portal||null;try{localStorage.setItem("logichain_session",JSON.stringify({id:u.id,firma:p.firma,seed:p.seed,portal:p.portal,src:"supabase"}));}catch(_){}}}}catch(_){}
+      location.href=dest||T.demo;})();
+    return false;};
   const out=document.createElement("a");out.className="btn btn-g";out.textContent=T.signOut;out.href="#";out.style.cssText="padding:10px 14px;font-size:14px";
   out.onclick=async function(){try{await getSb();if(sb)await sb.auth.signOut();localStorage.removeItem("logichain_session");}catch(_){}location.reload();return false;};
   b.parentNode.insertBefore(out,b);
