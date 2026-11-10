@@ -127,18 +127,33 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
 .side.l{transform-origin:left center;transform:rotateY(calc(14deg + var(--mx)*3deg)) rotateX(calc(var(--my)*-2deg))}
 .side.r{transform-origin:right center;transform:rotateY(calc(-14deg + var(--mx)*3deg)) rotateX(calc(var(--my)*-2deg))}
 .side .panel{animation:rise .8s both}
-/* click a panel title to blow it up */
-.side .ph h2{cursor:zoom-in;display:flex;align-items:center;gap:8px}
-.side .ph h2::after{content:"⤢";font-size:12px;opacity:0;transition:opacity .2s;letter-spacing:0}
-.side .panel:hover .ph h2::after{opacity:.7}
+/* side panels = menu tiles; click one to open it in the big view */
+.side{justify-content:flex-start}
+.side .panel{flex:none!important;cursor:pointer;padding:12px 14px 10px;transition:border-color .2s,box-shadow .2s,background .2s}
+.side .panel:hover{border-color:rgba(0,229,255,.55);box-shadow:0 0 0 1px rgba(0,229,255,.25),0 0 28px -6px rgba(0,229,255,.45),inset 0 0 40px rgba(0,229,255,.08)}
+.side .panel>*:not(.ph):not(.scroll):not(#traffic){display:none!important}
+.side .panel .ph{margin-bottom:6px}
+.side .panel .ph button{display:none}
+.side .panel .ph h2::after{content:"›";margin-left:8px;font-size:15px;opacity:.55;transition:transform .2s,opacity .2s;display:inline-block}
+.side .panel:hover .ph h2::after{opacity:1;transform:translateX(4px)}
+.side .panel .scroll,.side .panel #traffic{max-height:78px!important;flex:none!important;overflow:hidden!important;pointer-events:none;
+  -webkit-mask-image:linear-gradient(#000 35%,transparent);mask-image:linear-gradient(#000 35%,transparent)}
 #maxWrap{position:fixed;inset:0;z-index:70;display:grid;place-items:center;background:rgba(1,6,12,.62);backdrop-filter:blur(6px);animation:fadeIn .2s both}
 #maxWrap.hidden{display:none}
-#maxWrap .panel{width:min(980px,94vw);height:min(84vh,860px);flex:none!important;animation:none;display:flex;flex-direction:column;box-shadow:0 0 0 1px rgba(0,229,255,.25),0 30px 80px -20px rgba(0,229,255,.35)}
-#maxWrap .panel .scroll{flex:1;min-height:0;max-height:none!important}
-#maxWrap .ph h2{cursor:zoom-out;font-size:15px}
-#maxWrap .ph h2::after{content:"✕";opacity:.8;margin-left:10px}
-#maxWrap .lead,#maxWrap .sub{padding:12px 4px}
-#maxWrap #traffic .tr-bars,#maxWrap #traffic svg{max-height:none}
+#maxBox{display:grid;grid-template-columns:210px 1fr;gap:14px;width:min(1160px,95vw);height:min(86vh,880px)}
+#maxNav{display:flex;flex-direction:column;gap:6px;overflow:auto;padding:4px}
+#maxNav button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:5px;padding:12px 14px;border:1px solid rgba(0,229,255,.18);
+  background:rgba(3,20,34,.7);font:600 11px/1.2 var(--mono,monospace);letter-spacing:.16em;color:#9fdcec;transition:all .15s}
+#maxNav button small{font-weight:400;letter-spacing:.04em;color:#6aa7b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#maxNav button:hover{border-color:rgba(0,229,255,.5);color:#e6fbff}
+#maxNav button.on{background:linear-gradient(90deg,rgba(0,229,255,.22),rgba(0,229,255,.04));border-color:#00e5ff;color:#fff;box-shadow:inset 3px 0 0 #00e5ff}
+#maxNav .x{margin-top:auto;align-items:center;letter-spacing:.2em;opacity:.7}
+#maxStage{min-width:0;min-height:0;display:flex}
+#maxStage .panel{flex:1!important;min-width:0;animation:none;display:flex;flex-direction:column;box-shadow:0 0 0 1px rgba(0,229,255,.25),0 30px 80px -20px rgba(0,229,255,.35)}
+#maxStage .panel .scroll{flex:1;min-height:0;max-height:none!important}
+#maxStage .ph h2{font-size:15px}
+#maxStage .lead,#maxStage .sub{padding:12px 4px}
+@media (max-width:760px){#maxBox{grid-template-columns:1fr;grid-template-rows:auto 1fr}#maxNav{flex-direction:row;overflow-x:auto}#maxNav button{flex:none}#maxNav .x{margin:0}}
 .side .panel:nth-child(2){animation-delay:.12s}
 @keyframes rise{from{opacity:0;transform:translateZ(-120px) translateY(20px)}}
 
@@ -572,7 +587,7 @@ header{display:flex;align-items:center;gap:18px;padding:14px 24px;background:lin
   </form>
 </div>
 
-<div id="maxWrap" class="hidden"></div>
+<div id="maxWrap" class="hidden"><div id="maxBox"><nav id="maxNav"></nav><div id="maxStage"></div></div></div>
 
 <!-- SUBSCRIPTION EDITOR -->
 <div id="subM" class="hidden">
@@ -2072,17 +2087,29 @@ Ikke kontakt leverandører eller endre noe – bare oversikt og forslag. Lagre s
   if(j.error)return say("Couldn't brief Anna: "+j.error,false);
   say("Sent the subscription list to Anna boss. She'll have the overview ready in her log.",false);await loadAgents();openAgent(j.session.agent_id,j.session.id);});
 
-/* ================= ZOOM A PANEL (click its title) ================= */
+/* ================= PANEL MENU: tiles in the side columns, big view with a section menu ================= */
+const PANELS=[...document.querySelectorAll(".side .panel")];
 let MAXP=null;
-function maxPanel(panel){
-  if(MAXP)return unmaxPanel();
-  const ph=document.createElement("div");ph.className="panel-ph";ph.style.cssText=panel.getAttribute("style")||"";ph.style.visibility="hidden";
-  panel.parentNode.insertBefore(ph,panel);MAXP={panel,ph};$("maxWrap").appendChild(panel);$("maxWrap").classList.remove("hidden");
+const pTitle=p=>p.querySelector(".ph h2").textContent.trim();
+const pInfo=p=>{const c=p.querySelector(".ph").cloneNode(true);c.querySelectorAll("h2,button").forEach(x=>x.remove());return c.textContent.replace(/\s+/g," ").trim();};
+function buildNav(){
+  $("maxNav").innerHTML=PANELS.map((p,i)=>`<button data-i="${i}" class="${MAXP&&MAXP.panel===p?"on":""}"><span>${esc(pTitle(p))}</span><small>${esc(pInfo(p))}</small></button>`).join("")+'<button class="x" data-x="1">ESC ✕</button>';
 }
-function unmaxPanel(){if(!MAXP)return;MAXP.ph.parentNode.insertBefore(MAXP.panel,MAXP.ph);MAXP.ph.remove();MAXP=null;$("maxWrap").classList.add("hidden");}
-document.querySelectorAll(".side .panel .ph h2").forEach(h=>{h.title="Click to enlarge";h.addEventListener("click",e=>{e.stopPropagation();const p=h.closest(".panel");MAXP&&MAXP.panel===p?unmaxPanel():maxPanel(p);});});
-$("maxWrap").addEventListener("click",e=>{if(e.target.id==="maxWrap")unmaxPanel();});
-addEventListener("keydown",e=>{if(e.key==="Escape"&&MAXP)unmaxPanel();});
+function openPanel(panel){
+  if(MAXP&&MAXP.panel===panel)return;
+  if(MAXP){MAXP.ph.parentNode.insertBefore(MAXP.panel,MAXP.ph);MAXP.ph.remove();}
+  const ph=document.createElement("div");ph.className="panel-ph";ph.style.display="none";
+  panel.parentNode.insertBefore(ph,panel);MAXP={panel,ph};$("maxStage").appendChild(panel);
+  $("maxWrap").classList.remove("hidden");buildNav();
+}
+function closePanel(){if(!MAXP)return;MAXP.ph.parentNode.insertBefore(MAXP.panel,MAXP.ph);MAXP.ph.remove();MAXP=null;$("maxWrap").classList.add("hidden");}
+PANELS.forEach(p=>{p.title="Open "+pTitle(p);p.addEventListener("click",e=>{if(p.closest("#maxWrap"))return;e.stopPropagation();openPanel(p);});});
+$("maxNav").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;b.dataset.x?closePanel():openPanel(PANELS[+b.dataset.i]);});
+$("maxWrap").addEventListener("click",e=>{if(e.target.id==="maxWrap")closePanel();});
+addEventListener("keydown",e=>{if(!MAXP||e.target.matches("input,textarea,select"))return;
+  if(e.key==="Escape")closePanel();
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();const i=PANELS.indexOf(MAXP.panel);openPanel(PANELS[(i+(e.key==="ArrowDown"?1:PANELS.length-1))%PANELS.length]);}});
+setInterval(()=>{if(MAXP)buildNav();},5000);
 
 function refresh(){loadAgents();loadTodos();loadLinks();loadRuns();loadTraffic();loadLeads();loadSubs();}
 /* ---- Jarvis speaks up on his own now and then ---- */
