@@ -347,7 +347,7 @@
     const keyed=rows.map((r,i)=>({r,i,v:cellVal(r.cells[col])}));
     keyed.sort((a,b)=>{if(a.v===null&&b.v===null)return a.i-b.i;if(a.v===null)return 1;if(b.v===null)return -1;
       if(a.v.n!==undefined&&b.v.n!==undefined)return (a.v.n-b.v.n)*dir||a.i-b.i;
-      return String(a.v.s??a.v.n).localeCompare(String(b.v.s??b.v.n),"no",{numeric:true})*dir||a.i-b.i;});
+      return String(a.v.s!==undefined?a.v.s:a.v.n).localeCompare(String(b.v.s!==undefined?b.v.s:b.v.n),"no",{numeric:true})*dir||a.i-b.i;});
     const par=rows[0].parentNode;keyed.forEach(k=>par.appendChild(k.r));
     const hr=[...t.querySelectorAll("tr")].find(r=>r.querySelector("th"));
     if(hr)[...hr.cells].forEach((c,i)=>{c.classList.toggle("lc-sorted",i===col);c.dataset.dir=i===col?t.dataset.sortDir:"";});

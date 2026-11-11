@@ -3,6 +3,20 @@
   Cache-Control: no-cache
 /
   Cache-Control: no-cache
+/macgregor-dashboard*
+  Cache-Control: no-cache
+/kunde-dashboard*
+  Cache-Control: no-cache
+/logichain-dashboard-demo*
+  Cache-Control: no-cache
+/admin*
+  Cache-Control: no-cache
+/last-opp*
+  Cache-Control: no-cache
+/artikler/*
+  Cache-Control: no-cache
+/index-en*
+  Cache-Control: no-cache
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
