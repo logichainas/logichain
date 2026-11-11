@@ -640,8 +640,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
           REAL=true;
           // Customer data comes from their ERP export: neutralise characters that could inject HTML or break inline handlers
           const SAFE=v=>String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"\u2039").replace(/>/g,"\u203a").replace(/"/g,"\u201d").replace(/'/g,"\u2019").replace(/`/g,"\u02bc").replace(/\\/g,"/");
-          const RATING=v=>/^[A-D]$/.test(v||"")?v:"";
-          suppliers=lev.map(r=>({id:Number(r.id),num:SAFE(r.nummer),name:SAFE(r.navn),group:SAFE(r.gruppe||"\u2013"),country:SAFE(r.land||"\u2013"),rating:RATING(r.rating),otdBase:50}));
+                    suppliers=lev.map(r=>({id:Number(r.id),num:SAFE(r.nummer),name:SAFE(r.navn),group:SAFE(r.gruppe||"\u2013"),country:SAFE(r.land||"\u2013"),rating:"",otdBase:50})); // the upload has no rating column (the database default is "C"), so rating is always computed from delivery performance below
           MATS=mat.map(r=>[SAFE(r.kode),SAFE(r.beskrivelse),SAFE(r.kategori||"\u2013"),Number(r.standardpris)||0]);
           const matIdIdx={};mat.forEach((r2,i2)=>matIdIdx[r2.id]=i2);
           lines=po.map(r=>{
