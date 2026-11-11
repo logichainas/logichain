@@ -169,7 +169,7 @@ function fromSAP(table){
     rows.push({"po-nummer":String(r["purchasing document"]).trim(),"linjenr":String(r["item"]||"1").trim(),
       "leverandørnavn":supName,"leverandørnr":supNo,
       "materialnummer":mat||("TEKST-"+text.slice(0,30).toUpperCase().replace(/[^A-Z0-9ÆØÅ]+/g,"-").replace(/^-|-$/g,"")||"UKJENT"),
-      "materialebeskrivelse":text,"kategori":pg?"Innkjøpsgruppe "+pg:"","prosjektnr":wbs&&wbs!=="0"?wbs:(sd&&sd!=="0"?sd:""),
+      "materialebeskrivelse":text,"kategori":(()=>{const mg=String(r["material group"]||r["matl group"]||r["material group desc."]||"").trim();return mg?mg:(pg?"Innkjøpsgruppe "+pg:"");})(),"prosjektnr":wbs&&wbs!=="0"?wbs:(sd&&sd!=="0"?sd:""),
       "antall":String(qty||1),"enhet":String(r["order unit"]||"stk").trim(),
       "enhetspris (nok)":String(qty?Math.round(val/qty*100)/100:0),"linjeverdi (nok)":String(Math.round(val*100)/100),
       "bestillingsdato":isoD(r["document date"]),"bekreftet leveringsdato":(()=>{const c=r["first confirmation delivery date"];if(c){conf++;return isoD(c);}plan++;return isoD(r["planned delivery date"]);})(),

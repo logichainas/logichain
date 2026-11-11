@@ -1,6 +1,20 @@
 # Norwegian → English phrases for the portal pages that are not covered by the demo line map.
 # Order matters: longer phrases first. Internal keys (høy/midt/lav) are left as they are on purpose.
 PHRASES = [
+ # real-data texts in the portal (not in the demo)
+ ('kpi("Forsinkede leveringer",fmt(lateLines),fmt(Math.round(savExpedite))+" kr est. ekspedisjonskost","bad");', 'kpi("Late deliveries",fmt(lateLines),fmt(Math.round(savExpedite))+" NOK est. expediting cost","bad");'),
+ ('if(lateN>0)parts.push(["Ekspedisjon & frakt",lines.filter(l=>l.sup.id===s.id&&l.status==="For sent").reduce((t,l)=>t+expCost(l),0),`${lateN} forsinkede leveringer × 10 % av linjeverdien (maks ${fmt(EXPEDITE_COST)} kr)`]);', 'if(lateN>0)parts.push(["Expediting & freight",lines.filter(l=>l.sup.id===s.id&&l.status==="Late").reduce((t,l)=>t+expCost(l),0),`${lateN} late deliveries × 10 % of the line value (at most ${fmt(EXPEDITE_COST)} NOK)`]);'),
+ ('<div class="note">Basert på faktiske PO-linjer (verdi / antall) per måned.</div>', '<div class="note">Based on actual PO lines (value / quantity) per month.</div>'),
+ ('Estimatene er basert på deres egne innkjøpsdata og viste forutsetninger (ekspedisjonskost, lagerføring, benchmark-priser).', 'The estimates are based on your own purchasing data and the assumptions shown (expediting cost, carrying cost, benchmark prices).'),
+ ('kpi("Identifisert potensial",fmtM(savTotal),"per år · <a class=\'evlink\' style=\'color:inherit\' onclick=\\"showEvidence(\'total\')\\">Se dokumentasjon</a>","good")+', 'kpi("Identified potential",fmtM(savTotal),"per year · <a class=\'evlink\' style=\'color:inherit\' onclick=\\"showEvidence(\'total\')\\">See documentation</a>","good")+'),
+ ('kpi("Dekningsgrad",Math.min(100,Math.round(tot/savTotal*100))+"%","av identifisert potensial");', 'kpi("Coverage",Math.min(100,Math.round(tot/savTotal*100))+"%","of identified potential");'),
+ ('forsinkede leveringer antas å gi ekstrakostnader (ekspeditering, frakt, overtid). Est. 10 % av linjeverdien, maks ${fmt(EXPEDITE_COST)} kr per forsinket linje.`],', 'late deliveries are assumed to cause extra costs (expediting, freight, overtime). Est. 10 % of the line value, at most ${fmt(EXPEDITE_COST)} NOK per late line.`],'),
+ ('${fmt(lateLines)} forsinkede PO-linjer × 10 % av linjeverdien (maks ${fmt(EXPEDITE_COST)} kr per linje) antatt ekstra kost (ekspeditering, premiumfrakt, overtid). Satsen er justerbar per kunde.', '${fmt(lateLines)} late PO lines × 10 % of the line value (at most ${fmt(EXPEDITE_COST)} NOK per line) assumed extra cost (expediting, premium freight, overtime). The rate is adjustable per customer.'),
+ ('["Hvor kommer tallene fra?","Fra deres egne innkjøpsdata (SAP-eksport eller Excel). Logichain kvalitetssikrer filen og laster dataene inn i én modell. Linjer som ikke er levert ennå, vises separat og holdes utenfor leverandørevalueringen."],', '["Where do the figures come from?","From your own purchasing data (SAP export or Excel). Logichain quality-checks the file and loads the data into one model. Lines not delivered yet are shown separately and kept out of supplier evaluation."],'),
+ ('["Hva betyr ratingene A, B, C og D?","Ratingen settes ut fra leveringspresisjon (OTD): A ≥ 90 %, B ≥ 75 %, C ≥ 50 % og D under 50 %. C og D bør følges opp med forbedringstiltak."],', '["What do the ratings A, B, C and D mean?","The rating is based on delivery precision (OTD): A ≥ 90 %, B ≥ 75 %, C ≥ 50 % and D below 50 %. C and D should be followed up with improvement actions."],'),
+ ('["Kan jeg laste opp egne Excel-filer?","Ja – send en SAP-eksport eller Excel-fil med «Send data til Logichain» øverst. Logichain kvalitetssikrer filen og laster den inn, så oppdateres dashboardet."],', '["Can I upload my own Excel files?","Yes – send an SAP export or Excel file with “Send data to Logichain” at the top. Logichain quality-checks the file and loads it, and the dashboard updates."],'),
+ ('["Kan jeg eksportere data?","Ja – be Logichain om et Excel-uttrekk av tabellene dere trenger for videre analyse."],', '["Can I export data?","Yes – ask Logichain for an Excel extract of the tables you need for further analysis."],'),
+ ('["Hvor ofte oppdateres tallene?","Hver gang nye data lastes inn – typisk månedlig. Rapporteringsperioden går til og med siste hele måned."]];', '["How often are the figures updated?","Every time new data is loaded – typically monthly. The reporting period runs to the end of the last complete month."]];'),
  ('title="Switch to English" aria-label="Switch to English"><svg aria-hidden="true" style="display:block;border-radius:2px" width="21" height="11" viewBox="0 0 60 30"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="2.5"/><rect x="27" width="6" height="30" fill="#fff"/><rect y="12" width="60" height="6" fill="#fff"/><rect x="28.5" width="3" height="30" fill="#C8102E"/><rect y="13.5" width="60" height="3" fill="#C8102E"/></svg>', 'title="Bytt til norsk" aria-label="Switch to Norwegian"><svg aria-hidden="true" style="display:block;border-radius:2px" width="20" height="15" viewBox="0 0 22 16"><rect width="22" height="16" fill="#BA0C2F"/><rect x="6" width="4" height="16" fill="#fff"/><rect y="6" width="22" height="4" fill="#fff"/><rect x="7" width="2" height="16" fill="#00205B"/><rect y="7" width="22" height="2" fill="#00205B"/></svg>'),
  ("← Tilbake til nettsiden", "← Back to website"),
  # login / gate / picker
@@ -93,6 +107,16 @@ PHRASES = [
  ("<th>Sist endret</th>", "<th>Last changed</th>"),
  ("Ingen linjenotater ennå. Klikk på en PO-linje i tabellen for å skrive et notat på den.", "No line notes yet. Click a PO line in the table to write a note on it."),
  ("Lukk ✕", "Close ✕"),
+ ("📝 Notater", "📝 Notes"),
+ ('String(overallOTD).replace(".",",")+" %"', 'overallOTD+"%"'),
+ ('${String(s.avgAbs).replace(".",",")} dgr', '${s.avgAbs} days'),
+ ('${dev.toFixed(1).replace(".",",")} dgr', '${dev.toFixed(1)} days'),
+ ('(n/1e6).toFixed(2).replace(".",",").replace(/,?0+$/,"")+" mill kr":Math.round(n).toLocaleString("nb-NO")+" kr"', '(n/1e6).toFixed(2).replace(/\\.?0+$/,"")+" M NOK":Math.round(n).toLocaleString("en-GB")+" NOK"'),
+ ('String(avgAbs).replace(".",",")+" dgr"', 'avgAbs+" days"'),
+ ('String(s.avgAbs).replace(".",",")+" dgr"', 's.avgAbs+" days"'),
+ ('${String(overallOTD).replace(".",",")} %</text>', '${overallOTD}%</text>'),
+ ('${String(overallOTD).replace(".",",")} %', '${overallOTD} %'),
+ ('SAFE(r.kategori||"\\u2013")', 'SAFE(String(r.kategori||"\\u2013").replace(/^Innkjøpsgruppe /,"Purchasing group "))'),
  ("— fyll ut i Excel → «Lagre som → CSV» → last opp her.", "— fill it in in Excel → “Save as → CSV” → upload here."),
  (">Verdi</th>", ">Value</th>"),
  # Logichain insight box

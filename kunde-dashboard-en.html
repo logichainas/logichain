@@ -322,7 +322,7 @@ rect.clickable:hover{fill:#6db3ff}
   <div class="card">
     <h3 class="sect">Price development per material (weighted unit prices, first month = 100)</h3>
     <div style="overflow-x:auto"><table id="priceTable"></table></div>
-    <div class="note">Based on actual PO lines (value / quantity) per month – demo data.</div>
+    <div class="note">Based on actual PO lines (value / quantity) per month.</div>
   </div>
   <div class="grid2">
     <div class="card">
@@ -386,7 +386,7 @@ rect.clickable:hover{fill:#6db3ff}
     <h3 class="sect">Search purchase orders / PO lines</h3>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
       <input type="text" id="poSearch" placeholder="Search PO no., supplier, material ..." oninput="renderPO()">
-      <button class="btn-note" type="button" onclick="openNotes()">📝 Notater <span id="noteCount"></span></button>
+      <button class="btn-note" type="button" onclick="openNotes()">📝 Notes <span id="noteCount"></span></button>
       <select id="poStatus" onchange="renderPO()">
         <option value="">All statuses</option><option value="Not delivered">Not delivered (open)</option><option value="On time">On time</option>
         <option value="Late">Late</option><option value="Early">Early</option>
@@ -410,7 +410,7 @@ rect.clickable:hover{fill:#6db3ff}
   <div class="card">
     <h3 class="sect">Largest identified potential per supplier</h3>
     <div style="overflow-x:auto"><table id="sparTable"></table></div>
-    <div class="note">The estimates are based on demo data and the assumptions shown (expedition cost, carrying cost, benchmark prices). Identified potential that should be examined – does not replace detailed sourcing analysis.</div>
+    <div class="note">The estimates are based on your own purchasing data and the assumptions shown (expediting cost, carrying cost, benchmark prices). Identifisert potensial som bør undersøkes – erstatter ikke detaljert sourcing-analyse.</div>
   </div>
 </section>
 
@@ -641,7 +641,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
           // Customer data comes from their ERP export: neutralise characters that could inject HTML or break inline handlers
           const SAFE=v=>String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"\u2039").replace(/>/g,"\u203a").replace(/"/g,"\u201d").replace(/'/g,"\u2019").replace(/`/g,"\u02bc").replace(/\\/g,"/");
                     suppliers=lev.map(r=>({id:Number(r.id),num:SAFE(r.nummer),name:SAFE(r.navn),group:SAFE(r.gruppe||"\u2013"),country:SAFE(r.land||"\u2013"),rating:"",otdBase:50})); // the upload has no rating column (the database default is "C"), so rating is always computed from delivery performance below
-          MATS=mat.map(r=>[SAFE(r.kode),SAFE(r.beskrivelse),SAFE(r.kategori||"\u2013"),Number(r.standardpris)||0]);
+          MATS=mat.map(r=>[SAFE(r.kode),SAFE(r.beskrivelse),SAFE(String(r.kategori||"\u2013").replace(/^Innkjøpsgruppe /,"Purchasing group ")),Number(r.standardpris)||0]);
           const matIdIdx={};mat.forEach((r2,i2)=>matIdIdx[r2.id]=i2);
           lines=po.map(r=>{
             const sup=suppliers.find(x=>x.id===r.leverandor_id)||suppliers[0];
@@ -820,7 +820,8 @@ const singleSource=MATS.map((mt,mi)=>({mi,sups:matSups[mi]}))
 const EXPEDITE_COST=2500;
 let savExpedite=0,savBuffer=0,savReneg=0,savConsol=0;
 const savPer={}; suppliers.forEach(s=>savPer[s.id]=0);
-lines.filter(l=>l.status==="Late").forEach(l=>{savExpedite+=EXPEDITE_COST;savPer[l.sup.id]+=EXPEDITE_COST;});
+const expCost=l=>Math.min(EXPEDITE_COST,l.value*0.10);
+lines.filter(l=>l.status==="Late").forEach(l=>{const c=expCost(l);savExpedite+=c;savPer[l.sup.id]+=c;});
 suppliers.forEach(s=>{const a=agg[s.id];const dev=a.n?a.devAbs/a.n:0;
   if(dev>7&&a.spend>0){const v=a.spend*0.12*(dev/30);savBuffer+=v;savPer[s.id]+=v;}
   if(s.rating==="C"||s.rating==="D"){const v=a.spend*0.05;savReneg+=v;savPer[s.id]+=v;}
@@ -874,7 +875,7 @@ window.renderOpen=function(fl){
   all.forEach(l=>{const g=grp(l);cnt[g]++;val[g]+=l.value;});
   const tot=all.reduce((a,l)=>a+l.value,0);
   const k=document.getElementById("openKpis");if(!k)return;
-  k.innerHTML=kpi("Open lines",fmt(all.length),fmt(tot)+" kr value")+kpi("Overdue",fmt(cnt.over),fmt(val.over)+" kr · confirmed delivery date passed",cnt.over?"bad":"good")+kpi("Due ≤ 14 days",fmt(cnt.soon),fmt(val.soon)+" kr",cnt.soon?"warn":"")+kpi("Later",fmt(cnt.later),fmt(val.later)+" kr");
+  k.innerHTML=kpi("Open lines",fmt(all.length),fmt(tot)+" NOK value")+kpi("Overdue",fmt(cnt.over),fmt(val.over)+" NOK · confirmed delivery date passed",cnt.over?"bad":"good")+kpi("Due ≤ 14 days",fmt(cnt.soon),fmt(val.soon)+" NOK",cnt.soon?"warn":"")+kpi("Later",fmt(cnt.later),fmt(val.later)+" NOK");
   document.getElementById("openFilter").innerHTML=[["","All",all.length],["over","Overdue",cnt.over],["soon","≤ 14 days",cnt.soon],["later","Later",cnt.later]]
     .map(([v,t,n])=>`<button type="button" class="mchip${OPEN_F===v?" on":""}" onclick="renderOpen('${v}')">${t} <span style="opacity:.6">${n}</span></button>`).join("");
   const rows=all.filter(l=>!OPEN_F||grp(l)===OPEN_F);
@@ -989,7 +990,7 @@ window.renderProj=function(sel){
   out.innerHTML=`<p style="margin:0 0 10px"><a class="evlink" onclick="renderProj('')">← All projects</a></p>
   <h3 class="sect">Project ${one}</h3>
   <div class="kpis" style="margin-bottom:14px">
-    ${kpi("Spend",fmt(t.spend)+" kr",t.n+" PO lines")}
+    ${kpi("Spend",fmt(t.spend)+" NOK",t.n+" PO lines")}
     ${kpi("Purchase orders",t.pos,"")}
     ${kpi("Suppliers",t.sups,"")}
     ${kpi("OTD",t.otd+"%",t.ok+" on time of "+t.del+" deliveries",t.otd>=80?"good":t.otd<50?"bad":"warn")}
@@ -1059,15 +1060,15 @@ document.getElementById("ssTable").innerHTML=`<tr><th>Material</th><th>Category<
 
 /* ================= SAVINGS ================= */
 const cats=[
-  ["expedite","🚚 Expedition & premium freight",savExpedite,`${fmt(lateLines)} delayed deliveries assumed to create extra costs (expediting, freight, overtime). Est. ${fmt(EXPEDITE_COST)} NOK per delayed line.`],
+  ["expedite","🚚 Ekspedisjon & premiumfrakt",savExpedite,`${fmt(lateLines)} late deliveries are assumed to cause extra costs (expediting, freight, overtime). Est. 10 % of the line value, at most ${fmt(EXPEDITE_COST)} NOK per late line.`],
   ["buffer","📦 Excess safety stock",savBuffer,`Suppliers with average deviation above 7 days force excessive safety stock. Estimated reduction in carrying cost with better delivery discipline.`],
   ["reneg","✍️ Review of C/D suppliers",savReneg,`Price benchmarking against best practice for C- and D-rated suppliers assumed to give c. 5 % savings on that purchase volume.`],
   ["consol","🧩 Consolidation of small suppliers",savConsol,`Suppliers with fewer than 5 deliveries have weak negotiating power. Consolidation est. 8 % on that volume.`]];
 document.getElementById("kpi-spar").innerHTML=
-  kpi("Identified potential",fmtM(savTotal),"per year (demo data) · <a class='evlink' style='color:inherit' onclick=\"showEvidence('total')\">See documentation</a>","good")+
+  kpi("Identified potential",fmtM(savTotal),"per year · <a class='evlink' style='color:inherit' onclick=\"showEvidence('total')\">See documentation</a>","good")+
   kpi("Share of purchase volume",(savTotal/totVal*100).toFixed(1)+"%","of "+fmtM(totVal)+" in total")+
   kpi("Suppliers with actions",suppliers.filter(s=>savPer[s.id]>5000).length,"above NOK 5,000 identified potential")+
-  kpi("Delayed deliveries",fmt(lateLines),fmt(lateLines*EXPEDITE_COST)+" NOK est. expedition cost","bad");
+  kpi("Late deliveries",fmt(lateLines),fmt(Math.round(savExpedite))+" NOK est. expediting cost","bad");
 document.getElementById("sparBreakdown").innerHTML=cats.map(([key,t,v,desc])=>
   `<div class="card" style="margin:0"><div style="font-size:22px;font-weight:800" class="good">${fmtM(v)}</div><h4 style="margin:6px 0">${t}</h4><p style="color:var(--muted);font-size:12px;line-height:1.5">${desc}</p><p style="margin-top:8px"><a class="evlink" onclick="showEvidence('${key}')">See documentation →</a></p></div>`).join("");
 document.getElementById("sparTable").innerHTML=`<tr><th>Supplier</th><th>Rating</th><th>OTD</th><th style="text-align:right">Spend</th><th>Main source</th><th style="text-align:right">Identified potential / year</th><th></th></tr>`+
@@ -1092,7 +1093,7 @@ window.showEvidence=function(type,id){
   if(type==="expedite"){
     const ls=lines.filter(l=>l.status==="Late").sort((a,b)=>b.value-a.value);
     html=evHeader("Expediting & premium freight",savExpedite)+
-      `<div class="assump"><b>Assumptions:</b> ${fmt(lateLines)} delayed PO lines × ${fmt(EXPEDITE_COST)} NOK assumed extra cost per delayed line (expediting, premium freight, overtime). The amount is adjustable per customer.</div>
+      `<div class="assump"><b>Forutsetninger:</b> ${fmt(lateLines)} late PO lines × 10 % of the line value (at most ${fmt(EXPEDITE_COST)} NOK per line) assumed extra cost (expediting, premium freight, overtime). The rate is adjustable per customer.</div>
       <h3 class="sect">Underlying PO lines (showing ${Math.min(ls.length,25)} of ${fmt(ls.length)})</h3>`+linesTable(ls.slice(0,25));
   }else if(type==="buffer"){
     const rows=suppliers.filter(s=>parseFloat(s.avgAbs)>7&&s.spend>0).sort((a,b)=>b.spend-a.spend);
@@ -1117,7 +1118,7 @@ window.showEvidence=function(type,id){
     const s=suppliers.find(x=>x.id===id);const a=agg[s.id];
     const parts=[];
     const lateN=a.late;
-    if(lateN>0)parts.push(["Expediting & freight",lateN*EXPEDITE_COST,`${lateN} delayed deliveries × ${fmt(EXPEDITE_COST)} NOK`]);
+    if(lateN>0)parts.push(["Expediting & freight",lines.filter(l=>l.sup.id===s.id&&l.status==="Late").reduce((t,l)=>t+expCost(l),0),`${lateN} late deliveries × 10 % of the line value (at most ${fmt(EXPEDITE_COST)} NOK)`]);
     const dev=a.n?a.devAbs/a.n:0;
     if(dev>7)parts.push(["Safety stock",a.spend*0.12*(dev/30),`Avg. deviation ${dev.toFixed(1)} days × 12 % of spend (${fmt(a.spend)} NOK) ÷ 30`]);
     if(s.rating==="C"||s.rating==="D")parts.push(["Price review",a.spend*0.05,`${s.rating}-rating × 5 % of spend`]);
@@ -1187,7 +1188,7 @@ function renderTiltak(){
     kpi("Total identified potential",fmtM(tot),"sum of the actions","good")+
     kpi("Number of actions",tiltak.length,"automatically suggested")+
     kpi("High priority",cnt.høy,"actions","bad")+
-    kpi("Coverage",Math.min(100,Math.round(tot/savTotal*100))+"%","of identified potential in the demo");
+    kpi("Coverage",Math.min(100,Math.round(tot/savTotal*100))+"%","of identified potential");
   let list=tiltak.filter(x=>tiltakPrio==="alle"||x.prio===tiltakPrio);
   if(tiltakSort==="potensial")list=[...list].sort((a,b)=>b.v-a.v);
   else list=[...list].sort((a,b)=>({høy:0,midt:1,lav:2}[a.prio]-{høy:0,midt:1,lav:2}[b.prio])||b.v-a.v);
@@ -1498,15 +1499,15 @@ renderOctoTab();
 const FAQ=[
 ["What is Spend Intelligence?","Spend Intelligence shows where the money goes: total spend, spend by supplier/category/month, top 10 suppliers, concentration (top 5), price development per material, volume development, tail spend and single-source risk."],
 
-["Where do the figures come from?","Suppliers deliver reports in Excel. Logichain validates and consolidates the data automatically into one model. In this demo everything is generated as demo data."],
+["Where do the figures come from?","From your own purchasing data (SAP export or Excel). Logichain quality-checks the file and loads the data into one model. Lines not delivered yet are shown separately and kept out of supplier evaluation."],
 ["What does OTD mean?","OTD (On-Time Delivery) is the share of deliveries made within ±5 days of the confirmed delivery date. “On time” = delivered up to 5 days before or after the agreed date."],
-["What do the A, B, C and D ratings mean?","A combination of delivery precision, deviations and quality. A is the best class; C and D should be followed up with improvement actions."],
+["What do the ratings A, B, C and D mean?","The rating is based on delivery precision (OTD): A ≥ 90 %, B ≥ 75 %, C ≥ 50 % and D below 50 %. C and D should be followed up with improvement actions."],
 ["How reliable are the savings estimates?","Logichain shows identified potential based on documented assumptions – never guaranteed savings. Click “See documentation” on a figure to see exactly which materials, POs, suppliers and assumptions lie behind it. The estimate is a starting point for sourcing work and does not replace detailed sourcing analysis."],
 ["What is tail spend?","The small suppliers that together make up a small share of spend (here: beyond the 80 % cut). They often require a disproportionate amount of administration per krone – a typical consolidation area."],
 ["What is single-source risk?","Materials supplied by only one supplier. Logichain identifies them and prioritises by spend, so you can secure alternative sources before something goes wrong."],
-["Can I upload my own Excel files?","Yes – in the production version you upload the suppliers' Excel reports and the dashboard updates automatically with a fixed template and validation."],
-["Can I export the data?","Yes, all tables can be exported to Excel for further analysis."],
-["How often are the figures updated?","Whenever new supplier reports are uploaded – in production typically weekly."]];
+["Can I upload my own Excel files?","Yes – send an SAP export or Excel file with “Send data to Logichain” at the top. Logichain quality-checks the file and loads it, and the dashboard updates."],
+["Can I export data?","Yes – ask Logichain for an Excel extract of the tables you need for further analysis."],
+["How often are the figures updated?","Every time new data is loaded – typically monthly. The reporting period runs to the end of the last complete month."]];
 document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" onclick="this.classList.toggle('open')"><h4>${q}</h4><div class="ans">${a}</div></div>`).join("");
 
 /* deep-link support: logichain-dashboard-demo.html#spend opens that module */
@@ -1564,7 +1565,7 @@ document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" 
   window.openNotes=async function(){
     await load();
     const list=[...NOTES.values()].filter(n=>n.po!=="*"&&n.tekst&&n.tekst.trim()).sort((a,b)=>String(b.updated_at).localeCompare(String(a.updated_at)));
-    let html=`<div class="mh"><div><h2>📝 Notater – PO Performance</h2><div style="font-size:12px;color:var(--muted)">Saved automatically and shared with everyone who has access to the portal</div></div>
+    let html=`<div class="mh"><div><h2>📝 Notes – PO Performance</h2><div style="font-size:12px;color:var(--muted)">Saved automatically and shared with everyone who has access to the portal</div></div>
       <button class="mclose" onclick="hideModal()">Close ✕</button></div>`+window.noteBox("*",0,"Generelle notater");
     html+=`<h3 class="sect" style="margin-top:18px">Notes on PO lines (${list.length})</h3>`+(list.length?`<table><tr><th>PO</th><th>Linje</th><th>Note</th><th>Last changed</th></tr>`+
       list.map(n=>`<tr class="click" onclick="showLine(${esc(JSON.stringify(String(n.po)))},${Number(n.linjenr)||0})"><td><b>${esc(n.po)}</b></td><td>${n.linjenr}</td><td>${esc(n.tekst.length>140?n.tekst.slice(0,140)+"…":n.tekst)}</td><td>${when(n.updated_at)}${n.updated_email?"<br><small>"+esc(n.updated_email)+"</small>":""}</td></tr>`).join("")+`</table>`
@@ -1594,7 +1595,7 @@ boot();
     const r=await c.from("dashboard_insights").select("*").eq("kunde_id",kid).order("published_at",{ascending:false}).limit(1);
     const i=r.data&&r.data[0];if(!i)return;
     const e=x=>String(x==null?"":x).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
-    const kr=n=>n==null?"–":(n>=1e6?(n/1e6).toFixed(2).replace(".",",").replace(/,?0+$/,"")+" mill kr":Math.round(n).toLocaleString("nb-NO")+" kr");
+    const kr=n=>n==null?"–":(n>=1e6?(n/1e6).toFixed(2).replace(/\.?0+$/,"")+" M NOK":Math.round(n).toLocaleString("en-GB")+" NOK");
     const pr={high:["High","#e05d5d"],medium:["Medium","#f0b429"],low:["Low","#2ecc71"]};
     document.getElementById("aiInsights").innerHTML=`<div class="card" style="border-color:rgba(109,179,255,.45);background:linear-gradient(135deg,rgba(109,179,255,.08),transparent 60%),var(--panel)">
       <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:baseline">

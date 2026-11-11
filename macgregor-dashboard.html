@@ -307,7 +307,7 @@ rect.clickable:hover{fill:#6db3ff}
   <div class="card">
     <h3 class="sect">Prisutvikling per materiale (vektede enhetspriser, indeks første måned = 100)</h3>
     <div style="overflow-x:auto"><table id="priceTable"></table></div>
-    <div class="note">Basert på faktiske PO-linjer (verdi / antall) per måned – demodata.</div>
+    <div class="note">Basert på faktiske PO-linjer (verdi / antall) per måned.</div>
   </div>
   <div class="grid2">
     <div class="card">
@@ -395,7 +395,7 @@ rect.clickable:hover{fill:#6db3ff}
   <div class="card">
     <h3 class="sect">Størst identifisert potensial per leverandør</h3>
     <div style="overflow-x:auto"><table id="sparTable"></table></div>
-    <div class="note">Estimatene er basert på demodata og viste forutsetninger (ekspeditionskost, lagerføring, benchmark-priser). Identifisert potensial som bør undersøkes – erstatter ikke detaljert sourcing-analyse.</div>
+    <div class="note">Estimatene er basert på deres egne innkjøpsdata og viste forutsetninger (ekspedisjonskost, lagerføring, benchmark-priser). Identifisert potensial som bør undersøkes – erstatter ikke detaljert sourcing-analyse.</div>
   </div>
 </section>
 
@@ -812,7 +812,8 @@ const singleSource=MATS.map((mt,mi)=>({mi,sups:matSups[mi]}))
 const EXPEDITE_COST=2500;
 let savExpedite=0,savBuffer=0,savReneg=0,savConsol=0;
 const savPer={}; suppliers.forEach(s=>savPer[s.id]=0);
-lines.filter(l=>l.status==="For sent").forEach(l=>{savExpedite+=EXPEDITE_COST;savPer[l.sup.id]+=EXPEDITE_COST;});
+const expCost=l=>Math.min(EXPEDITE_COST,l.value*0.10);
+lines.filter(l=>l.status==="For sent").forEach(l=>{const c=expCost(l);savExpedite+=c;savPer[l.sup.id]+=c;});
 suppliers.forEach(s=>{const a=agg[s.id];const dev=a.n?a.devAbs/a.n:0;
   if(dev>7&&a.spend>0){const v=a.spend*0.12*(dev/30);savBuffer+=v;savPer[s.id]+=v;}
   if(s.rating==="C"||s.rating==="D"){const v=a.spend*0.05;savReneg+=v;savPer[s.id]+=v;}
@@ -837,7 +838,7 @@ const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl
 /* ================= EXECUTIVE OVERVIEW ================= */
 document.getElementById("kpi-forside").innerHTML=
   kpi("Totalt innkjøp 2026",fmtM(totVal),`${fmt(lines.length)} PO-linjer · ${new Set(lines.map(l=>l.sup.id)).size} leverandører`,"","Summen av alle linjeverdier i perioden")+
-  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad","On-Time Delivery: andel leveringer levert innen ±"+OTD_TOL+" dager fra bekreftet leveringsdato")+
+  kpi("Overall OTD",String(overallOTD).replace(".",",")+" %",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad","On-Time Delivery: andel leveringer levert innen ±"+OTD_TOL+" dager fra bekreftet leveringsdato")+
   kpi("Aktive leverandører",new Set(lines.map(l=>l.sup.id)).size,"med leveringer i perioden","","Leverandører med minst én PO-linje i perioden")+
   kpi("Leverandøravhengighet",top5Share+"%","av spend hos de 5 største leverandørene","","Hvor stor del av innkjøpet som går til de fem største leverandørene. Jo høyere andel, jo mer avhengige er dere av få leverandører – det gir forhandlingsstyrke, men også risiko.")+
   kpi("Single-source materialer",singleSource.length,"uten alternativ leverandør",singleSource.length>3?"warn":"","Materialer som kun leveres av én leverandør – se Spend Intelligence")+
@@ -881,10 +882,10 @@ const monthsData=MONTHS.map((m,i)=>{
   const ml=ALL_LINES.filter(l=>l.month===i);
   const ev=ml.filter(l=>l.status!=="Ikke levert");return{m,n:ml.length,otd:ev.length?Math.round(ev.filter(l=>l.status==="I tide").length/ev.length*100):0}});
 document.getElementById("kpi-po").innerHTML=
-  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad")+
+  kpi("Overall OTD",String(overallOTD).replace(".",",")+" %",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad")+
   kpi("Evaluerte leveringer",fmt(lines.length),"PO-linjer i utvalget")+
   kpi("For sent",Math.round(lateLines/lines.length*100)+"%",fmt(lateLines)+" forsinkede leveringer","bad")+
-  kpi("Snitt |avvik|",avgAbs+" dgr","absolutt avvik pr. levering")+
+  kpi("Snitt |avvik|",String(avgAbs).replace(".",",")+" dgr","absolutt avvik pr. levering")+
   kpi("PO-dokumenter",fmt(new Set(lines.map(l=>l.po)).size),"unikke innkjøpsordre")+
   kpi("Prosjekter",PROJECTS.length,"aktive prosjektnumre");
 
@@ -915,7 +916,7 @@ document.getElementById("kpi-po").innerHTML=
     const f=v/total;
     paths+=`<circle r="40" cx="100" cy="100" fill="none" stroke="${c}" stroke-width="26" stroke-dasharray="${(f*C).toFixed(2)} ${(C-f*C).toFixed(2)}" stroke-dashoffset="${(C*(0.25-cumf)).toFixed(2)}" transform="rotate(-90 100 100)"/>`;
     cumf+=f;});
-  document.getElementById("chartDonut").innerHTML=`<svg viewBox="0 0 200 200" width="190">${paths}<text x="100" y="96" text-anchor="middle" fill="#fff" font-size="26" font-weight="800">${overallOTD}%</text><text x="100" y="114" text-anchor="middle" fill="#8fa0c0" font-size="10">Overall OTD</text></svg>
+  document.getElementById("chartDonut").innerHTML=`<svg viewBox="0 0 200 200" width="190">${paths}<text x="100" y="96" text-anchor="middle" fill="#fff" font-size="26" font-weight="800">${String(overallOTD).replace(".",",")} %</text><text x="100" y="114" text-anchor="middle" fill="#8fa0c0" font-size="10">Overall OTD</text></svg>
   <div class="legend" style="justify-content:center;margin-top:10px"><span><i style="background:#2ecc71"></i>I tide</span><span><i style="background:#e05d5d"></i>For sent</span><span><i style="background:#f0b429"></i>For tidlig</span></div>`;
   const mk=(arr,good)=>arr.map(s=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(30,42,74,.5);font-size:12.5px"><span>${s.name}</span><b class="${good?"good":"bad"}">${s.otd}%</b></div>`).join("");
   document.getElementById("chartTop").innerHTML=mk([...suppliers].filter(s=>s.lines>=3).sort((a,b)=>b.otd-a.otd).slice(0,5),true);
@@ -927,7 +928,7 @@ function renderLev(){
   const q=(document.getElementById("levSearch").value||"").toLowerCase();
   const rows=suppliers.filter(s=>!q||s.name.toLowerCase().includes(q)||String(s.num||"").toLowerCase().includes(q)).sort((a,b)=>b.spend-a.spend);
   document.getElementById("levTable").innerHTML=`<tr><th>Leverandør</th><th>Gruppe</th><th>Rating</th><th>OTD</th><th>Leveringer</th><th>For sent</th><th>Snitt |avvik|</th><th style="text-align:right">Spend</th><th style="text-align:right">Identifisert potensial</th></tr>`+
-    rows.map(s=>`<tr class="click" onclick="levDetail(${s.id})"><td><b>${s.name}</b>${s.num?`<div style="font-size:11px;color:var(--muted)">Lev.nr ${s.num}</div>`:""}</td><td>${s.group}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.otd}%</td><td>${s.lines}</td><td>${s.latePct}%</td><td>${s.avgAbs} dgr</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${savPer[s.id]>5000?fmt(savPer[s.id])+" kr":"–"} ${savPer[s.id]>5000?`<a class="evlink" onclick="event.stopPropagation();showEvidence('sup',${s.id})">[dok]</a>`:""}</td></tr>`).join("");
+    rows.map(s=>`<tr class="click" onclick="levDetail(${s.id})"><td><b>${s.name}</b>${s.num?`<div style="font-size:11px;color:var(--muted)">Lev.nr ${s.num}</div>`:""}</td><td>${s.group}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.otd}%</td><td>${s.lines}</td><td>${s.latePct}%</td><td>${String(s.avgAbs).replace(".",",")} dgr</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${savPer[s.id]>5000?fmt(savPer[s.id])+" kr":"–"} ${savPer[s.id]>5000?`<a class="evlink" onclick="event.stopPropagation();showEvidence('sup',${s.id})">[dok]</a>`:""}</td></tr>`).join("");
 }
 renderLev();
 window.levDetail=function(id){
@@ -940,7 +941,7 @@ window.levDetail=function(id){
     ${kpi("Spend 2026",fmt(s.spend)+" kr",s.group)}
     ${kpi("OTD",s.otd+"%","i tide av "+s.lines+" leveringer",s.otd>=80?"good":s.otd<50?"bad":"warn")}
     ${kpi("For sent",s.latePct+"%",a.late+" leveringer","bad")}
-    ${kpi("Snitt |avvik|",s.avgAbs+" dgr","per levering")}
+    ${kpi("Snitt |avvik|",String(s.avgAbs).replace(".",",")+" dgr","per levering")}
     ${kpi("Identifisert potensial",savPer[id]>5000?fmt(savPer[id])+" kr":"Litet","se dokumentasjon","good")}
   </div>
   ${savPer[id]>5000?`<p style="margin-bottom:10px"><a class="evlink" onclick="showEvidence('sup',${id})">Se dokumentasjon for potensialet →</a></p>`:""}
@@ -1023,7 +1024,7 @@ document.getElementById("kpi-spend").innerHTML=
   kpi("Leverandøravhengighet",top5Share+"%","av spend hos de 5 største leverandørene",top5Share>60?"warn":"","Andel av innkjøpet hos de fem største leverandørene. Jo høyere andel, jo mer avhengige er dere av få leverandører. Se listen under for hvem det gjelder.")+
   kpi("Tail spend",tailShare+"%",tailSup.length+" leverandører står for andel > 80 %-kutten","","De små leverandørene etter 80 %-kutten – ofte mye administrasjon per krone")+
   kpi("Single-source materialer",singleSource.length,"uten dokumentert alternativ",singleSource.length>2?"warn":"","Materialer som kun én leverandør kan levere – forsyningssrisiko")+
-  kpi("Snitt prisutvikling",(avgPriceTrend>0?"+":"")+avgPriceTrend.toFixed(1).replace(".",",")+"%","vekta snitt per materiale, Jan→Sep",avgPriceTrend>2?"bad":"good","Gjennomsnittlig prisendring fra januar til september, vektet per materiale");
+  kpi("Snitt prisutvikling",(avgPriceTrend>0?"+":"")+avgPriceTrend.toFixed(1).replace(".",",")+"%","vektet snitt per materiale, Jan→Sep",avgPriceTrend>2?"bad":"good","Gjennomsnittlig prisendring fra januar til september, vektet per materiale");
 
 document.getElementById("chartSpendMonth").innerHTML=vbars(
   spendByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmtK(v),l=>l,"showMonth");
@@ -1051,15 +1052,15 @@ document.getElementById("ssTable").innerHTML=`<tr><th>Materiale</th><th>Kategori
 
 /* ================= SAVINGS ================= */
 const cats=[
-  ["expedite","🚚 Ekspedisjon & premiumfrakt",savExpedite,`${fmt(lateLines)} forsinkede leveringer antas å gi ekstrakostnader (ekspeditering, frakt, overtid). Est. ${fmt(EXPEDITE_COST)} kr per forsinket linje.`],
+  ["expedite","🚚 Ekspedisjon & premiumfrakt",savExpedite,`${fmt(lateLines)} forsinkede leveringer antas å gi ekstrakostnader (ekspeditering, frakt, overtid). Est. 10 % av linjeverdien, maks ${fmt(EXPEDITE_COST)} kr per forsinket linje.`],
   ["buffer","📦 Overflødig sikkerhetslager",savBuffer,`Leverandører med snittavvik over 7 dgr tvinger frem for høye bufferlager. Estimert reduksjon av lagerføringskost ved bedre leveringsdisiplin.`],
   ["reneg","✍️ Revisjon av C/D-leverandører",savReneg,`Prisbenchmark mot beste praksis for C- og D-ratede leverandører antas å gi ca. 5 % besparelse på innkjøpsvolumet dit.`],
   ["consol","🧩 Konsolidering av småleverandører",savConsol,`Leverandører med færre enn 5 leveringer har lav forhandlingsstyrke. Konsolidering est. 8 % på volumet dit.`]];
 document.getElementById("kpi-spar").innerHTML=
-  kpi("Identifisert potensial",fmtM(savTotal),"per år (demodata) · <a class='evlink' style='color:inherit' onclick=\"showEvidence('total')\">Se dokumentasjon</a>","good")+
+  kpi("Identifisert potensial",fmtM(savTotal),"per år · <a class='evlink' style='color:inherit' onclick=\"showEvidence('total')\">Se dokumentasjon</a>","good")+
   kpi("Andel av innkjøpsvolum",(savTotal/totVal*100).toFixed(1).replace(".",",")+"%","av "+fmtM(totVal)+" totalt")+
   kpi("Leverandører med tiltak",suppliers.filter(s=>savPer[s.id]>5000).length,"over 5 000 kr identifisert potensial")+
-  kpi("Forsinkede leveringer",fmt(lateLines),fmt(lateLines*EXPEDITE_COST)+" kr est. ekspedisjonskost","bad");
+  kpi("Forsinkede leveringer",fmt(lateLines),fmt(Math.round(savExpedite))+" kr est. ekspedisjonskost","bad");
 document.getElementById("sparBreakdown").innerHTML=cats.map(([key,t,v,desc])=>
   `<div class="card" style="margin:0"><div style="font-size:22px;font-weight:800" class="good">${fmtM(v)}</div><h4 style="margin:6px 0">${t}</h4><p style="color:var(--muted);font-size:12px;line-height:1.5">${desc}</p><p style="margin-top:8px"><a class="evlink" onclick="showEvidence('${key}')">Se dokumentasjon →</a></p></div>`).join("");
 document.getElementById("sparTable").innerHTML=`<tr><th>Leverandør</th><th>Rating</th><th>OTD</th><th style="text-align:right">Spend</th><th>Hovedkilde</th><th style="text-align:right">Identifisert potensial / år</th><th></th></tr>`+
@@ -1084,14 +1085,14 @@ window.showEvidence=function(type,id){
   if(type==="expedite"){
     const ls=lines.filter(l=>l.status==="For sent").sort((a,b)=>b.value-a.value);
     html=evHeader("Ekspedisjon & premiumfrakt",savExpedite)+
-      `<div class="assump"><b>Forutsetninger:</b> ${fmt(lateLines)} forsinkede PO-linjer × ${fmt(EXPEDITE_COST)} kr antatt ekstra kost per forsinket linje (ekspeditering, premiumfrakt, overtid). Beløpet er justerbart per kunde.</div>
+      `<div class="assump"><b>Forutsetninger:</b> ${fmt(lateLines)} forsinkede PO-linjer × 10 % av linjeverdien (maks ${fmt(EXPEDITE_COST)} kr per linje) antatt ekstra kost (ekspeditering, premiumfrakt, overtid). Satsen er justerbar per kunde.</div>
       <h3 class="sect">Underliggende PO-linjer (viser ${Math.min(ls.length,25)} av ${fmt(ls.length)})</h3>`+linesTable(ls.slice(0,25));
   }else if(type==="buffer"){
     const rows=suppliers.filter(s=>parseFloat(s.avgAbs)>7&&s.spend>0).sort((a,b)=>b.spend-a.spend);
     html=evHeader("Overflødig sikkerhetslager",savBuffer)+
       `<div class="assump"><b>Forutsetninger:</b> Leverandører med snittavvik &gt; 7 dgr antas å tvinge frem for høye bufferlager. Estimat per leverandør: 12 % av årlig spend × (snittavvik / 30). Redusert lagerføringskost ved bedre leveringsdisiplin.</div>
       <table><tr><th>Leverandør</th><th>Rating</th><th>Snitt |avvik|</th><th style="text-align:right">Spend</th><th style="text-align:right">Estimert potensial</th></tr>`+
-      rows.map(s=>`<tr><td>${s.name}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${s.avgAbs} dgr</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${fmt(agg[s.id].spend*0.12*(parseFloat(s.avgAbs)/30))} kr</td></tr>`).join("")+`</table>`;
+      rows.map(s=>`<tr><td>${s.name}</td><td><span class="pill p${s.rating}">${s.rating}</span></td><td>${String(s.avgAbs).replace(".",",")} dgr</td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right" class="good">${fmt(agg[s.id].spend*0.12*(parseFloat(s.avgAbs)/30))} kr</td></tr>`).join("")+`</table>`;
   }else if(type==="reneg"){
     const rows=suppliers.filter(s=>s.rating==="C"||s.rating==="D").sort((a,b)=>b.spend-a.spend);
     html=evHeader("Revisjon av C/D-leverandører",savReneg)+
@@ -1109,9 +1110,9 @@ window.showEvidence=function(type,id){
     const s=suppliers.find(x=>x.id===id);const a=agg[s.id];
     const parts=[];
     const lateN=a.late;
-    if(lateN>0)parts.push(["Ekspedisjon & frakt",lateN*EXPEDITE_COST,`${lateN} forsinkede leveringer × ${fmt(EXPEDITE_COST)} kr`]);
+    if(lateN>0)parts.push(["Ekspedisjon & frakt",lines.filter(l=>l.sup.id===s.id&&l.status==="For sent").reduce((t,l)=>t+expCost(l),0),`${lateN} forsinkede leveringer × 10 % av linjeverdien (maks ${fmt(EXPEDITE_COST)} kr)`]);
     const dev=a.n?a.devAbs/a.n:0;
-    if(dev>7)parts.push(["Sikkerhetslager",a.spend*0.12*(dev/30),`Snittavvik ${dev.toFixed(1)} dgr × 12 % av spend (${fmt(a.spend)} kr) ÷ 30`]);
+    if(dev>7)parts.push(["Sikkerhetslager",a.spend*0.12*(dev/30),`Snittavvik ${dev.toFixed(1).replace(".",",")} dgr × 12 % av spend (${fmt(a.spend)} kr) ÷ 30`]);
     if(s.rating==="C"||s.rating==="D")parts.push(["Prisrevisjon",a.spend*0.05,`${s.rating}-rating × 5 % av spend`]);
     if(a.n<5)parts.push(["Konsolidering",a.spend*0.08,`${a.n} leveringer (< 5) × 8 % av spend`]);
     const tot=parts.reduce((x,p)=>x+p[1],0);
@@ -1140,10 +1141,10 @@ suppliers.filter(s=>s.rating==="D"&&s.otd<45).sort((a,b)=>b.spend-a.spend).slice
 const small=suppliers.filter(s=>agg[s.id].n<5);
 if(small.length)tiltak.push({prio:"midt",t:`Konsolidér ${small.length} småleverandører`,d:`${small.length} leverandører har færre enn 5 leveringer og lav forhandlingsstyrke. Samle volumet hos færre, større leverandører og estimer ca. 8 % sparing på dette volumet.`,v:savConsol,ev:["consol"]});
 const cdTop=[...suppliers].filter(s=>s.rating==="C"||s.rating==="D").sort((a,b)=>b.spend-a.spend)[0];
-if(cdTop)tiltak.push({prio:"midt",t:"Renegotier priser med "+cdTop.name,d:`${cdTop.name} er ${cdTop.rating}-rated, men står for ${fmt(cdTop.spend)} kr i innkjøp. Benchmark priser mot beste praksis og bruk volum som forhandlingskort – est. 5 % besparelse.`,v:agg[cdTop.id].spend*0.05,ev:["reneg"]});
+if(cdTop)tiltak.push({prio:"midt",t:"Reforhandle priser med "+cdTop.name,d:`${cdTop.name} er ${cdTop.rating}-rated, men står for ${fmt(cdTop.spend)} kr i innkjøp. Benchmark priser mot beste praksis og bruk volum som forhandlingskort – est. 5 % besparelse.`,v:agg[cdTop.id].spend*0.05,ev:["reneg"]});
 const devBad=suppliers.filter(s=>parseFloat(s.avgAbs)>10).sort((a,b)=>b.avgAbs-a.avgAbs).slice(0,2);
-devBad.forEach(s=>tiltak.push({prio:"midt",t:"Innfør faste leveringsvinduer for "+s.name,d:`Snittavvik på ${s.avgAbs} dgr gir unødvendig sikkerhetslager. Krev bekreftet leveringsdato 14 dager før bekreftet leveringsdato og avtal avviksvarsel – reduserer bufferlagerbehovet.`,v:savPer[s.id]*0.5,ev:["sup",s.id]}));
-if(overallOTD<80)tiltak.push({prio:"høy",t:"Nasjonal OTD-målsetting og eskaleringsprosess",d:`Overall OTD er ${overallOTD} % mot mål på 90 %. Innfør månedlig OTD-rapport til alle leverandører, automatisk eskalering ved 2 forsinkelser på rad og OTD-krav i nye kontrakter.`,v:savExpedite*0.4,ev:["expedite"]});
+devBad.forEach(s=>tiltak.push({prio:"midt",t:"Innfør faste leveringsvinduer for "+s.name,d:`Snittavvik på ${String(s.avgAbs).replace(".",",")} dgr gir unødvendig sikkerhetslager. Krev bekreftet leveringsdato 14 dager før bekreftet leveringsdato og avtal avviksvarsel – reduserer bufferlagerbehovet.`,v:savPer[s.id]*0.5,ev:["sup",s.id]}));
+if(overallOTD<80)tiltak.push({prio:"høy",t:"Nasjonal OTD-målsetting og eskaleringsprosess",d:`Overall OTD er ${String(overallOTD).replace(".",",")} % mot mål på 90 %. Innfør månedlig OTD-rapport til alle leverandører, automatisk eskalering ved 2 forsinkelser på rad og OTD-krav i nye kontrakter.`,v:savExpedite*0.4,ev:["expedite"]});
 tiltak.push({prio:"lav",t:"Automatiser innrapportering fra leverandørene",d:`I dag mottas data som Excel-filer. Be leverandørene om fast mal og ukentlig levering, så oppdateres dashboardet automatisk – raskere beslutninger og færre manuelle feil.`,v:0});
 tiltak.push({prio:"midt",t:`Reduser single-source-risiko for ${singleSource.filter(x=>x.spend>3e5).length} materialer`,d:`Flere materialer med betydelig spend har kun én leverandør. Kartlegg alternative kilder eller inngå rammeavtale med reserveleverandør – se Spend Intelligence → Single-source risiko.`,v:0});
 tiltak.sort((a,b)=>b.v-a.v);
@@ -1179,7 +1180,7 @@ function renderTiltak(){
     kpi("Totalt identifisert potensial",fmtM(tot),"summen av tiltakene","good")+
     kpi("Antall tiltak",tiltak.length,"automatisk foreslått")+
     kpi("Høy prioritet",cnt.høy,"tiltak","bad")+
-    kpi("Dekningsgrad",Math.min(100,Math.round(tot/savTotal*100))+"%","av identifisert potensial i demoen");
+    kpi("Dekningsgrad",Math.min(100,Math.round(tot/savTotal*100))+"%","av identifisert potensial");
   let list=tiltak.filter(x=>tiltakPrio==="alle"||x.prio===tiltakPrio);
   if(tiltakSort==="potensial")list=[...list].sort((a,b)=>b.v-a.v);
   else list=[...list].sort((a,b)=>({høy:0,midt:1,lav:2}[a.prio]-{høy:0,midt:1,lav:2}[b.prio])||b.v-a.v);
@@ -1488,15 +1489,15 @@ renderOctoTab();
 const FAQ=[
 ["Hva er Spend Intelligence?","Spend Intelligence viser hvor pengene går: total spend, spend per leverandør/kategori/måned, topp 10-leverandører, leverandøravhengighet (andel hos topp 5), prisutvikling per materiale, volumutvikling, tail spend og single-source-risiko."],
 
-["Hvor kommer tallene fra?","Leverandørene leverer rapporter i Excel. Logichain validerer og samler dataene automatisk i én modell. I denne demoen er alt generert som demodata."],
+["Hvor kommer tallene fra?","Fra deres egne innkjøpsdata (SAP-eksport eller Excel). Logichain kvalitetssikrer filen og laster dataene inn i én modell. Linjer som ikke er levert ennå, vises separat og holdes utenfor leverandørevalueringen."],
 ["Hva betyr OTD?","OTD (On-Time Delivery) er andel leveringer som skjer innen ±5 dager fra bekreftet leveringsdato. «I tide» = levert inntil 5 dager før eller etter avtalt dato."],
-["Hva betyr ratingene A, B, C og D?","En kombinasjon av leveringspresisjon, avvik og kvalitet. A er beste klasse; C og D bør følges opp med forbedringstiltak."],
+["Hva betyr ratingene A, B, C og D?","Ratingen settes ut fra leveringspresisjon (OTD): A ≥ 90 %, B ≥ 75 %, C ≥ 50 % og D under 50 %. C og D bør følges opp med forbedringstiltak."],
 ["Hvor trygge er sparestimatene?","Logichain viser identifisert potensial basert på dokumenterte forutsetninger – ikke garantert sparing. Klikk «Se dokumentasjon» på et tall for å se nøyaktig hvilke materialer, PO-er, leverandører og antakelser som ligger bak. Estimatet er et utgangspunkt for sourcing-arbeid og erstatter ikke detaljert sourcing-analyse."],
 ["Hva er tail spend?","De små leverandørene som til sammen utgjør en liten andel av spenden (her: etter 80 %-kutten). De gir ofte uforholdsmessig mye administrasjon per krone – et typisk konsolideringsområde."],
 ["Hva er single-source risiko?","Materialer som kun leveres av én leverandør. Logichain identifiserer dem og prioriterer etter spend, så du kan sikre alternative kilder før noe går galt."],
-["Kan jeg laste opp egne Excel-filer?","Ja – i produksjonsversjonen laster du opp leverandørenes Excel-rapporter, og dashboardet oppdateres automatisk med fast mal og validering."],
-["Kan jeg eksportere data?","Ja, alle tabeller kan eksporteres til Excel for videre analyse."],
-["Hvor ofte oppdateres tallene?","Så ofte nye leverandørrapporter lastes opp – i produksjonen typisk ukentlig."]];
+["Kan jeg laste opp egne Excel-filer?","Ja – send en SAP-eksport eller Excel-fil med «Send data til Logichain» øverst. Logichain kvalitetssikrer filen og laster den inn, så oppdateres dashboardet."],
+["Kan jeg eksportere data?","Ja – be Logichain om et Excel-uttrekk av tabellene dere trenger for videre analyse."],
+["Hvor ofte oppdateres tallene?","Hver gang nye data lastes inn – typisk månedlig. Rapporteringsperioden går til og med siste hele måned."]];
 document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" onclick="this.classList.toggle('open')"><h4>${q}</h4><div class="ans">${a}</div></div>`).join("");
 
 /* deep-link support: logichain-dashboard-demo.html#spend opens that module */
