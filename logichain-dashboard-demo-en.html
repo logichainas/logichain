@@ -130,6 +130,7 @@ rect.clickable:hover{fill:#6db3ff}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/dash-theme.css?v=11">
+<style>.mchip{border:1px solid var(--line,#2a3558);background:transparent;color:var(--text,#e6ecff);border-radius:999px;padding:6px 12px;font:600 12px inherit;cursor:pointer}.mchip.on{background:linear-gradient(90deg,#22d3ee,#a78bfa);color:#050816;border-color:transparent}</style>
 </head>
 <body>
 
@@ -299,12 +300,20 @@ rect.clickable:hover{fill:#6db3ff}
       </div>
     </div>
   </div>
+  <div class="card" style="margin-top:16px" data-open>
+    <h3 class="sect">Open order lines – not delivered yet</h3>
+    <p class="note" style="margin:-4px 0 12px">These lines are kept out of supplier evaluation (OTD, rating, deviation) until they are delivered – but you can see them here and in the lookups.</p>
+    <div class="kpis" id="openKpis" style="margin-bottom:12px"></div>
+    <div class="openf" id="openFilter" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
+    <div style="overflow-x:auto"><table id="openTable"></table></div>
+    <div class="note" id="openCount"></div>
+  </div>
   <div class="card" style="margin-top:16px">
     <h3 class="sect">Search purchase orders / PO lines</h3>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
       <input type="text" id="poSearch" placeholder="Search PO no., supplier, material ..." oninput="renderPO()">
       <select id="poStatus" onchange="renderPO()">
-        <option value="">All statuses</option><option value="On time">On time</option>
+        <option value="">All statuses</option><option value="Not delivered">Not delivered (open)</option><option value="On time">On time</option>
         <option value="Late">Late</option><option value="Early">Early</option>
       </select>
     </div>
@@ -465,6 +474,15 @@ suppliers.forEach(s=>{
 
 /* ================= MONTH FILTER (whole page follows the selected month) ================= */
 const ALL_LINES=lines.slice();
+/* open (not delivered) lines: shown in lookups, never part of supplier evaluation */
+const OPEN_LINES=(function(){
+  if(window.__OPEN)return window.__OPEN;
+  const out=[],R=(typeof mulberry32==="function")?mulberry32(7331):Math.random,now=new Date();now.setHours(0,0,0,0);
+  if(!ALL_LINES.length)return out;
+  for(let i=0;i<34;i++){const t=ALL_LINES[Math.floor(R()*ALL_LINES.length)];
+    const prom=new Date(now.getTime()+(Math.floor(R()*70)-25)*864e5),order=new Date(prom.getTime()-(20+Math.floor(R()*50))*864e5);
+    out.push({po:"PO"+(27000+i*7),line:10*(1+Math.floor(R()*4)),sup:t.sup,mat:t.mat,proj:t.proj,qty:t.qty,order,prom,del:null,dev:0,status:"Not delivered",value:t.value,month:-1});}
+  return out;})();
 if(window.__MONTH!=null&&window.__MONTH>=0&&window.__MONTH<MONTHS.length){lines.length=0;ALL_LINES.filter(l=>l.month===window.__MONTH).forEach(l=>lines.push(l));}else window.__MONTH=null;
 (function(){const el=document.getElementById("monthBar");if(!el)return;const sel=window.__MONTH;
   el.innerHTML=`<span class="mb-lbl">Period</span><button class="${sel==null?"active":""}" onclick="setMonth(null)">Whole period <small>${ALL_LINES.length.toLocaleString("en-GB")}</small></button>`+
@@ -473,7 +491,7 @@ if(window.__MONTH!=null&&window.__MONTH>=0&&window.__MONTH<MONTHS.length){lines.
 const fmt=n=>Math.round(n).toLocaleString("en-GB");
 const fmtM=n=>n>=1e6?(n/1e6).toFixed(1)+" mill NOK":fmt(n)+" NOK";
 const fmtK=n=>n>=1e6?(n/1e6).toFixed(1)+" M":n>=1e3?Math.round(n/1e3)+" k":fmt(n);
-const dstr=d=>d.toLocaleDateString("en-GB",{day:"2-digit",month:"2-digit",year:"numeric"});
+const dstr=d=>!d?"–":d.toLocaleDateString("en-GB",{day:"2-digit",month:"2-digit",year:"numeric"});
 const matName=i=>MATS[i][1], matCat=i=>MATS[i][2], matCode=i=>MATS[i][0];
 
 const totVal=lines.reduce((a,l)=>a+l.value,0);
@@ -560,7 +578,7 @@ var poMonth=null;
 function renderPO(){
   const q=(document.getElementById("poSearch").value||"").toLowerCase();
   const st=document.getElementById("poStatus").value;
-  const rows=lines.filter(l=>(!st||l.status===st)&&(poMonth===null||l.month===poMonth)&&(
+  const rows=(st==="Not delivered"?OPEN_LINES:(st?lines:lines.concat(poMonth===null?OPEN_LINES:[]))).filter(l=>(!st||l.status===st)&&(poMonth===null||l.month===poMonth)&&(
     !q||l.po.toLowerCase().includes(q)||l.sup.name.toLowerCase().includes(q)||
     matName(l.mat).toLowerCase().includes(q)||matCode(l.mat).toLowerCase().includes(q)||l.proj.includes(q)));
   document.getElementById("poTable").innerHTML=`<tr><th>PO no.</th><th>Line</th><th>Supplier</th><th>Material</th><th>Proj.</th><th>Ordered</th><th>Promised</th><th>Delivered</th><th>Deviation</th><th>Status</th><th style="text-align:right">Value</th></tr>`+
@@ -568,6 +586,26 @@ function renderPO(){
   document.getElementById("poCount").textContent=`Showing ${Math.min(rows.length,120)} of ${fmt(rows.length)} matches · ${fmt(lines.length)} PO lines total · ${poMonth===null?"all months":MONTHS[poMonth]} · click a row for details`;
 }
 renderPO();
+/* ================= OPEN LINES (not delivered) ================= */
+let OPEN_F="";
+window.renderOpen=function(fl){
+  if(typeof fl==="string")OPEN_F=fl;
+  const now=new Date();now.setHours(0,0,0,0);const soon=new Date(now.getTime()+14*864e5);
+  const grp=l=>l.prom<now?"over":l.prom<=soon?"soon":"later";
+  const all=OPEN_LINES.slice().sort((a,b)=>a.prom-b.prom),cnt={over:0,soon:0,later:0},val={over:0,soon:0,later:0};
+  all.forEach(l=>{const g=grp(l);cnt[g]++;val[g]+=l.value;});
+  const tot=all.reduce((a,l)=>a+l.value,0);
+  const k=document.getElementById("openKpis");if(!k)return;
+  k.innerHTML=kpi("Open lines",fmt(all.length),fmt(tot)+" kr value")+kpi("Overdue",fmt(cnt.over),fmt(val.over)+" kr · promised date passed",cnt.over?"bad":"good")+kpi("Due ≤ 14 days",fmt(cnt.soon),fmt(val.soon)+" kr",cnt.soon?"warn":"")+kpi("Later",fmt(cnt.later),fmt(val.later)+" kr");
+  document.getElementById("openFilter").innerHTML=[["","All",all.length],["over","Overdue",cnt.over],["soon","≤ 14 days",cnt.soon],["later","Later",cnt.later]]
+    .map(([v,t,n])=>`<button type="button" class="mchip${OPEN_F===v?" on":""}" onclick="renderOpen('${v}')">${t} <span style="opacity:.6">${n}</span></button>`).join("");
+  const rows=all.filter(l=>!OPEN_F||grp(l)===OPEN_F);
+  document.getElementById("openTable").innerHTML=rows.length?`<tr><th>PO</th><th>Line</th><th>Supplier</th><th>Material</th><th>Proj.</th><th>Ordered</th><th>Promised</th><th>Days</th><th style="text-align:right">Value</th></tr>`+
+    rows.map(l=>{const d=Math.round((now-l.prom)/864e5);return `<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.line}</td><td><a class="cellink" onclick="event.stopPropagation();openSup(${l.sup.id})">${l.sup.name}</a></td><td><a class="cellink" onclick="event.stopPropagation();showMat(${l.mat})">${matName(l.mat)}</a></td><td>${l.proj}</td><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td style="color:${d>0?"#ff6b6b":d>=-14?"#f5b041":"var(--muted)"};font-weight:600">${d>0?d+" late":d===0?"today":(-d)+" left"}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`;}).join("")
+    :`<tr><td style="color:var(--muted)">No open lines.</td></tr>`;
+  document.getElementById("openCount").textContent=rows.length?`${fmt(rows.length)} lines`:"";
+};
+renderOpen();
 
 const monthsData=MONTHS.map((m,i)=>{
   const ml=ALL_LINES.filter(l=>l.month===i);
@@ -639,12 +677,16 @@ window.levDetail=function(id){
   <h3 class="sect">Largest deviations (latest deliveries)</h3>
   <table><tr><th>PO</th><th>Material</th><th>Promised</th><th>Delivered</th><th>Deviation</th><th>Status</th><th style="text-align:right">Value</th></tr>
   ${lv.map(l=>`<tr><td>${l.po}</td><td><a class="cellink" onclick="showMat(${l.mat})">${matName(l.mat)}</a></td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.dev>0?"+":""}${l.dev} days</td><td class="${l.status==="On time"?"st-ok":l.status==="Late"?"st-late":"st-early"}">${l.status}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")}</table>`;
+  {const op=OPEN_LINES.filter(l=>l.sup.id===id).sort((a,b)=>a.prom-b.prom),now=new Date(),od=op.filter(l=>l.prom<now).length;
+   el.insertAdjacentHTML("beforeend",`<h3 class="sect" style="margin-top:16px">Open lines with this supplier · ${op.length} lines${od?` · <span style="color:#ff6b6b">${od} Overdue</span>`:""}</h3>`+
+    (op.length?`<table><tr><th>PO</th><th>Material</th><th>Promised</th><th>Days</th><th style="text-align:right">Value</th></tr>${op.slice(0,10).map(l=>{const d=Math.round((now-l.prom)/864e5);
+      return `<tr class="click" onclick="showLine('${l.po}',${l.line})"><td>${l.po}</td><td>${matName(l.mat)}</td><td>${dstr(l.prom)}</td><td style="color:${d>0?"#ff6b6b":"var(--muted)"}">${d>0?d+" late":d===0?"today":(-d)+" left"}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`;}).join("")}</table>`:`<p class="note">No open lines with this supplier.</p>`));}
   setCrumbs([["Logichain","goto('forside')"],["Suppliers","goto('lev')"],[s.name]]);
   el.scrollIntoView({behavior:"smooth",block:"nearest"});
 };
 /* ================= PROJECT LOOKUP ================= */
 window.renderProj=function(sel){
-  const src=(typeof ALL_LINES!=="undefined"?ALL_LINES:lines),out=document.getElementById("projOut"),inp=document.getElementById("projSearch");
+  const src=(typeof ALL_LINES!=="undefined"?ALL_LINES:lines).concat(typeof OPEN_LINES!=="undefined"?OPEN_LINES:[]),out=document.getElementById("projOut"),inp=document.getElementById("projSearch");
   if(typeof sel==="string")inp.value=sel;
   const q=(inp.value||"").trim().toLowerCase();
   const by={};src.forEach(l=>{if(!l.proj||l.proj==="\u2013")return;(by[l.proj]=by[l.proj]||[]).push(l);});
@@ -1085,7 +1127,7 @@ window.showMat=function(mi){
   setCrumbs([["Logichain","goto('forside')"],["Spend Intelligence","goto('spend')"],["Material: "+mt[1]]]);
 };
 window.showLine=function(po,line){
-  const l=lines.find(x=>x.po===po&&x.line===line);if(!l)return;
+  const l=lines.find(x=>x.po===po&&x.line===line)||OPEN_LINES.find(x=>x.po===po&&x.line===line);if(!l)return;
   const others=lines.filter(x=>x.po===po&&x.line!==line).slice(0,10);
   let html=`<div class="mh"><div><h2>📦 ${l.po} · line ${l.line}</h2>
     <div style="font-size:12px;color:var(--muted)">Project ${l.proj}</div></div>
@@ -1118,7 +1160,7 @@ window.doSearch=function(){
   if(sups.length)out+=`<div class="grp">Suppliers</div>`+sups.map(s=>`<div class="item" onclick="openSup(${s.id})"><span>${s.name}</span><span class="tag">${s.group}</span></div>`).join("");
   const mats=MATS.map((m,i)=>i).filter(i=>matName(i).toLowerCase().includes(q)||matCode(i).toLowerCase().includes(q)).slice(0,4);
   if(mats.length)out+=`<div class="grp">Materials</div>`+mats.map(i=>`<div class="item" onclick="showMat(${i})"><span>${matName(i)}</span><span class="tag">${matCode(i)}</span></div>`).join("");
-  const seen={};lines.filter(l=>l.po.toLowerCase().includes(q)).forEach(l=>{if(!seen[l.po])seen[l.po]=l.line;});
+  const seen={};lines.concat(OPEN_LINES).filter(l=>l.po.toLowerCase().includes(q)).forEach(l=>{if(!seen[l.po])seen[l.po]=l.line;});
   const pos=Object.keys(seen).slice(0,4);
   if(pos.length)out+=`<div class="grp">Purchase orders</div>`+pos.map(p=>`<div class="item" onclick="showLine('${p}',${seen[p]})"><span>${p}</span><span class="tag">PO</span></div>`).join("");
   if(!out)out=`<div class="grp">No matches for “${q}”</div>`;
