@@ -111,7 +111,7 @@ document.getElementById("gForm").addEventListener("submit",async e=>{
 sb.auth.getSession().then(r=>{const u=r&&r.data&&r.data.session&&r.data.session.user;if(u)enter(u);});
 document.getElementById("sample").addEventListener("click",e=>{
   e.preventDefault();
-  const head=["PO-nummer","Linjenr","Leverandørnavn","Leverandørnr","Materialnummer","Materialebeskrivelse","Kategori","Prosjektnr","Antall","Enhet","Enhetspris (NOK)","Linjeverdi (NOK)","Bestillingsdato","Love-dato","Faktisk leveringsdato","Leveringsstatus","Kommentar"];
+  const head=["PO-nummer","Linjenr","Leverandørnavn","Leverandørnr","Materialnummer","Materialebeskrivelse","Kategori","Prosjektnr","Antall","Enhet","Enhetspris (NOK)","Linjeverdi (NOK)","Bestillingsdato","Bekreftet leveringsdato","Faktisk leveringsdato","Leveringsstatus","Kommentar"];
   const row=["PO27001",1,"Eksempel Leverandør AS","10001","EKSEMPEL-1","Eksempelvare","Mekanisk","1001",10,"stk",1000,10000,"01.01.2026","01.02.2026","01.02.2026","I tide",""];
   const b=new Blob(["\uFEFF"+[head,row].map(r=>r.join(";")).join("\n")],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="logichain-mal-eksempel.csv";a.click();
@@ -172,7 +172,7 @@ function fromSAP(table){
       "materialebeskrivelse":text,"kategori":pg?"Innkjøpsgruppe "+pg:"","prosjektnr":wbs&&wbs!=="0"?wbs:(sd&&sd!=="0"?sd:""),
       "antall":String(qty||1),"enhet":String(r["order unit"]||"stk").trim(),
       "enhetspris (nok)":String(qty?Math.round(val/qty*100)/100:0),"linjeverdi (nok)":String(Math.round(val*100)/100),
-      "bestillingsdato":isoD(r["document date"]),"love-dato":isoD(r["planned delivery date"]),
+      "bestillingsdato":isoD(r["document date"]),"bekreftet leveringsdato":isoD(r["planned delivery date"]),
       "faktisk leveringsdato":still>0?"":isoD(r["posting date"]),"leveringsstatus":"","kommentar":cur!=="NOK"?"Valuta "+cur:""});
   }
   const info="SAP-eksport gjenkjent: "+table.length+" rader → "+rows.length+" PO-linjer. Hoppet over: "+deleted+" slettede og "+cancelled+" lukket uten levering. Verdier er i NOK fra SAP"+(fx?" ("+fx+" linjer omregnet med Norges Banks snittkurs 2026)":"")+". Linjer som ikke er ferdig levert telles som ikke levert.";
@@ -195,14 +195,14 @@ document.getElementById("file").addEventListener("change",async e=>{
   rows.forEach((r,idx)=>{
     const row=idx+2;
     const po=get(r,"po-nummer"),sup=get(r,"leverandørnavn"),mat=get(r,"materialnummer");
-    const bd=pDate(get(r,"bestillingsdato")),ld=pDate(get(r,"love-dato")),dd=pDate(get(r,"faktisk leveringsdato"));
+    const bd=pDate(get(r,"bestillingsdato")),ld=pDate(get(r,"bekreftet leveringsdato")||get(r,"love-dato")),dd=pDate(get(r,"faktisk leveringsdato"));
     const val=num(get(r,"linjeverdi")),qty=num(get(r,"antall"))||1,up=num(get(r,"enhetspris"));
     const E=m=>errs.push({row,t:"Feil",m});
     if(!po)E("Mangler PO-nummer");
     if(!sup)E("Mangler leverandørnavn");
     if(!mat)E("Mangler materialnummer");
     if(!bd||bd==="BAD")E("Bestillingsdato mangler/ugyldig");
-    if(!ld||ld==="BAD")E("Love-dato mangler/ugyldig");
+    if(!ld||ld==="BAD")E("Bekreftet leveringsdato mangler/ugyldig");
     if(dd==="BAD")E("Faktisk leveringsdato ugyldig");
     if(isNaN(val))E("Linjeverdi mangler/ugyldig");
     if(sup&&mat){const key=po.toUpperCase()+"#"+(get(r,"linjenr")||"1");

@@ -567,7 +567,7 @@ const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl
 /* ================= EXECUTIVE OVERVIEW ================= */
 document.getElementById("kpi-forside").innerHTML=
   kpi("Total purchases 2026",fmtM(totVal),`${fmt(lines.length)} PO lines · ${new Set(lines.map(l=>l.sup.id)).size} suppliers`,"","Sum of all line values in the period")+
-  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="On time").length)} of ${fmt(lines.length)} on time`,overallOTD>=80?"good":"bad","On-Time Delivery: share of deliveries within ±"+OTD_TOL+" days of the promised date")+
+  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="On time").length)} of ${fmt(lines.length)} on time`,overallOTD>=80?"good":"bad","On-Time Delivery: share of deliveries within ±"+OTD_TOL+" days of the confirmed delivery date")+
   kpi("Active suppliers",new Set(lines.map(l=>l.sup.id)).size,"with deliveries in the period","","Suppliers with at least one PO line in the period")+
   kpi("Supplier dependency",top5Share+"%","of spend with the 5 largest suppliers","","How much of the purchasing goes to the five largest suppliers. The higher the share, the more you depend on a few suppliers – that gives negotiating power, but also risk.")+
   kpi("Single-source materials",singleSource.length,"without an alternative supplier",singleSource.length>3?"warn":"","Materials supplied by only one supplier – see Spend Intelligence")+
@@ -581,7 +581,7 @@ function renderPO(){
   const rows=(st==="Not delivered"?OPEN_LINES:(st?lines:lines.concat(poMonth===null?OPEN_LINES:[]))).filter(l=>(!st||l.status===st)&&(poMonth===null||l.month===poMonth)&&(
     !q||l.po.toLowerCase().includes(q)||l.sup.name.toLowerCase().includes(q)||
     matName(l.mat).toLowerCase().includes(q)||matCode(l.mat).toLowerCase().includes(q)||l.proj.includes(q)));
-  document.getElementById("poTable").innerHTML=`<tr><th>PO no.</th><th>Line</th><th>Supplier</th><th>Material</th><th>Proj.</th><th>Ordered</th><th>Promised</th><th>Delivered</th><th>Deviation</th><th>Status</th><th style="text-align:right">Value</th></tr>`+
+  document.getElementById("poTable").innerHTML=`<tr><th>PO no.</th><th>Line</th><th>Supplier</th><th>Material</th><th>Proj.</th><th>Ordered</th><th>Confirmed delivery date</th><th>Delivered</th><th>Deviation</th><th>Status</th><th style="text-align:right">Value</th></tr>`+
     rows.slice(0,120).map(l=>`<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.line}</td><td><a class="cellink" onclick="event.stopPropagation();openSup(${l.sup.id})">${l.sup.name}</a></td><td><a class="cellink" onclick="event.stopPropagation();showMat(${l.mat})">${matName(l.mat)}</a></td><td>${l.proj}</td><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.dev>0?"+":""}${l.dev} days</td><td><span class="${l.status==="On time"?"st-ok":l.status==="Late"?"st-late":"st-early"}">${l.status}</span></td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("");
   document.getElementById("poCount").textContent=`Showing ${Math.min(rows.length,120)} of ${fmt(rows.length)} matches · ${fmt(lines.length)} PO lines total · ${poMonth===null?"all months":MONTHS[poMonth]} · click a row for details`;
 }
@@ -596,11 +596,11 @@ window.renderOpen=function(fl){
   all.forEach(l=>{const g=grp(l);cnt[g]++;val[g]+=l.value;});
   const tot=all.reduce((a,l)=>a+l.value,0);
   const k=document.getElementById("openKpis");if(!k)return;
-  k.innerHTML=kpi("Open lines",fmt(all.length),fmt(tot)+" kr value")+kpi("Overdue",fmt(cnt.over),fmt(val.over)+" kr · promised date passed",cnt.over?"bad":"good")+kpi("Due ≤ 14 days",fmt(cnt.soon),fmt(val.soon)+" kr",cnt.soon?"warn":"")+kpi("Later",fmt(cnt.later),fmt(val.later)+" kr");
+  k.innerHTML=kpi("Open lines",fmt(all.length),fmt(tot)+" kr value")+kpi("Overdue",fmt(cnt.over),fmt(val.over)+" kr · confirmed delivery date passed",cnt.over?"bad":"good")+kpi("Due ≤ 14 days",fmt(cnt.soon),fmt(val.soon)+" kr",cnt.soon?"warn":"")+kpi("Later",fmt(cnt.later),fmt(val.later)+" kr");
   document.getElementById("openFilter").innerHTML=[["","All",all.length],["over","Overdue",cnt.over],["soon","≤ 14 days",cnt.soon],["later","Later",cnt.later]]
     .map(([v,t,n])=>`<button type="button" class="mchip${OPEN_F===v?" on":""}" onclick="renderOpen('${v}')">${t} <span style="opacity:.6">${n}</span></button>`).join("");
   const rows=all.filter(l=>!OPEN_F||grp(l)===OPEN_F);
-  document.getElementById("openTable").innerHTML=rows.length?`<tr><th>PO</th><th>Line</th><th>Supplier</th><th>Material</th><th>Proj.</th><th>Ordered</th><th>Promised</th><th>Days</th><th style="text-align:right">Value</th></tr>`+
+  document.getElementById("openTable").innerHTML=rows.length?`<tr><th>PO</th><th>Line</th><th>Supplier</th><th>Material</th><th>Proj.</th><th>Ordered</th><th>Confirmed delivery date</th><th>Days</th><th style="text-align:right">Value</th></tr>`+
     rows.map(l=>{const d=Math.round((now-l.prom)/864e5);return `<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.line}</td><td><a class="cellink" onclick="event.stopPropagation();openSup(${l.sup.id})">${l.sup.name}</a></td><td><a class="cellink" onclick="event.stopPropagation();showMat(${l.mat})">${matName(l.mat)}</a></td><td>${l.proj}</td><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td style="color:${d>0?"#ff6b6b":d>=-14?"#f5b041":"var(--muted)"};font-weight:600">${d>0?d+" late":d===0?"today":(-d)+" left"}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`;}).join("")
     :`<tr><td style="color:var(--muted)">No open lines.</td></tr>`;
   document.getElementById("openCount").textContent=rows.length?`${fmt(rows.length)} lines`:"";
@@ -675,11 +675,11 @@ window.levDetail=function(id){
   </div>
   ${savPer[id]>5000?`<p style="margin-bottom:10px"><a class="evlink" onclick="showEvidence('sup',${id})">See documentation for the potential →</a></p>`:""}
   <h3 class="sect">Largest deviations (latest deliveries)</h3>
-  <table><tr><th>PO</th><th>Material</th><th>Promised</th><th>Delivered</th><th>Deviation</th><th>Status</th><th style="text-align:right">Value</th></tr>
+  <table><tr><th>PO</th><th>Material</th><th>Confirmed delivery date</th><th>Delivered</th><th>Deviation</th><th>Status</th><th style="text-align:right">Value</th></tr>
   ${lv.map(l=>`<tr><td>${l.po}</td><td><a class="cellink" onclick="showMat(${l.mat})">${matName(l.mat)}</a></td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.dev>0?"+":""}${l.dev} days</td><td class="${l.status==="On time"?"st-ok":l.status==="Late"?"st-late":"st-early"}">${l.status}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")}</table>`;
   {const op=OPEN_LINES.filter(l=>l.sup.id===id).sort((a,b)=>a.prom-b.prom),now=new Date(),od=op.filter(l=>l.prom<now).length;
    el.insertAdjacentHTML("beforeend",`<h3 class="sect" style="margin-top:16px">Open lines with this supplier · ${op.length} lines${od?` · <span style="color:#ff6b6b">${od} Overdue</span>`:""}</h3>`+
-    (op.length?`<table><tr><th>PO</th><th>Material</th><th>Promised</th><th>Days</th><th style="text-align:right">Value</th></tr>${op.slice(0,10).map(l=>{const d=Math.round((now-l.prom)/864e5);
+    (op.length?`<table><tr><th>PO</th><th>Material</th><th>Confirmed delivery date</th><th>Days</th><th style="text-align:right">Value</th></tr>${op.slice(0,10).map(l=>{const d=Math.round((now-l.prom)/864e5);
       return `<tr class="click" onclick="showLine('${l.po}',${l.line})"><td>${l.po}</td><td>${matName(l.mat)}</td><td>${dstr(l.prom)}</td><td style="color:${d>0?"#ff6b6b":"var(--muted)"}">${d>0?d+" late":d===0?"today":(-d)+" left"}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`;}).join("")}</table>`:`<p class="note">No open lines with this supplier.</p>`));}
   setCrumbs([["Logichain","goto('forside')"],["Suppliers","goto('lev')"],[s.name]]);
   el.scrollIntoView({behavior:"smooth",block:"nearest"});
@@ -721,7 +721,7 @@ window.renderProj=function(sel){
   <div style="overflow-x:auto;margin-bottom:16px"><table><tr><th>Supplier</th><th>PO lines</th><th>Late</th><th style="text-align:right">Spend</th></tr>
   ${Object.values(sp).sort((a,b)=>b.v-a.v).map(o=>`<tr class="click" onclick="openSup(${o.s.id})"><td><b>${o.s.name}</b></td><td>${o.n}</td><td>${o.late}</td><td style="text-align:right">${fmt(o.v)}</td></tr>`).join("")}</table></div>
   <h3 class="sect">All purchase orders in the project</h3>
-  <div style="overflow-x:auto"><table><tr><th>PO</th><th>Line</th><th>Supplier</th><th>Material</th><th>Qty</th><th>Promised</th><th>Delivered</th><th>Deviation</th><th>Status</th><th style="text-align:right">Value</th></tr>
+  <div style="overflow-x:auto"><table><tr><th>PO</th><th>Line</th><th>Supplier</th><th>Material</th><th>Qty</th><th>Confirmed delivery date</th><th>Delivered</th><th>Deviation</th><th>Status</th><th style="text-align:right">Value</th></tr>
   ${ls.map(l=>`<tr class="click" onclick="showLine('${l.po}',${l.line})"><td><b>${l.po}</b></td><td>${l.line}</td><td><a class="cellink" onclick="event.stopPropagation();openSup(${l.sup.id})">${l.sup.name}</a></td><td><a class="cellink" onclick="event.stopPropagation();showMat(${l.mat})">${matName(l.mat)}</a></td><td>${l.qty}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.status==="Not delivered"?"–":(l.dev>0?"+":"")+l.dev+" days"}</td><td class="${stc(l.status)}">${l.status}</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")}</table></div>`;
   try{setCrumbs([["Logichain","goto('forside')"],["Project lookup","renderProj('')"],["Project "+one]]);}catch(_){}
 };
@@ -806,7 +806,7 @@ function evHeader(title,amt){
     <div class="assump">Logichain shows <b>identified potential</b> based on the customer's own data and the assumptions below. It is a starting point for further examination – <b>not a guarantee of realised savings</b> and not a replacement for detailed sourcing analysis. (Demo data.)</div>`;
 }
 function linesTable(ls){
-  return `<table><tr><th>PO</th><th>Line</th><th>Supplier</th><th>Material</th><th>Promised</th><th>Delivered</th><th>Deviation</th><th style="text-align:right">Value</th></tr>`+
+  return `<table><tr><th>PO</th><th>Line</th><th>Supplier</th><th>Material</th><th>Confirmed delivery date</th><th>Delivered</th><th>Deviation</th><th style="text-align:right">Value</th></tr>`+
     ls.map(l=>`<tr><td>${l.po}</td><td>${l.line}</td><td>${l.sup.name}</td><td>${matName(l.mat)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td class="st-late">+${l.dev} days</td><td style="text-align:right">${fmt(l.value)}</td></tr>`).join("")+`</table>`;
 }
 window.showEvidence=function(type,id){
@@ -872,7 +872,7 @@ if(small.length)tiltak.push({prio:"midt",t:`Consolidate ${small.length} small su
 const cdTop=[...suppliers].filter(s=>s.rating==="C"||s.rating==="D").sort((a,b)=>b.spend-a.spend)[0];
 if(cdTop)tiltak.push({prio:"midt",t:"Renegotiate prices with "+cdTop.name,d:`${cdTop.name} is ${cdTop.rating}-rated but accounts for ${fmt(cdTop.spend)} NOK in purchases. Benchmark prices against best practice and use the volume as a negotiation card – est. 5 % savings.`,v:agg[cdTop.id].spend*0.05,ev:["reneg"]});
 const devBad=suppliers.filter(s=>parseFloat(s.avgAbs)>10).sort((a,b)=>b.avgAbs-a.avgAbs).slice(0,2);
-devBad.forEach(s=>tiltak.push({prio:"midt",t:"Introduce fixed delivery windows for "+s.name,d:`An average deviation of ${s.avgAbs} days creates unnecessary safety stock. Require a confirmed delivery date 14 days before the promised date and agreed deviation alerts – reduces the safety stock requirement.`,v:savPer[s.id]*0.5,ev:["sup",s.id]}));
+devBad.forEach(s=>tiltak.push({prio:"midt",t:"Introduce fixed delivery windows for "+s.name,d:`An average deviation of ${s.avgAbs} days creates unnecessary safety stock. Require a confirmed delivery date 14 days before the confirmed delivery date and agreed deviation alerts – reduces the safety stock requirement.`,v:savPer[s.id]*0.5,ev:["sup",s.id]}));
 if(overallOTD<80)tiltak.push({prio:"høy",t:"Group-wide OTD target and escalation process",d:`Overall OTD is ${overallOTD} % against a 90 % target. Introduce a monthly OTD report to all suppliers, automatic escalation after 2 consecutive delays, and OTD requirements in new contracts.`,v:savExpedite*0.4,ev:["expedite"]});
 tiltak.push({prio:"lav",t:"Automate supplier reporting",d:`Today data arrives as Excel files. Ask suppliers for a fixed template and weekly delivery, and the dashboard updates automatically – faster decisions and fewer manual errors.`,v:0});
 tiltak.push({prio:"midt",t:`Reduce single-source risk for ${singleSource.filter(x=>x.spend>3e5).length} materials`,d:`Several materials with significant spend have only one supplier. Map alternative sources or enter a frame agreement with a backup supplier – see Spend Intelligence → Single-source risk.`,v:0});
@@ -1138,11 +1138,11 @@ window.showLine=function(po,line){
   </div>
   <div class="kpis" style="margin:12px 0">
     ${kpi("Linjeverdi",fmt(l.value)+" NOK","")}
-    ${kpi("Deviation",(l.dev>0?"+":"")+l.dev+" days","delivered vs. promised date",l.dev>OTD_TOL?"bad":l.dev<-OTD_TOL?"warn":"good")}
+    ${kpi("Deviation",(l.dev>0?"+":"")+l.dev+" days","delivered vs. confirmed delivery date",l.dev>OTD_TOL?"bad":l.dev<-OTD_TOL?"warn":"good")}
     ${kpi("Status",l.status,"",l.status==="On time"?"good":l.status==="Late"?"bad":"warn")}
     ${kpi("Quantity",l.qty,"units")}
   </div>
-  <table><tr><th>Order date</th><th>Promised date</th><th>Actual delivery</th><th>Project</th></tr>
+  <table><tr><th>Order date</th><th>Confirmed delivery date</th><th>Actual delivery</th><th>Project</th></tr>
   <tr><td>${dstr(l.order)}</td><td>${dstr(l.prom)}</td><td>${dstr(l.del)}</td><td>${l.proj}</td></tr></table>`;
   if(others.length)html+=`<h3 class="sect" style="margin-top:14px">Other lines on the same PO – click for details</h3>
   <table><tr><th>Line</th><th>Material</th><th>Qty</th><th style="text-align:right">Value</th><th>Status</th></tr>`+
@@ -1216,7 +1216,7 @@ renderOctoTab();
 const FAQ=[
 ["What is Spend Intelligence?","Spend Intelligence shows where the money goes: total spend, spend by supplier/category/month, top 10 suppliers, concentration (top 5), price development per material, volume development, tail spend and single-source risk."],
 ["Where do the figures come from?","Suppliers deliver reports in Excel. Logichain validates and consolidates the data automatically into one model. In this demo everything is generated as demo data."],
-["What does OTD mean?","OTD (On-Time Delivery) is the share of deliveries made within ±5 days of the promised date. “On time” = delivered up to 5 days before or after the agreed date."],
+["What does OTD mean?","OTD (On-Time Delivery) is the share of deliveries made within ±5 days of the confirmed delivery date. “On time” = delivered up to 5 days before or after the agreed date."],
 ["What do the A, B, C and D ratings mean?","A combination of delivery precision, deviations and quality. A is the best class; C and D should be followed up with improvement actions."],
 ["How reliable are the savings estimates?","Logichain shows identified potential based on documented assumptions – never guaranteed savings. Click “See documentation” on a figure to see exactly which materials, POs, suppliers and assumptions lie behind it. The estimate is a starting point for sourcing work and does not replace detailed sourcing analysis."],
 ["What is tail spend?","The small suppliers that together make up a small share of spend (here: beyond the 80 % cut). They often require a disproportionate amount of administration per krone – a typical consolidation area."],
