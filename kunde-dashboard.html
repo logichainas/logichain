@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="no">
+<html lang="no" translate="no" class="notranslate">
 <head>
 <meta name="robots" content="noindex,nofollow">
 <script>/* language: Norwegian page ↔ "-en" page, remembered per browser */(function(){var EN=document.documentElement.lang==="en";function other(){var p=location.pathname.replace(/\.html$/,"");p=EN?p.replace(/-en$/,""):p+"-en";return p+location.search+location.hash;}try{var pref=localStorage.getItem("lc_lang");if(pref&&(pref==="en")!==EN){location.replace(other());return;}}catch(e){}window.__lcLang=function(){try{localStorage.setItem("lc_lang",EN?"no":"en");}catch(e){}location.href=other();};})();</script>
@@ -74,6 +74,7 @@ window.__ERRS.push("PROMISE-FEIL: "+(r&&r.message?r.message:String(r))+s);__show
 </script>
 <script>window.addEventListener("error",function(e){try{var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.4 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);}b.textContent="JS-FEIL: "+(e.message||"ukjent")+" (linje "+e.lineno+")";}catch(_){}});</script>
 <meta charset="UTF-8">
+<meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kundeportal · Logichain</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
@@ -558,7 +559,7 @@ document.addEventListener("change",async function(e){
     (errs.length?"<br><span style='color:#e05d5d'>"+errs.slice(0,10).join("<br>")+"</span>":"<br><span style='color:#2ecc71'>✓ Filen er klar til å sendes til Logichain.</span>");
 });
 document.addEventListener("click",async function(e){
-  if(e.target.id!=="upSend")return;
+  const _b=e.target.closest&&e.target.closest("#upSend");if(!_b)return;
   var btn=e.target;btn.disabled=true;btn.textContent="Sender …";
   var rep=document.getElementById("upReport");
   try{
@@ -841,7 +842,7 @@ function goto(t){window.__TAB=t;document.querySelectorAll(".tabs button").forEac
   const h=document.getElementById("hintline");if(h)h.textContent=HINTS[t]||"";
   setCrumbs([["Logichain","goto('forside')"],[TABNAMES[t]||t]]);
   window.scrollTo(0,0);}
-if(!window.__BOOTED)document.getElementById("tabs").addEventListener("click",e=>{if(e.target.dataset.tab)goto(e.target.dataset.tab)});
+if(!window.__BOOTED)document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)goto(b.dataset.tab)});
 
 const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl}${help?` <span class="kpi-help" title="${help}">ⓘ</span>`:""}</div><div class="val ${cls}">${val}</div><div class="sub">${sub}</div></div>`;
 

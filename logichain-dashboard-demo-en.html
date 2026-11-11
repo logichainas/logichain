@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no" class="notranslate">
 <head>
 <script>(function(){var V="v20261103a";try{var s=localStorage.getItem("lc_ver"+location.pathname);if(s!==V){localStorage.setItem("lc_ver"+location.pathname,V);location.reload();}}catch(e){}})();</script>
 <script>window.addEventListener("error",function(e){try{var b=document.getElementById("errBanner");if(!b){b=document.createElement("div");b.id="errBanner";b.style.cssText="position:fixed;bottom:0;left:0;right:0;background:#5b1a1a;color:#ffd7d7;font:12px/1.4 monospace;padding:10px 14px;z-index:99999;white-space:pre-wrap";(document.body||document.documentElement).appendChild(b);}b.textContent="JS ERROR: "+(e.message||"unknown")+" (line "+e.lineno+")";}catch(_){}});</script>
 <meta charset="UTF-8">
+<meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Logichain Dashboard – Demo</title>
 <link rel="canonical" href="https://logichain.no/logichain-dashboard-demo-en">
@@ -560,7 +561,7 @@ function goto(t){window.__TAB=t;document.querySelectorAll(".tabs button").forEac
   const h=document.getElementById("hintline");if(h)h.textContent=HINTS[t]||"";
   setCrumbs([["Logichain","goto('forside')"],[TABNAMES[t]||t]]);
   window.scrollTo(0,0);}
-if(!window.__BOOTED)document.getElementById("tabs").addEventListener("click",e=>{if(e.target.dataset.tab)goto(e.target.dataset.tab)});
+if(!window.__BOOTED)document.getElementById("tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)goto(b.dataset.tab)});
 
 const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl}${help?` <span class="kpi-help" title="${help}">ⓘ</span>`:""}</div><div class="val ${cls}">${val}</div><div class="sub">${sub}</div></div>`;
 
