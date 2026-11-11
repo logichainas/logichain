@@ -641,7 +641,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
           // Customer data comes from their ERP export: neutralise characters that could inject HTML or break inline handlers
           const SAFE=v=>String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"\u2039").replace(/>/g,"\u203a").replace(/"/g,"\u201d").replace(/'/g,"\u2019").replace(/`/g,"\u02bc").replace(/\\/g,"/");
                     suppliers=lev.map(r=>({id:Number(r.id),num:SAFE(r.nummer),name:SAFE(r.navn),group:SAFE(r.gruppe||"\u2013"),country:SAFE(r.land||"\u2013"),rating:"",otdBase:50})); // the upload has no rating column (the database default is "C"), so rating is always computed from delivery performance below
-          MATS=mat.map(r=>[SAFE(r.kode),SAFE(r.beskrivelse),SAFE(String(r.kategori||"\u2013").replace(/^Innkjøpsgruppe /,"Purchasing group ")),Number(r.standardpris)||0]);
+          MATS=mat.map(r=>[SAFE(r.kode),SAFE(r.beskrivelse),SAFE(((k,m)=>String(k).replace(/^Innkjøpsgruppe /,"Purchasing group ").replace(/ – (.+)$/,(x,n)=>" – "+(m[n]||n)))(r.kategori||"\u2013",{"MacGregor-spesifikke deler": "MacGregor-specific parts", "Maskinerte deler og stål": "Machined parts & steel", "Hydraulikkventiler": "Hydraulic valves", "Hydraulikkslanger": "Hydraulic hoses", "Pakninger og tetninger": "Seals & gaskets", "Bolter og festemidler": "Bolts & fasteners", "Diverse og emballasje": "Miscellaneous & packaging", "Filtre": "Filters", "Fjærer": "Springs", "Lagre og foringer": "Bearings & bushings", "Hydraulikkoblinger": "Hydraulic fittings", "Wire og tau": "Wire rope", "Elektro": "Electrical", "Låseringer og pinner": "Retaining rings & pins", "Pakningssett": "Seal kits", "Servicesett ventilblokk": "Valve block service kits", "Sylindersett": "Cylinder kits", "Kjetting og sjakler": "Chain & shackles", "Hurtigkoblinger": "Quick couplings", "Kjøling og varme": "Cooling & heating", "Elektro – styring": "Electrical – controls", "Pumper og motorer": "Pumps & motors"})),Number(r.standardpris)||0]);
           const matIdIdx={};mat.forEach((r2,i2)=>matIdIdx[r2.id]=i2);
           lines=po.map(r=>{
             const sup=suppliers.find(x=>x.id===r.leverandor_id)||suppliers[0];
@@ -797,7 +797,7 @@ const priceIdx=MATS.map((mt,mi)=>{
   const rows=MONTHS.map((_,m)=>{
     const ml=lines.filter(l=>l.mat===mi&&l.month===m);
     const q=ml.reduce((a,l)=>a+l.qty,0), v=ml.reduce((a,l)=>a+l.value,0);
-    return q?v/q:null;});
+    return q&&v>0?v/q:null;});
   const base=rows.find(r=>r!==null);
   return{mi,rows:rows.map(r=>r?Math.round(r/base*100):null)};
 });
@@ -831,7 +831,9 @@ const evaluated=lines.filter(l=>l.status!=="Not delivered");
 const overallOTD=Math.round(lines.filter(l=>l.status==="On time").length/(evaluated.length||1)*1000)/10;
 const lateLines=lines.filter(l=>l.status==="Late").length;
 const avgAbs=(lines.reduce((a,l)=>a+Math.abs(l.dev),0)/lines.length).toFixed(1);
-const avgPriceTrend=(matTrend.reduce((a,t)=>a+t,0)/matTrend.length*100);
+// price development from the actual unit prices: first → last month with purchases, weighted by spend
+const avgPriceTrend=(()=>{let w=0,t=0;priceIdx.forEach(p=>{const v=p.rows.filter(x=>x!==null);if(v.length<2)return;
+  const sp=lines.filter(l=>l.mat===p.mi).reduce((a,l)=>a+l.value,0);t+=Math.max(-50,Math.min(50,(v[v.length-1]-v[0])/v[0]*100))*sp;w+=sp;});return w?t/w:0;})();
 
 /* ================= TABS ================= */
 function goto(t){window.__TAB=t;document.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
@@ -1032,7 +1034,7 @@ document.getElementById("kpi-spend").innerHTML=
   kpi("Supplier dependency",top5Share+"%","of spend with the 5 largest suppliers",top5Share>60?"warn":"","Share of purchasing with the five largest suppliers. The higher the share, the more you depend on a few suppliers. See the list below for who they are.")+
   kpi("Tail spend",tailShare+"%",tailSup.length+" suppliers account for the share beyond the 80 % cut","","The small suppliers beyond the 80 % cut – often heavy administration per NOK")+
   kpi("Single-source materials",singleSource.length,"without a documented alternative",singleSource.length>2?"warn":"","Materials only one supplier can deliver – supply risk")+
-  kpi("Avg price development",(avgPriceTrend>0?"+":"")+avgPriceTrend.toFixed(1)+"%","weighted average per material, Jan→Sep",avgPriceTrend>2?"bad":"good","Average price change from January to September, weighted per material");
+  kpi("Avg price development",(avgPriceTrend>0?"+":"")+avgPriceTrend.toFixed(1)+"%","weighted average per material, "+MONTHS[0]+"→"+MONTHS[MONTHS.length-1],avgPriceTrend>2?"bad":"good","Average price change from the first to the last month with purchases, weighted by spend (materials bought in at least two months; change per material capped at ±50 %)");
 
 document.getElementById("chartSpendMonth").innerHTML=vbars(
   spendByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmtK(v),l=>l,"showMonth");
@@ -1042,7 +1044,7 @@ document.getElementById("top10Table").innerHTML=`<tr><th>#</th><th>Supplier</th>
   topSorted.slice(0,10).map((s,i)=>`<tr class="click" onclick="levDetail(${s.id});goto('lev')"><td>${i+1}</td><td><b>${s.name}</b></td><td><span class="pill p${s.rating}">${s.rating}</span></td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right">${(s.spend/totVal*100).toFixed(1)}%</td><td><div class="bar" style="width:160px"><i style="width:${s.spend/topSorted[0].spend*100}%"></i></div></td></tr>`).join("");
 document.getElementById("chartVolMonth").innerHTML=vbars(
   qtyByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmt(v),l=>l,"showMonth");
-document.getElementById("priceTable").innerHTML=`<tr><th>Material</th><th>Category</th><th style="text-align:right">Spend</th><th style="text-align:right">Price index Jan→Sep</th><th style="text-align:right">Endring</th><th>Utvikling</th></tr>`+
+document.getElementById("priceTable").innerHTML=`<tr><th>Material</th><th>Category</th><th style="text-align:right">Spend</th><th style="text-align:right">Price index ${MONTHS[0]}→${MONTHS[MONTHS.length-1]}</th><th style="text-align:right">Change</th><th>Trend</th></tr>`+
   priceIdx.map(p=>({p,spend:lines.filter(l=>l.mat===p.mi).reduce((a,l)=>a+l.value,0)}))
     .sort((a,b)=>b.spend-a.spend).slice(0,8).map(({p,spend})=>{
       const pts=p.rows.map((v,i)=>v?`${8+i*(150/8)},${34-(v-90)*0.6}`:"").filter(Boolean).join(" ");
@@ -1388,7 +1390,7 @@ window.showMat=function(mi){
   html+=`<div class="kpis" style="margin:12px 0">
     ${kpi("Total spend",fmt(spend)+" NOK",fmt(ls.length)+" PO lines")}
     ${kpi("Total quantity",fmt(qty),"units")}
-    ${kpi("Price index Jan→Sep",first+" → "+last,`${chg>0?"+":""}${chg.toFixed(1)} %`,chg>1?"bad":chg<-1?"good":"")}
+    ${kpi("Price index ${MONTHS[0]}→${MONTHS[MONTHS.length-1]}",first+" → "+last,`${chg>0?"+":""}${chg.toFixed(1)} %`,chg>1?"bad":chg<-1?"good":"")}
     ${kpi("Suppliers",matSups[mi].length,ss?"single-source":"active suppliers",ss?"warn":"")}
   </div>`;
   html+=`<h3 class="sect">Suppliers for this material – click for details</h3>

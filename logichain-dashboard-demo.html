@@ -519,7 +519,7 @@ const priceIdx=MATS.map((mt,mi)=>{
   const rows=MONTHS.map((_,m)=>{
     const ml=lines.filter(l=>l.mat===mi&&l.month===m);
     const q=ml.reduce((a,l)=>a+l.qty,0), v=ml.reduce((a,l)=>a+l.value,0);
-    return q?v/q:null;});
+    return q&&v>0?v/q:null;});
   const base=rows.find(r=>r!==null);
   return{mi,rows:rows.map(r=>r?Math.round(r/base*100):null)};
 });
@@ -753,7 +753,7 @@ document.getElementById("kpi-spend").innerHTML=
   kpi("Leverandøravhengighet",top5Share+"%","av spend hos de 5 største leverandørene",top5Share>60?"warn":"","Andel av innkjøpet hos de fem største leverandørene. Jo høyere andel, jo mer avhengige er dere av få leverandører. Se listen under for hvem det gjelder.")+
   kpi("Tail spend",tailShare+"%",tailSup.length+" leverandører står for andel > 80 %-kutten","","De små leverandørene etter 80 %-kutten – ofte mye administrasjon per krone")+
   kpi("Single-source materialer",singleSource.length,"uten dokumentert alternativ",singleSource.length>2?"warn":"","Materialer som kun én leverandør kan levere – forsyningssrisiko")+
-  kpi("Snitt prisutvikling",(avgPriceTrend>0?"+":"")+avgPriceTrend.toFixed(1).replace(".",",")+"%","vektet snitt per materiale, Jan→Sep",avgPriceTrend>2?"bad":"good","Gjennomsnittlig prisendring fra januar til september, vektet per materiale");
+  kpi("Snitt prisutvikling",(avgPriceTrend>0?"+":"")+avgPriceTrend.toFixed(1).replace(".",",")+"%","vektet snitt per materiale, "+MONTHS[0]+"→"+MONTHS[MONTHS.length-1],avgPriceTrend>2?"bad":"good","Gjennomsnittlig prisendring fra første til siste måned med kjøp, vektet etter spend (materialer kjøpt i minst to måneder; endring per materiale begrenset til ±50 %)");
 
 document.getElementById("chartSpendMonth").innerHTML=vbars(
   spendByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmtK(v),l=>l,"showMonth");
@@ -763,7 +763,7 @@ document.getElementById("top10Table").innerHTML=`<tr><th>#</th><th>Leverandør</
   topSorted.slice(0,10).map((s,i)=>`<tr class="click" onclick="levDetail(${s.id});goto('lev')"><td>${i+1}</td><td><b>${s.name}</b></td><td><span class="pill p${s.rating}">${s.rating}</span></td><td style="text-align:right">${fmt(s.spend)}</td><td style="text-align:right">${(s.spend/totVal*100).toFixed(1).replace(".",",")}%</td><td><div class="bar" style="width:160px"><i style="width:${s.spend/topSorted[0].spend*100}%"></i></div></td></tr>`).join("");
 document.getElementById("chartVolMonth").innerHTML=vbars(
   qtyByMonth.map((v,i)=>({l:MONTHS[i],v})),v=>fmt(v),l=>l,"showMonth");
-document.getElementById("priceTable").innerHTML=`<tr><th>Materiale</th><th>Kategori</th><th style="text-align:right">Spend</th><th style="text-align:right">Prisindeks Jan→Sep</th><th style="text-align:right">Endring</th><th>Utvikling</th></tr>`+
+document.getElementById("priceTable").innerHTML=`<tr><th>Materiale</th><th>Kategori</th><th style="text-align:right">Spend</th><th style="text-align:right">Prisindeks ${MONTHS[0]}→${MONTHS[MONTHS.length-1]}</th><th style="text-align:right">Endring</th><th>Utvikling</th></tr>`+
   priceIdx.map(p=>({p,spend:lines.filter(l=>l.mat===p.mi).reduce((a,l)=>a+l.value,0)}))
     .sort((a,b)=>b.spend-a.spend).slice(0,8).map(({p,spend})=>{
       const pts=p.rows.map((v,i)=>v?`${8+i*(150/8)},${34-(v-90)*0.6}`:"").filter(Boolean).join(" ");
@@ -1109,7 +1109,7 @@ window.showMat=function(mi){
   html+=`<div class="kpis" style="margin:12px 0">
     ${kpi("Spend totalt",fmt(spend)+" kr",fmt(ls.length)+" PO-linjer")}
     ${kpi("Totalt antall",fmt(qty),"enheter")}
-    ${kpi("Prisindeks Jan→Sep",first+" → "+last,`${chg>0?"+":""}${chg.toFixed(1).replace(".",",")} %`,chg>1?"bad":chg<-1?"good":"")}
+    ${kpi("Prisindeks ${MONTHS[0]}→${MONTHS[MONTHS.length-1]}",first+" → "+last,`${chg>0?"+":""}${chg.toFixed(1).replace(".",",")} %`,chg>1?"bad":chg<-1?"good":"")}
     ${kpi("Leverandører",matSups[mi].length,ss?"single-source":"aktive leverandører",ss?"warn":"")}
   </div>`;
   html+=`<h3 class="sect">Leverandører for dette materialet – klikk for detaljer</h3>

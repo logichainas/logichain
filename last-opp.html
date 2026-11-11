@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Logichain · Dataopplasting</title>
-<script>(function(){var V="v20261111b";try{var s=localStorage.getItem("lc_ver"+location.pathname);if(s!==V){localStorage.setItem("lc_ver"+location.pathname,V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261111c";try{var s=localStorage.getItem("lc_ver"+location.pathname);if(s!==V){localStorage.setItem("lc_ver"+location.pathname,V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{--bg:#070b16;--panel:#101830;--line:#1e2a4a;--txt:#dbe4f5;--muted:#8fa0c0;--accent:#2e7cf6;--accent2:#6db3ff;--good:#2ecc71;--bad:#e05d5d;--warn:#f0b429}
@@ -146,6 +146,10 @@ async function readRows(f){
   // template in Excel: lower-case the headers, dates as yyyy-mm-dd
   return {rows:table.map(o=>{const r={};for(const k in o){const v=o[k];r[String(k).trim().toLowerCase()]=v instanceof Date?isoD(v):String(v==null?"":v).trim();}return r;})};
 }
+const MG_MACGREGOR={MCG00:"MacGregor-spesifikke deler",S:"Maskinerte deler og stål",HV:"Hydraulikkventiler",HH:"Hydraulikkslanger",D:"Pakninger og tetninger",
+  KB:"Bolter og festemidler",MCGXX:"Diverse og emballasje",C:"Filtre",J:"Fjærer",B:"Lagre og foringer",H:"Hydraulikkoblinger",M:"Wire og tau",E:"Elektro",
+  K:"Låseringer og pinner",DG:"Pakningssett",DGC:"Servicesett ventilblokk",CY:"Sylindersett",MC:"Kjetting og sjakler",HB:"Hurtigkoblinger",I:"Kjøling og varme",
+  EJ:"Elektro – styring",EN:"Elektro – styring",ED:"Elektro – styring",EH:"Elektro – styring",HP:"Pumper og motorer"};
 function fromSAP(table){
   const low=o=>{const r={};for(const k in o)r[String(k).trim().toLowerCase()]=o[k];return r;};
   const g=new Map();let deleted=0,cancelled=0,fx=0,conf=0,plan=0;const hasConf=table.length&&Object.keys(table[0]).some(k=>/first confirmation/i.test(k));
@@ -153,6 +157,8 @@ function fromSAP(table){
     const key=po+"#"+String(r["item"]||"").trim();
     if(!g.has(key))g.set(key,r);else{const o=g.get(key);if(!o["posting date"]&&r["posting date"])o["posting date"]=r["posting date"];const CF="first confirmation delivery date";if(!o[CF]&&r[CF])o[CF]=r[CF];if(r["deletion indicator"])o["deletion indicator"]=r["deletion indicator"];}});
   const rows=[];
+  // MacGregor material groups get readable names (only when the file uses MacGregor's own MCG codes)
+  const mgLabels=[...g.values()].some(r=>/^MCG/i.test(String(r["material group"]||"")));
   for(const r of g.values()){
     if(String(r["deletion indicator"]||"").trim()){deleted++;continue;}
     const n=v=>{const x=Number(String(v==null?"":v).replace(/\s/g,"").replace(",","."));return isFinite(x)?x:0;};
@@ -169,7 +175,7 @@ function fromSAP(table){
     rows.push({"po-nummer":String(r["purchasing document"]).trim(),"linjenr":String(r["item"]||"1").trim(),
       "leverandørnavn":supName,"leverandørnr":supNo,
       "materialnummer":mat||("TEKST-"+text.slice(0,30).toUpperCase().replace(/[^A-Z0-9ÆØÅ]+/g,"-").replace(/^-|-$/g,"")||"UKJENT"),
-      "materialebeskrivelse":text,"kategori":(()=>{const mg=String(r["material group"]||r["matl group"]||r["material group desc."]||"").trim();return mg?mg:(pg?"Innkjøpsgruppe "+pg:"");})(),"prosjektnr":wbs&&wbs!=="0"?wbs:(sd&&sd!=="0"?sd:""),
+      "materialebeskrivelse":text,"kategori":(()=>{const mg=String(r["material group"]||r["matl group"]||"").trim();if(!mg)return pg?"Innkjøpsgruppe "+pg:"";const lab=mgLabels&&MG_MACGREGOR[mg.toUpperCase()];return lab?mg+" – "+lab:mg;})(),"prosjektnr":wbs&&wbs!=="0"?wbs:(sd&&sd!=="0"?sd:""),
       "antall":String(qty||1),"enhet":String(r["order unit"]||"stk").trim(),
       "enhetspris (nok)":String(qty?Math.round(val/qty*100)/100:0),"linjeverdi (nok)":String(Math.round(val*100)/100),
       "bestillingsdato":isoD(r["document date"]),"bekreftet leveringsdato":(()=>{const c=r["first confirmation delivery date"];if(c){conf++;return isoD(c);}plan++;return isoD(r["planned delivery date"]);})(),

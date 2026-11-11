@@ -121,7 +121,7 @@ PHRASES = [
  ('String(s.avgAbs).replace(".",",")+" dgr"', 's.avgAbs+" days"'),
  ('${String(overallOTD).replace(".",",")} %</text>', '${overallOTD}%</text>'),
  ('${String(overallOTD).replace(".",",")} %', '${overallOTD} %'),
- ('SAFE(r.kategori||"\\u2013")', 'SAFE(String(r.kategori||"\\u2013").replace(/^Innkjøpsgruppe /,"Purchasing group "))'),
+ ('SAFE(r.kategori||"\\u2013")', 'SAFE(((k,m)=>String(k).replace(/^Innkjøpsgruppe /,"Purchasing group ").replace(/ – (.+)$/,(x,n)=>" – "+(m[n]||n)))(r.kategori||"\\u2013",{"MacGregor-spesifikke deler": "MacGregor-specific parts", "Maskinerte deler og stål": "Machined parts & steel", "Hydraulikkventiler": "Hydraulic valves", "Hydraulikkslanger": "Hydraulic hoses", "Pakninger og tetninger": "Seals & gaskets", "Bolter og festemidler": "Bolts & fasteners", "Diverse og emballasje": "Miscellaneous & packaging", "Filtre": "Filters", "Fjærer": "Springs", "Lagre og foringer": "Bearings & bushings", "Hydraulikkoblinger": "Hydraulic fittings", "Wire og tau": "Wire rope", "Elektro": "Electrical", "Låseringer og pinner": "Retaining rings & pins", "Pakningssett": "Seal kits", "Servicesett ventilblokk": "Valve block service kits", "Sylindersett": "Cylinder kits", "Kjetting og sjakler": "Chain & shackles", "Hurtigkoblinger": "Quick couplings", "Kjøling og varme": "Cooling & heating", "Elektro – styring": "Electrical – controls", "Pumper og motorer": "Pumps & motors"}))'),
  ("— fyll ut i Excel → «Lagre som → CSV» → last opp her.", "— fill it in in Excel → “Save as → CSV” → upload here."),
  (">Verdi</th>", ">Value</th>"),
  # Logichain insight box
