@@ -303,3 +303,10 @@ html[lang=en] .disclaimer.lc-clamp::after{content:"Read more ▾"}
 /* no period filter on the Q&A tab */
 main:has(#tab-faq:not([style*="none"])) .monthbar{display:none!important}
 main:has(#tab-proj:not([style*="none"])) .monthbar{display:none!important}
+/* sortable table headers */
+main table th{cursor:pointer;user-select:none;white-space:nowrap}
+main table th:hover{color:#e6ecff}
+main table th::after{content:"↕";margin-left:6px;font-size:10px;opacity:.25}
+main table th.lc-sorted{color:#7ef3ff}
+main table th.lc-sorted[data-dir="asc"]::after{content:"▲";opacity:.9}
+main table th.lc-sorted[data-dir="desc"]::after{content:"▼";opacity:.9}

@@ -197,7 +197,7 @@ rect.clickable:hover{fill:#6db3ff}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/dash-theme.css?v=11">
+<link rel="stylesheet" href="assets/dash-theme.css?v=12">
 <style>.dept-tag{display:inline-block;margin-left:18px;padding:.32em .8em;border-radius:999px;font-size:.42em;line-height:1.2;vertical-align:middle;position:relative;top:-.12em;background:rgba(255,45,70,.12);border:1px solid rgba(255,45,70,.5);color:#ff7a8a;letter-spacing:.03em;font-weight:700;white-space:nowrap}.dept-tag[hidden]{display:none}@media(max-width:700px){.dept-tag{display:table;margin:10px 0 0;font-size:.5em}}</style>
 <style>.mchip{border:1px solid var(--line,#2a3558);background:transparent;color:var(--text,#e6ecff);border-radius:999px;padding:6px 12px;font:600 12px inherit;cursor:pointer}.mchip.on{background:linear-gradient(90deg,#22d3ee,#a78bfa);color:#050816;border-color:transparent}</style>
 </head>
@@ -338,7 +338,7 @@ rect.clickable:hover{fill:#6db3ff}
 <section id="tab-lev" style="display:none">
   <div class="card">
     <h3 class="sect">Leverandøroversikt – klikk på raden for detaljer</h3>
-    <input type="text" id="levSearch" placeholder="Søk på leverandørnavn eller leverandørnr ..." oninput="renderLev()" style="margin-bottom:14px">
+    <input type="text" id="levSearch" placeholder="Søk på leverandørnavn eller leverandørnr ..." oninput="renderLev()" style="margin-bottom:14px;width:min(420px,100%)">
     <div style="overflow-x:auto"><table id="levTable"></table></div>
     <div class="detail" id="levDetail"></div>
   </div>
@@ -638,7 +638,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
           REAL=true;
           // Customer data comes from their ERP export: neutralise characters that could inject HTML or break inline handlers
           const SAFE=v=>String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"\u2039").replace(/>/g,"\u203a").replace(/"/g,"\u201d").replace(/'/g,"\u2019").replace(/`/g,"\u02bc").replace(/\\/g,"/");
-          const RATING=v=>/^[A-D]$/.test(v||"")?v:"C";
+          const RATING=v=>/^[A-D]$/.test(v||"")?v:"";
           suppliers=lev.map(r=>({id:Number(r.id),num:SAFE(r.nummer),name:SAFE(r.navn),group:SAFE(r.gruppe||"\u2013"),country:SAFE(r.land||"\u2013"),rating:RATING(r.rating),otdBase:50}));
           MATS=mat.map(r=>[SAFE(r.kode),SAFE(r.beskrivelse),SAFE(r.kategori||"\u2013"),Number(r.standardpris)||0]);
           const matIdIdx={};mat.forEach((r2,i2)=>matIdIdx[r2.id]=i2);
@@ -780,7 +780,9 @@ lines.forEach(l=>{const a=agg[l.sup.id];a.n++;a.spend+=l.value;
 suppliers.forEach(s=>{const a=agg[s.id];
   s.lines=a.n;s.otd=a.ev?Math.round(a.onTime/a.ev*100):0;
   s.avgDev=a.ev?(a.devSum/a.ev).toFixed(1):"0";s.avgAbs=a.ev?(a.devAbs/a.ev).toFixed(1):"0";
-  s.latePct=a.ev?Math.round(a.late/a.ev*100):0;s.spend=a.spend;});
+  s.latePct=a.ev?Math.round(a.late/a.ev*100):0;s.spend=a.spend;
+  // no rating in the customer's data: rate on delivery performance (A ≥ 90 % OTD, B ≥ 75 %, C ≥ 50 %, D below)
+  if(!s.rating){s.rating=!a.ev?"C":s.otd>=90?"A":s.otd>=75?"B":s.otd>=50?"C":"D";s.ratingAuto=true;}});
 
 /* ---- spend aggregations ---- */
 const spendByMonth=MONTHS.map((m,i)=>ALL_LINES.filter(l=>l.month===i).reduce((a,l)=>a+l.value,0));
@@ -1610,6 +1612,6 @@ boot();
 })();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
-<script src="assets/dash-fx.js?v=7" defer></script>
+<script src="assets/dash-fx.js?v=8" defer></script>
 </body>
 </html>

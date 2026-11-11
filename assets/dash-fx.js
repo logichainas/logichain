@@ -325,10 +325,46 @@
     function label(){btn.textContent=t.classList.contains("lc-all")?(EN?"Show fewer ▴":"Vis færre ▴"):(EN?`Show all ${rows.length} ▾`:`Vis alle ${rows.length} ▾`);}
     label();
   }
+  /* click a column header to sort (again to reverse); numbers, %, days, kr, dates and A–D ratings sort as values */
+  function cellVal(td){
+    if(!td)return null;
+    const t=(td.innerText||td.textContent||"").replace(/\u00a0/g," ").trim();
+    if(!t||t==="–"||t==="-")return null;
+    if(/^[A-D]$/.test(t))return {n:t.charCodeAt(0)};
+    let m=t.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})/);if(m)return {n:Date.UTC(+m[3],m[2]-1,+m[1])};
+    m=t.match(/^([+-]?)\s*([\d][\d ,.]*)/);
+    if(m){let x=m[2].replace(/ /g,"");
+      if(x.includes(",")&&x.includes("."))x=x.replace(/,/g,"");
+      else if(/^\d{1,3}(,\d{3})+$/.test(x))x=x.replace(/,/g,"");
+      else x=x.replace(",",".");
+      let v=parseFloat(x);if(isFinite(v)){if(/\bmill/i.test(t))v*=1e6;if(/(over|late)\b/i.test(t))v=v;else if(/(igjen|left)\b/i.test(t))v=-v;return {n:(m[1]==="-"?-v:v)};}}
+    return {s:t.toLowerCase()};
+  }
+  function sortTable(t){
+    const col=+t.dataset.sortCol,dir=t.dataset.sortDir==="asc"?1:-1;if(isNaN(col))return;
+    const rows=[...t.querySelectorAll("tr")].filter(r=>!r.querySelector("th")&&r.cells.length>col);
+    if(rows.length<2)return;
+    const keyed=rows.map((r,i)=>({r,i,v:cellVal(r.cells[col])}));
+    keyed.sort((a,b)=>{if(a.v===null&&b.v===null)return a.i-b.i;if(a.v===null)return 1;if(b.v===null)return -1;
+      if(a.v.n!==undefined&&b.v.n!==undefined)return (a.v.n-b.v.n)*dir||a.i-b.i;
+      return String(a.v.s??a.v.n).localeCompare(String(b.v.s??b.v.n),"no",{numeric:true})*dir||a.i-b.i;});
+    const par=rows[0].parentNode;keyed.forEach(k=>par.appendChild(k.r));
+    const hr=[...t.querySelectorAll("tr")].find(r=>r.querySelector("th"));
+    if(hr)[...hr.cells].forEach((c,i)=>{c.classList.toggle("lc-sorted",i===col);c.dataset.dir=i===col?t.dataset.sortDir:"";});
+  }
+  document.addEventListener("click",e=>{
+    const th=e.target.closest("main table th");if(!th||e.target.closest("button,a,input,select"))return;
+    const t=th.closest("table"),hr=th.parentNode;if(!t||t.classList.contains("nosort"))return;
+    const col=[...hr.cells].indexOf(th);if(col<0||th.colSpan>1)return;
+    // first click: numbers high→low, text A→Ö; second click reverses
+    const first=(()=>{const r=[...t.querySelectorAll("tr")].find(r=>!r.querySelector("th")&&r.cells.length>col);const v=r&&cellVal(r.cells[col]);return v&&v.n!==undefined&&!/^[A-D]$/.test((r.cells[col].innerText||"").trim())?"desc":"asc";})();
+    t.dataset.sortDir=+t.dataset.sortCol===col?(t.dataset.sortDir==="asc"?"desc":"asc"):first;t.dataset.sortCol=col;
+    sortTable(t);limitTable(t);
+  });
   function watchTables(){
     document.querySelectorAll("main table[id]").forEach(t=>{
       if(t.dataset.lw)return;t.dataset.lw="1";limitTable(t);
-      new MutationObserver(()=>limitTable(t)).observe(t,{childList:true,subtree:false});
+      new MutationObserver(()=>{if(t.dataset.sortCol!==undefined)sortTable(t);limitTable(t);}).observe(t,{childList:true,subtree:false});
     });
   }
   // actions (tiltak): click the card to see description and evidence
