@@ -6,6 +6,8 @@ PHRASES = [
  # login / gate / picker
  ("Logg inn for å se innkjøps- og leverandørinnsikten deres.", "Sign in to see your purchasing and supplier insight."),
  ("Logg inn →", "Sign in →"),
+ ("<label>E-post<input", "<label>Email<input"),
+ ("<label>Passord<input", "<label>Password<input"),
  ("← Tilbake til logichain.no", "← Back to logichain.no"),
  ("Ingen tilgang for denne brukeren.", "This user has no access."),
  ("Du er admin. Åpne dashboardet til en kunde:", "You are admin. Open a customer dashboard:"),
