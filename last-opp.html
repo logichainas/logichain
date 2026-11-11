@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Logichain · Dataopplasting</title>
-<script>(function(){var V="v20261111a";try{var s=localStorage.getItem("lc_ver"+location.pathname);if(s!==V){localStorage.setItem("lc_ver"+location.pathname,V);location.reload();}}catch(e){}})();</script>
+<script>(function(){var V="v20261111b";try{var s=localStorage.getItem("lc_ver"+location.pathname);if(s!==V){localStorage.setItem("lc_ver"+location.pathname,V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <style>
 :root{--bg:#070b16;--panel:#101830;--line:#1e2a4a;--txt:#dbe4f5;--muted:#8fa0c0;--accent:#2e7cf6;--accent2:#6db3ff;--good:#2ecc71;--bad:#e05d5d;--warn:#f0b429}
@@ -148,10 +148,10 @@ async function readRows(f){
 }
 function fromSAP(table){
   const low=o=>{const r={};for(const k in o)r[String(k).trim().toLowerCase()]=o[k];return r;};
-  const g=new Map();let deleted=0,cancelled=0,fx=0;
+  const g=new Map();let deleted=0,cancelled=0,fx=0,conf=0,plan=0;const hasConf=table.length&&Object.keys(table[0]).some(k=>/first confirmation/i.test(k));
   table.map(low).forEach(r=>{const po=String(r["purchasing document"]||"").trim();if(!po)return;
     const key=po+"#"+String(r["item"]||"").trim();
-    if(!g.has(key))g.set(key,r);else{const o=g.get(key);if(!o["posting date"]&&r["posting date"])o["posting date"]=r["posting date"];if(r["deletion indicator"])o["deletion indicator"]=r["deletion indicator"];}});
+    if(!g.has(key))g.set(key,r);else{const o=g.get(key);if(!o["posting date"]&&r["posting date"])o["posting date"]=r["posting date"];const CF="first confirmation delivery date";if(!o[CF]&&r[CF])o[CF]=r[CF];if(r["deletion indicator"])o["deletion indicator"]=r["deletion indicator"];}});
   const rows=[];
   for(const r of g.values()){
     if(String(r["deletion indicator"]||"").trim()){deleted++;continue;}
@@ -172,10 +172,10 @@ function fromSAP(table){
       "materialebeskrivelse":text,"kategori":pg?"Innkjøpsgruppe "+pg:"","prosjektnr":wbs&&wbs!=="0"?wbs:(sd&&sd!=="0"?sd:""),
       "antall":String(qty||1),"enhet":String(r["order unit"]||"stk").trim(),
       "enhetspris (nok)":String(qty?Math.round(val/qty*100)/100:0),"linjeverdi (nok)":String(Math.round(val*100)/100),
-      "bestillingsdato":isoD(r["document date"]),"bekreftet leveringsdato":isoD(r["planned delivery date"]),
+      "bestillingsdato":isoD(r["document date"]),"bekreftet leveringsdato":(()=>{const c=r["first confirmation delivery date"];if(c){conf++;return isoD(c);}plan++;return isoD(r["planned delivery date"]);})(),
       "faktisk leveringsdato":still>0?"":isoD(r["posting date"]),"leveringsstatus":"","kommentar":cur!=="NOK"?"Valuta "+cur:""});
   }
-  const info="SAP-eksport gjenkjent: "+table.length+" rader → "+rows.length+" PO-linjer. Hoppet over: "+deleted+" slettede og "+cancelled+" lukket uten levering. Verdier er i NOK fra SAP"+(fx?" ("+fx+" linjer omregnet med Norges Banks snittkurs 2026)":"")+". Linjer som ikke er ferdig levert telles som ikke levert.";
+  const info="SAP-eksport gjenkjent: "+table.length+" rader → "+rows.length+" PO-linjer. Hoppet over: "+deleted+" slettede og "+cancelled+" lukket uten levering. Bekreftet leveringsdato: "+(hasConf?conf+" linjer fra «First Confirmation Delivery Date», "+plan+" uten bekreftelse bruker «Planned Delivery date»":"«Planned Delivery date» (eksporten har ingen bekreftet dato)")+". Verdier er i NOK fra SAP"+(fx?" ("+fx+" linjer omregnet med Norges Banks snittkurs 2026)":"")+". Linjer som ikke er ferdig levert telles som ikke levert.";
   return {rows,info};
 }
 function pDate(s){if(!s)return null;s=s.trim();let m=s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
