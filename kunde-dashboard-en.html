@@ -664,7 +664,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
           // months follow the promised (planned) delivery date, and keep years apart
           const mset=[...new Set(lines.map(l=>l.month))].sort((a,b)=>a-b);
           lines.forEach(l=>l.month=mset.indexOf(l.month));
-          const MN=["Jan","Feb","Mar","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Des"],multiYear=new Set(mset.map(k=>Math.floor(k/12))).size>1;
+          const MN=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],multiYear=new Set(mset.map(k=>Math.floor(k/12))).size>1;
           MONTHS=mset.map(k=>MN[k%12]+(multiYear?" "+String(Math.floor(k/12)).slice(2):""));
           matSups=MATS.map((m,i)=>[...new Set(lines.filter(l=>l.mat===i).map(l=>l.sup.id))]);
           matTrend=MATS.map(()=>0);
@@ -1028,7 +1028,7 @@ function hbars(el,rows,fmtV){
 }
 document.getElementById("kpi-spend").innerHTML=
   kpi("Total spend 2026",fmtM(totVal),fmt(lines.length)+" PO lines","","Sum of all PO lines in the period")+
-  (window.__MONTH!=null?kpi("Spend i "+MONTHS[window.__MONTH],fmtM(totVal),"selected month","","Purchasing volume in the selected month"):kpi("Spend per month (snitt)",fmtM(totVal/Math.max(1,MONTHS.length)),MONTHS.length?MONTHS[0]+" – "+MONTHS[MONTHS.length-1]:"–","","Average monthly purchasing volume"))+
+  (window.__MONTH!=null?kpi("Spend i "+MONTHS[window.__MONTH],fmtM(totVal),"selected month","","Purchasing volume in the selected month"):kpi("Spend per month (avg)",fmtM(totVal/Math.max(1,MONTHS.length)),MONTHS.length?MONTHS[0]+" – "+MONTHS[MONTHS.length-1]:"–","","Average monthly purchasing volume"))+
   kpi("Supplier dependency",top5Share+"%","of spend with the 5 largest suppliers",top5Share>60?"warn":"","Share of purchasing with the five largest suppliers. The higher the share, the more you depend on a few suppliers. See the list below for who they are.")+
   kpi("Tail spend",tailShare+"%",tailSup.length+" suppliers account for the share beyond the 80 % cut","","The small suppliers beyond the 80 % cut – often heavy administration per NOK")+
   kpi("Single-source materials",singleSource.length,"without a documented alternative",singleSource.length>2?"warn":"","Materials only one supplier can deliver – supply risk")+
@@ -1514,7 +1514,7 @@ document.getElementById("faqList").innerHTML=FAQ.map(([q,a])=>`<div class="faq" 
 (function(){const h=window.__BOOTED?(window.__TAB||"forside"):location.hash.slice(1);
   if(["forside","spend","lev","proj","po","octo","spar","tiltak","faq"].indexOf(h)>=0)goto(h);})();
 
-  const bEl=document.getElementById("dataBadge");if(bEl)bEl.textContent=REAL?"\u2713 EKTE DATA":"GENERERT DEMODATA";
+  const bEl=document.getElementById("dataBadge");if(bEl)bEl.textContent=REAL?"\u2713 LIVE DATA":"GENERATED DEMO DATA";
   try{const u=document.querySelector(".updated");if(u&&REAL){const P=window.__PERIOD,f=d=>d.toLocaleDateString("en-GB",{month:"short",year:"numeric"});u.textContent="Last updated: "+new Date().toLocaleDateString("en-GB")+" \u00b7 Period: "+(P?f(P.from)+" – "+f(P.to):"–")+" \u00b7 Data source: "+(window.__FIRMA||"")+" (live data)";}}catch(_){}
   window.goto=goto;window.renderPO=renderPO;window.renderLev=renderLev;
   window.__BOOTED=true;
