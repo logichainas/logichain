@@ -198,6 +198,7 @@ rect.clickable:hover{fill:#6db3ff}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/dash-theme.css?v=11">
+<style>.dept-tag{display:inline-block;margin-left:18px;padding:.32em .8em;border-radius:999px;font-size:.42em;line-height:1.2;vertical-align:middle;position:relative;top:-.12em;background:rgba(255,45,70,.12);border:1px solid rgba(255,45,70,.5);color:#ff7a8a;letter-spacing:.03em;font-weight:700;white-space:nowrap}.dept-tag[hidden]{display:none}@media(max-width:700px){.dept-tag{display:table;margin:10px 0 0;font-size:.5em}}</style>
 </head>
 <body>
 
@@ -241,7 +242,7 @@ rect.clickable:hover{fill:#6db3ff}
   <div class="card hero">
     <div class="updated">Sist oppdatert: 02.10.2026 kl. 10:33 · Datakilde: leverandørrapporter</div>
     <div class="mg-brand"><b id="heroFirma" style="color:#22d3ee"></b> <span>Performance Dashboard</span></div>
-    <h1>Executive Overview</h1>
+    <h1>Executive Overview<span class="dept-tag" id="deptTag" hidden></span></h1>
     <p>Logichain samler innkjøpsdata fra dine leverandører i én procurement intelligence-plattform:
     totalt innkjøp og spend-struktur, leverandør-ytelse, leveringspresisjon, identifisert
     sparepotensial og konkrete tiltak – med full dokumentasjon bak hvert tall.</p>
@@ -1408,6 +1409,7 @@ goto(document.querySelector(".tabs button.active").dataset.tab);
   if(__KUNDE.firma)document.title=__KUNDE.firma+" · Logichain";
   const hf=document.getElementById("heroFirma");if(hf)hf.textContent=__KUNDE.firma;
   const uf=document.getElementById("upFirma");if(uf&&__KUNDE.firma)uf.textContent=__KUNDE.firma;
+  {const dt=document.getElementById("deptTag");if(dt&&window.__DEPT){dt.textContent=window.__DEPT;dt.hidden=false;}}
   const lb=document.getElementById("logoutBtn");
   if(lb&&__SESS)lb.style.display="inline-block";
 })();
