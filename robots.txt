@@ -4,6 +4,8 @@ Disallow: /admin
 Disallow: /admin.html
 Disallow: /macgregor-dashboard.html
 Disallow: /kunde-dashboard.html
+Disallow: /macgregor-dashboard-en
+Disallow: /kunde-dashboard-en
 Disallow: /last-opp.html
 Disallow: /api/
 

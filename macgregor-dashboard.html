@@ -2,6 +2,7 @@
 <html lang="no">
 <head>
 <meta name="robots" content="noindex,nofollow">
+<script>/* language: Norwegian page ↔ "-en" page, remembered per browser */(function(){var EN=document.documentElement.lang==="en";function other(){var p=location.pathname.replace(/\.html$/,"");p=EN?p.replace(/-en$/,""):p+"-en";return p+location.search+location.hash;}try{var pref=localStorage.getItem("lc_lang");if(pref&&(pref==="en")!==EN){location.replace(other());return;}}catch(e){}window.__lcLang=function(){try{localStorage.setItem("lc_lang",EN?"no":"en");}catch(e){}location.href=other();};})();</script>
 <script>(function(){var V="v20261103a";try{var s=localStorage.getItem("lc_ver");if(s!==V){localStorage.setItem("lc_ver",V);location.reload();}}catch(e){}})();</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -200,6 +201,7 @@ rect.clickable:hover{fill:#6db3ff}
     <div class="sdd" id="searchDD"></div>
   </div>
   
+  <a class="home-btn" id="langBtn" href="#" onclick="__lcLang();return false" title="Switch to English" aria-label="Switch to English"><svg aria-hidden="true" style="display:block;border-radius:2px" width="21" height="11" viewBox="0 0 60 30"><rect width="60" height="30" fill="#012169"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0 L60,30 M60,0 L0,30" stroke="#C8102E" stroke-width="2.5"/><rect x="27" width="6" height="30" fill="#fff"/><rect y="12" width="60" height="6" fill="#fff"/><rect x="28.5" width="3" height="30" fill="#C8102E"/><rect y="13.5" width="60" height="3" fill="#C8102E"/></svg></a>
   <a class="home-btn" href="/">← Tilbake til nettsiden</a>
   <a class="home-btn" id="logoutBtn" href="#" onclick="doLogout();return false" style="display:none">Logg ut</a>
   <a class="home-btn" id="upBtn" href="#" onclick="openSend();return false" style="display:none">📤 Send data til Logichain</a>
