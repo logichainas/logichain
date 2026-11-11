@@ -61,7 +61,7 @@ window.__ERRS.push("PROMISE-FEIL: "+(r&&r.message?r.message:String(r))+s);__show
     var e=function(x){return String(x==null?"":x).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});};
     var list=(q.data||[]).filter(function(k){return k.portal!=="admin.html";});
     document.body.innerHTML='<div class="mg-login"><div class="mg-card"><h2>Velg kunde</h2><p class="mg-sub">Du er admin. Åpne dashboardet til en kunde:</p>'+
-      (list.length?list.map(function(k){var href=k.portal&&k.portal!=="kunde-dashboard.html"?"/"+k.portal:"?kunde="+encodeURIComponent(k.id);
+      (list.length?list.map(function(k){var href=(k.portal==="macgregor-dashboard.html"?"/macgregor-dashboard.html":"")+"?kunde="+encodeURIComponent(k.id);
         return '<a class="mg-pick" href="'+e(href)+'"><b>'+e(k.firma)+'</b><small>'+e(k.epost)+'</small></a>';}).join(""):'<p class="mg-sub">Ingen kunder ennå. Opprett en bruker i Supabase først.</p>')+
       '<a class="mg-back" href="/admin.html">← Tilbake til Jarvis</a></div></div>'+
       '<style>.mg-pick{display:flex;flex-direction:column;gap:2px;padding:12px 14px;margin:8px 0;border:1px solid rgba(148,163,255,.2);border-radius:12px;color:#e6ecff;text-decoration:none}.mg-pick:hover{border-color:#22d3ee;background:rgba(34,211,238,.06)}.mg-pick small{color:#8fa0c0}</style>';
@@ -663,15 +663,17 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
     }
   }catch(e){DIAG+="unntak: "+(e.message||e);}
   try{console.info("Logichain diagnose:",DIAG,"| REAL="+REAL);}catch(_){}
-if(!REAL&&document.getElementById("tabs")){
+/* signed in but no data uploaded yet: say so, never show invented numbers */
+if(!REAL&&window.__KID&&document.getElementById("tabs")){
   const e=x=>String(x==null?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   document.getElementById("tabs").style.display="none";
   const mb=document.getElementById("monthBar");if(mb)mb.style.display="none";
   const bEl=document.getElementById("dataBadge");if(bEl)bEl.textContent="VENTER PÅ DATA";
   const kc=document.getElementById("kundeChip");if(kc&&window.__FIRMA){kc.textContent="🏢 "+window.__FIRMA;kc.style.display="inline-block";}
   const lb=document.getElementById("logoutBtn");if(lb)lb.style.display="inline-block";
+  if(window.__FIRMA)document.title=window.__FIRMA+" · Logichain";
   document.querySelector("main").innerHTML=`<section><div class="card hero" style="text-align:center;padding:56px 24px">
-    <div class="mg-brand" style="justify-content:center"><b style="color:#22d3ee">${e(window.__FIRMA||"")}</b> <span>Performance Dashboard</span></div>
+    <div class="mg-brand" style="justify-content:center"><b class="firma-name" style="color:#22d3ee">${e(window.__FIRMA||"")}</b> <span>Performance Dashboard</span></div>
     <h1 style="margin:10px auto 8px;text-align:center;max-width:720px">Dashboardet er klart – venter på første data</h1>
     <p style="max-width:560px;margin:0 auto 18px;color:var(--muted)">Når Logichain har kvalitetssikret og lastet inn leverandørdataene deres, vises spend, leveringspresisjon, leverandører, prosjekter og sparepotensial her.</p>
     <a class="home-btn" href="#" onclick="openSend();return false">📤 Send data til Logichain</a></div></section>`;

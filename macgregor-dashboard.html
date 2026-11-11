@@ -47,7 +47,7 @@ window.__ERRS.push("PROMISE-FEIL: "+(r&&r.message?r.message:String(r))+s);__show
     if(!s){loginCard("");return;}
     var p=await sb.from("kunder").select("firma,seed,admin,portal").eq("user_id",s.user.id).maybeSingle();
     var row=p&&p.data;
-    if(!row||((row.seed+"")!=="4211"&&!row.admin)){await sb.auth.signOut();loginCard("Ingen tilgang for denne brukeren.");return;}
+    if(!row||((row.seed+"")!=="4211"&&row.portal!=="macgregor-dashboard.html"&&!row.admin)){await sb.auth.signOut();loginCard("Ingen tilgang for denne brukeren.");return;}
     try{localStorage.setItem("logichain_session",JSON.stringify({id:s.user.id,firma:row.firma,seed:row.seed,portal:row.portal||"macgregor-dashboard.html",src:"supabase"}));}catch(e){}
     var ub=document.getElementById("upBtn");if(ub)ub.style.display="inline-block";
     reveal();
@@ -580,11 +580,17 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
       DIAG+="profil="+(prof&&prof.data?("ja (seed "+prof.data.seed+", admin "+prof.data.admin+")"):"MANGLER")+" | ";
       if(prof&&prof.data){
         let kid=prof.data.id;
-        // admin (Logichain) ser MacGregor sine data
-        if(prof.data.admin&&(prof.data.seed+"")!=="4211"){
+        // admin (Logichain): ?kunde=<id> opens that MacGregor department, otherwise MacGregor Arendal (seed 4211)
+        const want=new URLSearchParams(location.search).get("kunde")||"";
+        if(prof.data.admin&&/^[0-9a-f-]{36}$/i.test(want))kid=want;
+        else if(prof.data.admin&&(prof.data.seed+"")!=="4211"){
           const mg=await sb.from("kunder").select("id").eq("seed",4211).limit(1).maybeSingle();
           if(mg&&mg.data)kid=mg.data.id;
         }
+        // other MacGregor departments show their own name (Arendal keeps "MacGregor Norway")
+        const kf=await sb.from("kunder").select("firma,seed").eq("id",kid).maybeSingle();
+        if(kf&&kf.data&&kf.data.firma&&(kf.data.seed+"")!=="4211")__KUNDE.firma=kf.data.firma;
+        window.__FIRMA=__KUNDE.firma;
         window.__KID=kid;
         const fetchAll=async function(tbl,ord){
           if(window.__MGC&&window.__MGC[tbl])return window.__MGC[tbl];
@@ -647,6 +653,22 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
     }
   }catch(e){DIAG+="unntak: "+(e.message||e);}
   try{console.info("Logichain diagnose:",DIAG,"| REAL="+REAL);}catch(_){}
+/* signed in but no data uploaded yet: say so, never show invented numbers */
+if(!REAL&&window.__KID&&document.getElementById("tabs")){
+  const e=x=>String(x==null?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  document.getElementById("tabs").style.display="none";
+  const mb=document.getElementById("monthBar");if(mb)mb.style.display="none";
+  const bEl=document.getElementById("dataBadge");if(bEl)bEl.textContent="VENTER PÅ DATA";
+  const kc=document.getElementById("kundeChip");if(kc&&window.__FIRMA){kc.textContent="🏢 "+window.__FIRMA;kc.style.display="inline-block";}
+  const lb=document.getElementById("logoutBtn");if(lb)lb.style.display="inline-block";
+  if(window.__FIRMA)document.title=window.__FIRMA+" · Logichain";
+  document.querySelector("main").innerHTML=`<section><div class="card hero" style="text-align:center;padding:56px 24px">
+    <div class="mg-brand" style="justify-content:center"><b class="firma-name">${e(window.__FIRMA||"")}</b> <span>Performance Dashboard</span></div>
+    <h1 style="margin:10px auto 8px;text-align:center;max-width:720px">Dashboardet er klart – venter på første data</h1>
+    <p style="max-width:560px;margin:0 auto 18px;color:var(--muted)">Når Logichain har kvalitetssikret og lastet inn leverandørdataene deres, vises spend, leveringspresisjon, leverandører, prosjekter og sparepotensial her.</p>
+    <a class="home-btn" href="#" onclick="openSend();return false">📤 Send data til Logichain</a></div></section>`;
+  return;
+}
 if(!REAL){
 const pick=a=>a[Math.floor(rnd()*a.length)];
 const NAMES=["Nordic Steel AS","Hydraflow Systems AB","Bergen Mek. Verksted","Trondheim Maritim AS","Fjell Metall AS","Aalborg Industri A/S","Stavanger Vekst AS","Øresund Komponenter AB","Halden Presisjon AS","Luleå Verkstad AB","Grenland Teknikk AS","Aarhus Metal Parts A/S","Vestfold Hydraulikk AS","Sandnes Stålprodusent","Kongsberg Drift AS","Malmö Processteknik AB","Oslo Fjord Industri AS","Drammen Rørforsyning","Ålesund Maskin AS","Umeå Maskinering AB","Kristiansand Kjetil AS","Södertälje Smed AB","Molde Profil AS","Haugesund Bolt AS","Karlskrona Verkstad AB","Tønsberg Tårn AS","Fredrikstad Fittings","Sundsvall Snurrning AB","Moss Montasje AS","Göteborg Gjutning AB","Skien Sveiseverksted","Randers Rustfritt A/S","Bodø Befestning AS","Västerås Ventiler AB","Arendal Aluminium","Porsgrunn Pumper AS","Helsingborg Hylsor AB","Mo i Rana Mekanisk","Tromsø Teknikk AS","Jönköping Jern AB","Hamar Hubstang AS","Esbjerg Ekstra A/S","Notodden Nippring","Sarpsborg Systemer AS","Linköping Laser AB"];
@@ -1508,7 +1530,9 @@ boot();
     const s=(await c.auth.getSession()).data.session;if(!s)return;
     const me=(await c.from("kunder").select("id,seed,admin").eq("user_id",s.user.id).maybeSingle()).data;if(!me)return;
     let kid=me.id;
-    if(me.admin&&(me.seed+"")!=="4211"){const mg=(await c.from("kunder").select("id").eq("seed",4211).limit(1).maybeSingle()).data;if(mg)kid=mg.id;}
+    {const want=new URLSearchParams(location.search).get("kunde")||"";
+     if(me.admin&&/^[0-9a-f-]{36}$/i.test(want))kid=want;
+     else if(me.admin&&(me.seed+"")!=="4211"){const mg=(await c.from("kunder").select("id").eq("seed",4211).limit(1).maybeSingle()).data;if(mg)kid=mg.id;}}
     const r=await c.from("dashboard_insights").select("*").eq("kunde_id",kid).order("published_at",{ascending:false}).limit(1);
     const i=r.data&&r.data[0];if(!i)return;
     const e=x=>String(x==null?"":x).replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
