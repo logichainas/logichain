@@ -77,8 +77,9 @@ PHRASES = [
  ('"I tide"', '"On time"'),
  # KPIs / tables
  ("leverte i tide", "delivered on time"),
- ("On-Time Delivery: andel leveringer levert innen ±", "On-Time Delivery: share of deliveries delivered within ±"),
- ("dager fra bekreftet leveringsdato", "days of the confirmed delivery date"),
+ ("On-Time Delivery: andel leveringer levert senest ", "On-Time Delivery: share of deliveries delivered no later than "),
+ (" dager etter bekreftet leveringsdato (for tidlig regnes som i tide)", " days after the confirmed delivery date (early counts as on time)"),
+
  ("} av ${", "} of ${"),
  ("ikke levert ennå", "not delivered yet"),
  ("levert vs. bekreftet leveringsdato", "delivered vs. confirmed delivery date"),

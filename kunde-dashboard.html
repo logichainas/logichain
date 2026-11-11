@@ -389,7 +389,7 @@ rect.clickable:hover{fill:#6db3ff}
       <button class="btn-note" type="button" onclick="openNotes()">📝 Notater <span id="noteCount"></span></button>
       <select id="poStatus" onchange="renderPO()">
         <option value="">Alle statuser</option><option value="Ikke levert">Ikke levert (åpne)</option><option value="I tide">I tide</option>
-        <option value="For sent">For sent</option><option value="For tidlig">For tidlig</option>
+        <option value="For sent">For sent</option>
       </select>
     </div>
     <div style="overflow-x:auto"><table id="poTable"></table></div>
@@ -582,7 +582,7 @@ document.addEventListener("click",async function(e){
 });
 </script>
 <script>/* ================= DEMO DATA / EKTE DATA ================= */
-const OTD_TOL=5; // slingringsmonn i dager: levert innen ±5 dager fra bekreftet leveringsdato regnes som «i tide»
+const OTD_TOL=5; // slingringsmonn i dager: levert senest 5 dager etter bekreftet leveringsdato regnes som «i tide» (for tidlig = i tide)
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 async function boot(){
 
@@ -650,7 +650,7 @@ if(SUPABASE.url&&SUPABASE.anonKey&&window.supabase){sb=supabase.createClient(SUP
             const pd=r.love_dato?new Date(r.love_dato):null;
             const dd=r.leveringsdato?new Date(r.leveringsdato):null;
             let dev=0,status="Ikke levert";
-            if(dd&&pd){dev=Math.round((dd-pd)/864e5);status=dev<-OTD_TOL?"For tidlig":dev<=OTD_TOL?"I tide":"For sent";}
+            if(dd&&pd){dev=Math.round((dd-pd)/864e5);status=dev<=OTD_TOL?"I tide":"For sent";}
             const od2=od||pd||dd||new Date();
             return {po:SAFE(r.po),line:Number(r.linjenr)||1,sup,mat:mi,proj:SAFE(r.prosjekt)||"\u2013",qty:Number(r.antall)||1,order:od2,prom:pd||od2,del:dd,dev,status,value:Number(r.verdi)||0,month:(pd||od2).getFullYear()*12+(pd||od2).getMonth()};
           });
@@ -736,7 +736,7 @@ suppliers.forEach(s=>{
     const r=rnd();
     const devDays=r<sup.otdBase/100*0.55?(Math.floor(rnd()*4)-1):Math.ceil(rnd()*35);
     const del=new Date(prom.getTime()+devDays*864e5);
-    const status=devDays<-OTD_TOL?"For tidlig":devDays<=OTD_TOL?"I tide":"For sent";
+    const status=devDays<=OTD_TOL?"I tide":"For sent";
     lines.push({po:"PO"+(26000+Math.floor(rnd()*4000)),line:1+Math.floor(rnd()*40),
       sup,mat:mi,proj:pick(PROJECTS),qty,order,prom,del,dev:devDays,status,value,month:m});
   }
@@ -848,7 +848,7 @@ const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl
 /* ================= EXECUTIVE OVERVIEW ================= */
 document.getElementById("kpi-forside").innerHTML=
   kpi("Totalt innkjøp 2026",fmtM(totVal),`${fmt(lines.length)} PO-linjer · ${new Set(lines.map(l=>l.sup.id)).size} leverandører`,"","Summen av alle linjeverdier i perioden")+
-  kpi("Overall OTD",String(overallOTD).replace(".",",")+" %",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad","On-Time Delivery: andel leveringer levert innen ±"+OTD_TOL+" dager fra bekreftet leveringsdato")+
+  kpi("Overall OTD",String(overallOTD).replace(".",",")+" %",`${fmt(lines.filter(l=>l.status==="I tide").length)} av ${fmt(evaluated.length)} leverte i tide`,overallOTD>=80?"good":"bad","On-Time Delivery: andel leveringer levert senest "+OTD_TOL+" dager etter bekreftet leveringsdato (for tidlig regnes som i tide)")+
   kpi("Aktive leverandører",new Set(lines.map(l=>l.sup.id)).size,"med leveringer i perioden","","Leverandører med minst én PO-linje i perioden")+
   kpi("Leverandøravhengighet",top5Share+"%","av spend hos de 5 største leverandørene","","Hvor stor del av innkjøpet som går til de fem største leverandørene. Jo høyere andel, jo mer avhengige er dere av få leverandører – det gir forhandlingsstyrke, men også risiko.")+
   kpi("Single-source materialer",singleSource.length,"uten alternativ leverandør",singleSource.length>3?"warn":"","Materialer som kun leveres av én leverandør – se Spend Intelligence")+
@@ -920,14 +920,14 @@ document.getElementById("kpi-po").innerHTML=
 })();
 
 (function(){
-  const total=lines.length,on=lines.filter(l=>l.status==="I tide").length,early=lines.filter(l=>l.status==="For tidlig").length;
+  const total=lines.length,early=lines.filter(l=>l.status==="I tide"&&l.dev<-OTD_TOL).length,on=lines.filter(l=>l.status==="I tide").length-early; // early deliveries count as on time; shown as their own slice
   const C=251.33;let cumf=0,paths="";
-  [["I tide · "+fmt(on),on,"#2ecc71"],["For sent · "+fmt(lateLines),lateLines,"#e05d5d"],["For tidlig · "+fmt(early),early,"#f0b429"]].forEach(([lbl,v,c])=>{
+  [["I tide · "+fmt(on),on,"#2ecc71"],["For sent · "+fmt(lateLines),lateLines,"#e05d5d"],["For tidlig (i tide) · "+fmt(early),early,"#f0b429"]].forEach(([lbl,v,c])=>{
     const f=v/total;
     paths+=`<circle r="40" cx="100" cy="100" fill="none" stroke="${c}" stroke-width="26" stroke-dasharray="${(f*C).toFixed(2)} ${(C-f*C).toFixed(2)}" stroke-dashoffset="${(C*(0.25-cumf)).toFixed(2)}" transform="rotate(-90 100 100)"/>`;
     cumf+=f;});
   document.getElementById("chartDonut").innerHTML=`<svg viewBox="0 0 200 200" width="190">${paths}<text x="100" y="96" text-anchor="middle" fill="#fff" font-size="26" font-weight="800">${String(overallOTD).replace(".",",")} %</text><text x="100" y="114" text-anchor="middle" fill="#8fa0c0" font-size="10">Overall OTD</text></svg>
-  <div class="legend" style="justify-content:center;margin-top:10px"><span><i style="background:#2ecc71"></i>I tide</span><span><i style="background:#e05d5d"></i>For sent</span><span><i style="background:#f0b429"></i>For tidlig</span></div>`;
+  <div class="legend" style="justify-content:center;margin-top:10px"><span><i style="background:#2ecc71"></i>I tide</span><span><i style="background:#e05d5d"></i>For sent</span><span><i style="background:#f0b429"></i>For tidlig (i tide)</span></div>`;
   const mk=(arr,good)=>arr.map(s=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(30,42,74,.5);font-size:12.5px"><span>${s.name}</span><b class="${good?"good":"bad"}">${s.otd}%</b></div>`).join("");
   document.getElementById("chartTop").innerHTML=mk([...suppliers].filter(s=>s.lines>=3).sort((a,b)=>b.otd-a.otd).slice(0,5),true);
   document.getElementById("chartBottom").innerHTML=mk([...suppliers].filter(s=>s.lines>=3).sort((a,b)=>a.otd-b.otd).slice(0,5),false);
@@ -1502,7 +1502,7 @@ const FAQ=[
 ["Hva er Spend Intelligence?","Spend Intelligence viser hvor pengene går: total spend, spend per leverandør/kategori/måned, topp 10-leverandører, leverandøravhengighet (andel hos topp 5), prisutvikling per materiale, volumutvikling, tail spend og single-source-risiko."],
 
 ["Hvor kommer tallene fra?","Fra deres egne innkjøpsdata (SAP-eksport eller Excel). Logichain kvalitetssikrer filen og laster dataene inn i én modell. Linjer som ikke er levert ennå, vises separat og holdes utenfor leverandørevalueringen."],
-["Hva betyr OTD?","OTD (On-Time Delivery) er andel leveringer som skjer innen ±5 dager fra bekreftet leveringsdato. «I tide» = levert inntil 5 dager før eller etter avtalt dato."],
+["Hva betyr OTD?","OTD (On-Time Delivery) er andel leveringer som er levert senest 5 dager etter bekreftet leveringsdato. Leveranser som kommer før avtalt dato, regnes som i tide."],
 ["Hva betyr ratingene A, B, C og D?","Ratingen settes ut fra leveringspresisjon (OTD): A ≥ 90 %, B ≥ 75 %, C ≥ 50 % og D under 50 %. C og D bør følges opp med forbedringstiltak."],
 ["Hvor trygge er sparestimatene?","Logichain viser identifisert potensial basert på dokumenterte forutsetninger – ikke garantert sparing. Klikk «Se dokumentasjon» på et tall for å se nøyaktig hvilke materialer, PO-er, leverandører og antakelser som ligger bak. Estimatet er et utgangspunkt for sourcing-arbeid og erstatter ikke detaljert sourcing-analyse."],
 ["Hva er tail spend?","De små leverandørene som til sammen utgjør en liten andel av spenden (her: etter 80 %-kutten). De gir ofte uforholdsmessig mye administrasjon per krone – et typisk konsolideringsområde."],

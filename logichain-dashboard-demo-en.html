@@ -314,7 +314,7 @@ rect.clickable:hover{fill:#6db3ff}
       <input type="text" id="poSearch" placeholder="Search PO no., supplier, material ..." oninput="renderPO()">
       <select id="poStatus" onchange="renderPO()">
         <option value="">All statuses</option><option value="Not delivered">Not delivered (open)</option><option value="On time">On time</option>
-        <option value="Late">Late</option><option value="Early">Early</option>
+        <option value="Late">Late</option>
       </select>
     </div>
     <div style="overflow-x:auto"><table id="poTable"></table></div>
@@ -466,7 +466,7 @@ suppliers.forEach(s=>{
     const r=rnd();
     const devDays=r<sup.otdBase/100*0.55?(Math.floor(rnd()*4)-1):Math.ceil(rnd()*35);
     const del=new Date(prom.getTime()+devDays*864e5);
-    const status=devDays<-OTD_TOL?"Early":devDays<=OTD_TOL?"On time":"Late";
+    const status=devDays<=OTD_TOL?"On time":"Late";
     lines.push({po:"PO"+(26000+Math.floor(rnd()*4000)),line:1+Math.floor(rnd()*40),
       sup,mat:mi,proj:pick(PROJECTS),qty,order,prom,del,dev:devDays,status,value,month:m});
   }
@@ -567,7 +567,7 @@ const kpi=(lbl,val,sub,cls="",help="")=>`<div class="kpi"><div class="lbl">${lbl
 /* ================= EXECUTIVE OVERVIEW ================= */
 document.getElementById("kpi-forside").innerHTML=
   kpi("Total purchases 2026",fmtM(totVal),`${fmt(lines.length)} PO lines · ${new Set(lines.map(l=>l.sup.id)).size} suppliers`,"","Sum of all line values in the period")+
-  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="On time").length)} of ${fmt(lines.length)} on time`,overallOTD>=80?"good":"bad","On-Time Delivery: share of deliveries within ±"+OTD_TOL+" days of the confirmed delivery date")+
+  kpi("Overall OTD",overallOTD+"%",`${fmt(lines.filter(l=>l.status==="On time").length)} of ${fmt(lines.length)} on time`,overallOTD>=80?"good":"bad","On-Time Delivery: share of deliveries delivered no later than "+OTD_TOL+" days after the confirmed delivery date (early counts as on time)")+
   kpi("Active suppliers",new Set(lines.map(l=>l.sup.id)).size,"with deliveries in the period","","Suppliers with at least one PO line in the period")+
   kpi("Supplier dependency",top5Share+"%","of spend with the 5 largest suppliers","","How much of the purchasing goes to the five largest suppliers. The higher the share, the more you depend on a few suppliers – that gives negotiating power, but also risk.")+
   kpi("Single-source materials",singleSource.length,"without an alternative supplier",singleSource.length>3?"warn":"","Materials supplied by only one supplier – see Spend Intelligence")+
@@ -639,14 +639,14 @@ document.getElementById("kpi-po").innerHTML=
 })();
 
 (function(){
-  const total=lines.length,on=lines.filter(l=>l.status==="On time").length,early=lines.filter(l=>l.status==="Early").length;
+  const total=lines.length,early=lines.filter(l=>l.status==="On time"&&l.dev<-OTD_TOL).length,on=lines.filter(l=>l.status==="On time").length-early; // early deliveries count as on time; shown as their own slice
   const C=251.33;let cumf=0,paths="";
-  [["On time · "+fmt(on),on,"#2ecc71"],["Late · "+fmt(lateLines),lateLines,"#e05d5d"],["Early · "+fmt(early),early,"#f0b429"]].forEach(([lbl,v,c])=>{
+  [["On time · "+fmt(on),on,"#2ecc71"],["Late · "+fmt(lateLines),lateLines,"#e05d5d"],["Early (on time) · "+fmt(early),early,"#f0b429"]].forEach(([lbl,v,c])=>{
     const f=v/total;
     paths+=`<circle r="40" cx="100" cy="100" fill="none" stroke="${c}" stroke-width="26" stroke-dasharray="${(f*C).toFixed(2)} ${(C-f*C).toFixed(2)}" stroke-dashoffset="${(C*(0.25-cumf)).toFixed(2)}" transform="rotate(-90 100 100)"/>`;
     cumf+=f;});
   document.getElementById("chartDonut").innerHTML=`<svg viewBox="0 0 200 200" width="190">${paths}<text x="100" y="96" text-anchor="middle" fill="#fff" font-size="26" font-weight="800">${overallOTD}%</text><text x="100" y="114" text-anchor="middle" fill="#8fa0c0" font-size="10">Overall OTD</text></svg>
-  <div class="legend" style="justify-content:center;margin-top:10px"><span><i style="background:#2ecc71"></i>On time</span><span><i style="background:#e05d5d"></i>Late</span><span><i style="background:#f0b429"></i>Early</span></div>`;
+  <div class="legend" style="justify-content:center;margin-top:10px"><span><i style="background:#2ecc71"></i>On time</span><span><i style="background:#e05d5d"></i>Late</span><span><i style="background:#f0b429"></i>Early (on time)</span></div>`;
   const mk=(arr,good)=>arr.map(s=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(30,42,74,.5);font-size:12.5px"><span>${s.name}</span><b class="${good?"good":"bad"}">${s.otd}%</b></div>`).join("");
   document.getElementById("chartTop").innerHTML=mk([...suppliers].filter(s=>s.lines>=3).sort((a,b)=>b.otd-a.otd).slice(0,5),true);
   document.getElementById("chartBottom").innerHTML=mk([...suppliers].filter(s=>s.lines>=3).sort((a,b)=>a.otd-b.otd).slice(0,5),false);
@@ -1216,7 +1216,7 @@ renderOctoTab();
 const FAQ=[
 ["What is Spend Intelligence?","Spend Intelligence shows where the money goes: total spend, spend by supplier/category/month, top 10 suppliers, concentration (top 5), price development per material, volume development, tail spend and single-source risk."],
 ["Where do the figures come from?","Suppliers deliver reports in Excel. Logichain validates and consolidates the data automatically into one model. In this demo everything is generated as demo data."],
-["What does OTD mean?","OTD (On-Time Delivery) is the share of deliveries made within ±5 days of the confirmed delivery date. “On time” = delivered up to 5 days before or after the agreed date."],
+["What does OTD mean?","OTD (On-Time Delivery) is the share of deliveries delivered no later than 5 days after the confirmed delivery date. Deliveries that arrive before the agreed date count as on time."],
 ["What do the A, B, C and D ratings mean?","A combination of delivery precision, deviations and quality. A is the best class; C and D should be followed up with improvement actions."],
 ["How reliable are the savings estimates?","Logichain shows identified potential based on documented assumptions – never guaranteed savings. Click “See documentation” on a figure to see exactly which materials, POs, suppliers and assumptions lie behind it. The estimate is a starting point for sourcing work and does not replace detailed sourcing analysis."],
 ["What is tail spend?","The small suppliers that together make up a small share of spend (here: beyond the 80 % cut). They often require a disproportionate amount of administration per krone – a typical consolidation area."],
